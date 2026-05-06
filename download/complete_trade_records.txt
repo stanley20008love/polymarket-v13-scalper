@@ -1,0 +1,822 @@
+========================================================================================================================
+Polymarket 完整交易记录 - 每一笔明细
+账户: stanley2008love (Shiny-Weekender)
+V2存款钱包: 0xbd10cd50ebd49439851be67e37514cbf1488cacf
+数据来源: Polymarket Data API (maker endpoint)
+========================================================================================================================
+
+第  1笔 | 2026-05-07 00:20:34 北京时间 | 卖出
+  市场: Indian Premier League: Sunrisers Hyderabad vs Punjab Kings
+  方向: Sunrisers Hyderabad
+  价格: $0.9000
+  数量: 53.00份
+  金额: $47.70
+  交易哈希: 0x1d61f9d7a731cf8aa048a84bda69c81820431263ef37d537c18863f8d9ca4773
+
+第  2笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Counter-Strike: CYBERSHOKE Esports vs ASTRAL (BO3) - BC Game Masters Europe Series #1 Group Stage
+  方向: CYBERSHOKE Esports
+  价格: $0.6309
+  数量: 103.03份
+  金额: $65.00
+  交易哈希: 0xfbfd4d0c663639970bce790cebc65c4fe57e23b2c26648b56d92f3ee88cd6537
+
+第  3笔 | 2026-05-07 00:20:34 北京时间 | 卖出
+  市场: Indian Premier League: Sunrisers Hyderabad vs Punjab Kings
+  方向: Sunrisers Hyderabad
+  价格: $0.9000
+  数量: 2.00份
+  金额: $1.80
+  交易哈希: 0x16f00605a740c827a8d07445b01d473be8cac38d8f3de47bb3a1a078e639210c
+
+第  4笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5300
+  数量: 5.47份
+  金额: $2.90
+  交易哈希: 0x24b5fab89dd4cc7bfa1bb528d3a551da03aebd45c74bb64911436d0c729ee751
+
+第  5笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Brazzaville: Skander Mansouri vs Bienvenue Bolangi
+  方向: Skander Mansouri
+  价格: $0.9590
+  数量: 20.00份
+  金额: $19.18
+  交易哈希: 0x1c3dab0cdbedee7f305171d70b78c6f2ee427cbdfa419278b97f3fae48944bd3
+
+第  6笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.4800
+  数量: 2.29份
+  金额: $1.10
+  交易哈希: 0xe4db4577ff9bc934d127c56805d62cd00eee0e6e96f2f3e7b972bfc9c489836c
+
+第  7笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5300
+  数量: 10.27份
+  金额: $5.44
+  交易哈希: 0x687b61f8de2f5a84d1815b1ab0e8f3090ab85d9fabd7bb5adcd8e2f28b45fc10
+
+第  8笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12PM ET
+  方向: Down
+  价格: $0.5100
+  数量: 7.00份
+  金额: $3.57
+  交易哈希: 0xd530070e11e4835ed5a05b69c5f60f3dfd42bc8faf0bcc4f9b614695c888efa3
+
+第  9笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5300
+  数量: 1.89份
+  金额: $1.00
+  交易哈希: 0x13cba53e346025875b0efd767d1379f45020174e89017de5ffe54c1249374748
+
+第 10笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Will Paris Saint-Germain FC win on 2026-05-06?
+  方向: Yes
+  价格: $0.2300
+  数量: 4.35份
+  金额: $1.00
+  交易哈希: 0x7164e8b724873c8264184bb6ce1856dc15fe5485da9f829274a977b5db03fd8d
+
+第 11笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5300
+  数量: 5.26份
+  金额: $2.79
+  交易哈希: 0x81ef5d039fa8f0ddf0cd12d6b479d5e76afb54e645c08460cf2cd3beeab753d5
+
+第 12笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.4800
+  数量: 2.08份
+  金额: $1.00
+  交易哈希: 0x3df3ac6bf4ac4d47189189f43ddd52b498ad9f61d4aa4484a62d2d37081147e6
+
+第 13笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Will Pete Hegseth win the 2028 US Presidential Election?
+  方向: No
+  价格: $0.9940
+  数量: 9.05份
+  金额: $9.00
+  交易哈希: 0x21a11944ee06489d0671557696c39f220223e7b9fc6b601ea9a21722d28b858f
+
+第 14笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Will the highest temperature in Chicago be 55°F or below on May 7?
+  方向: Yes
+  价格: $0.0390
+  数量: 25.64份
+  金额: $1.00
+  交易哈希: 0x87a3a60ddeca99ff903bae7ce1f8ecbfbe5288c014cde82e902bfa8437e32ded
+
+第 15笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:15PM-12:30PM ET
+  方向: Down
+  价格: $0.7700
+  数量: 10.26份
+  金额: $7.90
+  交易哈希: 0xb36682b07321092074a4cd1217d24a614066adc81fac790bbcab0c19dec02c85
+
+第 16笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5300
+  数量: 1.98份
+  金额: $1.05
+  交易哈希: 0x828832bcb956074c5a7e0c00b05ec3a2002dbd747e4631e2aa571a7699c656c3
+
+第 17笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5300
+  数量: 6.87份
+  金额: $3.64
+  交易哈希: 0x70c810f8342ca0636c11f16c506ed19d897811c60970417f9d8dffd772bcd272
+
+第 18笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Will the ECB announce no change at the June 2026 meeting?
+  方向: Yes
+  价格: $0.3460
+  数量: 5.00份
+  金额: $1.73
+  交易哈希: 0x5c2aedf1e1b64c80eb3a27866b8288a8e16504c8926033ea610ebb96e0a260b3
+
+第 19笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Ethereum Up or Down - May 6, 12:15PM-12:30PM ET
+  方向: Down
+  价格: $0.8600
+  数量: 10.53份
+  金额: $9.06
+  交易哈希: 0x769564c94ca1d7d43f8a01d813c62f535c5c88358778141b4f1da55c019e2f97
+
+第 20笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Ethereum Up or Down - May 6, 12:15PM-12:30PM ET
+  方向: Up
+  价格: $0.1500
+  数量: 13.33份
+  金额: $2.00
+  交易哈希: 0xb36cb525fa28a5c82e3cad7c551232fc048e94e3171e33be15525a0f31eacab0
+
+第 21笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Will the ECB announce a 25 bps increase at the June 2026 meeting?
+  方向: Yes
+  价格: $0.6000
+  数量: 5.00份
+  金额: $3.00
+  交易哈希: 0x54f98c65a0b6dfefcab3416362693ee29b98b68a78d936bc054b2b2053d1493b
+
+第 22笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.4800
+  数量: 5.00份
+  金额: $2.40
+  交易哈希: 0xa03d8d3f5bc169ebb72c4855fabe981d91c850d7f6115e5644e71169bb122eae
+
+第 23笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.5034
+  数量: 1384.59份
+  金额: $696.94
+  交易哈希: 0xaae1888b3111bb6cd2195a7bd2f3749eba7fd00e47d8d4b1d2e7160a63b4b55b
+
+第 24笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5300
+  数量: 5.57份
+  金额: $2.95
+  交易哈希: 0x2e6f3ab18c0e38f9dacc4076cdd8abcc1932f926e98f493585b1a63b429dea4d
+
+第 25笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.5315
+  数量: 570.22份
+  金额: $303.06
+  交易哈希: 0x5559c64364cdc7cb7f4467c402450d907010adca9edfa5e860ed08de8b536593
+
+第 26笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Ethereum Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5600
+  数量: 10.19份
+  金额: $5.71
+  交易哈希: 0xb544fc42e79fe0b5c2ba1e51c4d4917c6038cb55acda2982bc9c4508d8ca2cf4
+
+第 27笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5300
+  数量: 1.89份
+  金额: $1.00
+  交易哈希: 0x06f4b89fc2bad6c7494ca597b1caebbbc46293592b1428ef88e7d3b000e1b494
+
+第 28笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5300
+  数量: 15.60份
+  金额: $8.27
+  交易哈希: 0xb095ab639cac681a41a68dd4c9e53024142d1aaab609d8b19b28fa9e481f6de3
+
+第 29笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5300
+  数量: 5.66份
+  金额: $3.00
+  交易哈希: 0x1812b230d0a25d66a7db1721eaa087b2cda295c97783d7f4d2eff32c551de2b2
+
+第 30笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:15PM-12:30PM ET
+  方向: Down
+  价格: $0.7700
+  数量: 14.00份
+  金额: $10.78
+  交易哈希: 0x00cecca5f619df91383813be9f9947692526a30a298e1076c32f8078de44388e
+
+第 31笔 | 2026-05-07 00:20:34 北京时间 | 卖出
+  市场: Spread: Spurs (-9.5)
+  方向: Timberwolves
+  价格: $0.4700
+  数量: 2.54份
+  金额: $1.19
+  交易哈希: 0x2bd1a953d836869884ea4802dc6e06c6d3cf95393cf5609c96eb40c8c375c016
+
+第 32笔 | 2026-05-07 00:20:34 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.4800
+  数量: 41.67份
+  金额: $20.00
+  交易哈希: 0x56a984fedef0590b7d0fcddd63389a960f714c3fd9862add749ea6ce007c89f1
+
+第 33笔 | 2026-05-07 00:20:32 北京时间 | 卖出
+  市场: Spread: Spurs (-9.5)
+  方向: Timberwolves
+  价格: $0.4700
+  数量: 104.16份
+  金额: $48.96
+  交易哈希: 0xfab5e70cd0a4d13fdd957a14ee59fc9e8de07938c7be2e89484f2fb702b621bb
+
+第 34笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5300
+  数量: 5.12份
+  金额: $2.71
+  交易哈希: 0xf80dc2826a0d4243b7111dafaf0a6ef4397a17c3b7155f8e2e4d100140f70242
+
+第 35笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Ethereum Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5600
+  数量: 28.00份
+  金额: $15.68
+  交易哈希: 0x29e8a4050deae0ddff4919d0e8e89e0671803d041ec21e6b9d2a39249a9ec11e
+
+第 36笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5300
+  数量: 5.66份
+  金额: $3.00
+  交易哈希: 0x70dabd3800a9ca583f4087b50b3bb85a6901cfebbe7bf68963681b0dcf2f5ff7
+
+第 37笔 | 2026-05-07 00:20:32 北京时间 | 卖出
+  市场: Will the U.S. invade Iran before 2027?
+  方向: No
+  价格: $0.7800
+  数量: 0.05份
+  金额: $0.04
+  交易哈希: 0x013a79a310d48eae90acf0fb96f093e2bb15fe049812190c37269ff671092e90
+
+第 38笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Solana Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.4528
+  数量: 44.17份
+  金额: $20.00
+  交易哈希: 0x56dfcf3047162906631de9b14389c567db78bf45313b27e3413620e8624e813d
+
+第 39笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5300
+  数量: 5.57份
+  金额: $2.95
+  交易哈希: 0x5bb0162ab60ba1c9794c3e36f5b5205de663924751f3f2217c295d565981f2fb
+
+第 40笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5300
+  数量: 40.00份
+  金额: $21.20
+  交易哈希: 0x83168bcdbf09e64f78004e664c1759bd6aad869f3b7a89efc9a6e5c63c88c0a8
+
+第 41笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.4900
+  数量: 10.20份
+  金额: $5.00
+  交易哈希: 0xdd35c4edee9c36b9b622b442a7c1dd00211464ca17af440103d21d5bc7582d45
+
+第 42笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.4800
+  数量: 41.67份
+  金额: $20.00
+  交易哈希: 0x68007df6acb1eec8313c8f3d16ddae381a96c0c5961c45b6617b7c35830e55a8
+
+第 43笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.4800
+  数量: 2.08份
+  金额: $1.00
+  交易哈希: 0x82d466c092b77125814b418ab596b6355808d8163b68e85496ad6f1847e7938a
+
+第 44笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Dota 2: MOUZ vs PlayTime (BO3) - 1win Essence Group A
+  方向: MOUZ
+  价格: $0.3400
+  数量: 7.00份
+  金额: $2.38
+  交易哈希: 0xe852016ab12170e8a3c5f7634669eb85e4608d4a3c64cf4cceaec311e55101fb
+
+第 45笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5400
+  数量: 1.85份
+  金额: $1.00
+  交易哈希: 0x222b850159ed7861f7aaf908f66a2f57b50611d7ffae6768883426bdc8ed4de2
+
+第 46笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5392
+  数量: 5.19份
+  金额: $2.80
+  交易哈希: 0xb3c4d56c929b7f67652f0ab574bcaf23338d3771399a122390c6ad9dfac7f84f
+
+第 47笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Will Carlos Roberto Massa Júnior win the 2026 Brazilian presidential election?
+  方向: No
+  价格: $0.9990
+  数量: 88.09份
+  金额: $88.00
+  交易哈希: 0x5de791ea293cc02e38a374d8d4bd8b7e6a3596ae68db1b56f92d4124e67a6789
+
+第 48笔 | 2026-05-07 00:20:32 北京时间 | 卖出
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.4700
+  数量: 13.52份
+  金额: $6.35
+  交易哈希: 0x2e6908de327025df26583fd2959af9ba5e36326c36c9715368d13b64c091708e
+
+第 49笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5300
+  数量: 10.00份
+  金额: $5.30
+  交易哈希: 0xf9f8ddf0b43e2892a7bdb683b29609603163a1c8f8257e60cd10a9af2396f1e0
+
+第 50笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.4800
+  数量: 10.42份
+  金额: $5.00
+  交易哈希: 0xac6e2d3218cbff3d4cc3a6d3d3343bb75e4b44ce703951cab5872b3d354d486f
+
+第 51笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Will Elon Musk post 280-299 tweets from May 5 to May 12, 2026?
+  方向: No
+  价格: $0.9870
+  数量: 15.00份
+  金额: $14.80
+  交易哈希: 0x2086ad59c52fbb90f6aa3534136ed8df1e1572f9e6136cc502906b1338e97a39
+
+第 52笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.4600
+  数量: 10.87份
+  金额: $5.00
+  交易哈希: 0x0d17d998028474f7dc1d99a3bf97e059667277d9da2e4fad6a617603cae4b583
+
+第 53笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.4900
+  数量: 5.00份
+  金额: $2.45
+  交易哈希: 0x8edef761d97c5bf703addc6b87cd6907b6d7b251ccf4b2667046c327b7eca078
+
+第 54笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5318
+  数量: 6.09份
+  金额: $3.24
+  交易哈希: 0x9f70b8b6866d56b6ee6e0f45b96d4a14aedb2d2e666db25b66e39793c56cff8e
+
+第 55笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5600
+  数量: 10.00份
+  金额: $5.60
+  交易哈希: 0xda6b268f38c32dc2308a8722b74df314377c3470c02a4905c4a2e015987d2933
+
+第 56笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5600
+  数量: 6.02份
+  金额: $3.37
+  交易哈希: 0x7eb09260e2c6e7402060bd95d046f0c837da3b3d53911d7541f827d5f39573c5
+
+第 57笔 | 2026-05-07 00:20:32 北京时间 | 卖出
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5100
+  数量: 7.77份
+  金额: $3.96
+  交易哈希: 0x6c0d76573d9d8dc588f9e86619588f63467c5342aa8a9b42edc7942a117e227d
+
+第 58笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.4744
+  数量: 42.16份
+  金额: $20.00
+  交易哈希: 0xad57e49749603c606edf775a202f2238c8292960114070d4267c131f297593b6
+
+第 59笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.4600
+  数量: 2.17份
+  金额: $1.00
+  交易哈希: 0xa7de51a471b7bed59aea17d60642985d48c7e4ba9205817c2483d6068024750a
+
+第 60笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5407
+  数量: 30.00份
+  金额: $16.22
+  交易哈希: 0xb48440dda04bd05c1fd7553647d61aa4033c78633e3c2e35dd130d7c6f38a827
+
+第 61笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5350
+  数量: 4.21份
+  金额: $2.25
+  交易哈希: 0x2c1a7a28242a0a95d9e387fc9cb4dc5620655afda742517d68eb5ee0b2b01ef7
+
+第 62笔 | 2026-05-07 00:20:32 北京时间 | 卖出
+  市场: Will the highest temperature in New York City be between 68-69°F on May 6?
+  方向: Yes
+  价格: $0.0800
+  数量: 49.98份
+  金额: $4.00
+  交易哈希: 0x4fd77bad0e785a0417e5f9bf01cd88703089b3d68c1b90deeb0873086d8e63d3
+
+第 63笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Counter-Strike: CYBERSHOKE Esports vs ASTRAL (BO3) - BC Game Masters Europe Series #1 Group Stage
+  方向: CYBERSHOKE Esports
+  价格: $0.6300
+  数量: 5.00份
+  金额: $3.15
+  交易哈希: 0x07aeedf9538a0535b3a81d69e73e25db6aa86025e4b8967408f7ac06068a964a
+
+第 64笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: LoL: GLORE vs devils.one - Game 2 Winner
+  方向: devils.one
+  价格: $0.7900
+  数量: 100.63份
+  金额: $79.50
+  交易哈希: 0x9b17cedd555e3d80f7f4788a29cdebc4dc883decd0c3fc19b47e7afc4a2a6da6
+
+第 65笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Indian Premier League: Sunrisers Hyderabad vs Punjab Kings
+  方向: Punjab Kings
+  价格: $0.1000
+  数量: 2468.00份
+  金额: $246.80
+  交易哈希: 0xe1459d163515454baa67766576f5ffe20524d7522dbb09459ca98b77ec697036
+
+第 66笔 | 2026-05-07 00:20:32 北京时间 | 卖出
+  市场: Will the highest temperature in Austin be between 82-83°F on May 6?
+  方向: No
+  价格: $0.9920
+  数量: 5.00份
+  金额: $4.96
+  交易哈希: 0xd2e4d3219deb26c0775f80e4b8bc595bbcc4747facb0e5d822bc6cb37df1202b
+
+第 67笔 | 2026-05-07 00:20:32 北京时间 | 卖出
+  市场: Will WTI Crude Oil (WTI) hit (HIGH) $200 in May?
+  方向: No
+  价格: $0.9890
+  数量: 10.68份
+  金额: $10.56
+  交易哈希: 0x8fdf2953bf763b644745ef03bc1e403bd00c357b2fb3310f66691d914d171002
+
+第 68笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Internazionali BNL d'Italia: Katie Boulter vs Eva Lys
+  方向: Eva Lys
+  价格: $0.7800
+  数量: 1.38份
+  金额: $1.08
+  交易哈希: 0xa2bb10b9e32fdaa702523b7fd3ff2df62fefae521d4cb12065ed1df61db9ffd9
+
+第 69笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: LoL: FALKE Esports vs LUA Gaming (BO3) - LES Regular Season
+  方向: LUA Gaming
+  价格: $0.7800
+  数量: 41.00份
+  金额: $31.98
+  交易哈希: 0xbf912416ba89e59b100725c222fdcb29764303fa2f64b7aefd2a78c27b7a94fa
+
+第 70笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5100
+  数量: 40.00份
+  金额: $20.40
+  交易哈希: 0x1400340b3199106d690c5dc5f21bc782fd646c7a49a211168770a3219a8fef2f
+
+第 71笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.4853
+  数量: 92.00份
+  金额: $44.65
+  交易哈希: 0x74f873395b1b775b296d279b89450a1fabbe5aef553972e065037c0a91f00681
+
+第 72笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5000
+  数量: 14.06份
+  金额: $7.03
+  交易哈希: 0x1f4636dcd866bfa01aaa633fffc13e326c0430037d867a59747c6cce0d5248aa
+
+第 73笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5225
+  数量: 31.00份
+  金额: $16.20
+  交易哈希: 0x2cd42c453ed52ddd4862c81a1ea9636e9ba512b60c2d3d766d7cd6f83f9ab054
+
+第 74笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5300
+  数量: 10.60份
+  金额: $5.62
+  交易哈希: 0x671f62031331c7b373ff460bc562b54addfc2fdff8be5ee6546a6b7ed7aec0e9
+
+第 75笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.4800
+  数量: 6.50份
+  金额: $3.12
+  交易哈希: 0xa67cd81b698cc158745b59b4e1483ad4ccc74ae5c1d112ab82414461994165ba
+
+第 76笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: XRP Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5200
+  数量: 5.00份
+  金额: $2.60
+  交易哈希: 0xc0097badb599c0ca187b989d753032f10946e2ece73cf8ce15d4ef32bb07f8c7
+
+第 77笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5110
+  数量: 8.06份
+  金额: $4.12
+  交易哈希: 0x91c92e5f1840d21043a65bc4ea496ccdfb07aedf86577642329af44336e4278d
+
+第 78笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Ethereum Up or Down - May 6, 12PM ET
+  方向: Up
+  价格: $0.5800
+  数量: 4.91份
+  金额: $2.85
+  交易哈希: 0xf6f7a4e200375ddd64df44f867fcada27a1a29d4c7664637fdf4a892256e67cc
+
+第 79笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5600
+  数量: 20.00份
+  金额: $11.20
+  交易哈希: 0x91f1df50e4366e7227ef468deb55689809558e4bfe54bcd83a1b6ddbb7a9253a
+
+第 80笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5664
+  数量: 10.00份
+  金额: $5.66
+  交易哈希: 0x22dec3de8995cba3560ec7dc784c28381fbbd5f2f14154e12f06c593de8a59d8
+
+第 81笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.4600
+  数量: 5.00份
+  金额: $2.30
+  交易哈希: 0x1079f14f965c5ad66bb631d1759d6cc59dfc27d9b791e0959b3fa4f6852076bf
+
+第 82笔 | 2026-05-07 00:20:32 北京时间 | 卖出
+  市场: Will the U.S. invade Iran before 2027?
+  方向: Yes
+  价格: $0.2100
+  数量: 2878.32份
+  金额: $604.45
+  交易哈希: 0x677edbbab42883c9be0a5348a7daccc93fd6f78b1b59f5fd221af4b74ed78c26
+
+第 83笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5700
+  数量: 5.00份
+  金额: $2.85
+  交易哈希: 0xc29b897b4cfc328ea13fa3e84afb0883366c39394ec7fc71e5c59747a24742e4
+
+第 84笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Ethereum Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.4545
+  数量: 44.00份
+  金额: $20.00
+  交易哈希: 0x9e3815b26f6b820d5d2df8411ee0dee58cae00a880f24eb98fbd6070c67bffb5
+
+第 85笔 | 2026-05-07 00:20:32 北京时间 | 卖出
+  市场: Miguel Díaz-Canel out as leader of Cuba by June 30?
+  方向: No
+  价格: $0.8400
+  数量: 0.10份
+  金额: $0.08
+  交易哈希: 0xb5a76f8e867f7e8ab780a6ced5980ef95d701d222af1a8188048dcea083e30b1
+
+第 86笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.4800
+  数量: 5.00份
+  金额: $2.40
+  交易哈希: 0x486c57329bc322bbdf9ae5c27eb82dac18ee15256625dc363737464c43d207b4
+
+第 87笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5600
+  数量: 4.50份
+  金额: $2.52
+  交易哈希: 0x9ebd91dd23a27036e45d9d141677f84ad308cc1c9ca1e23046771cf4d580fe5b
+
+第 88笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5600
+  数量: 20.09份
+  金额: $11.25
+  交易哈希: 0xb9ceb69f8191d55c453544b341416c7d407636bc71c90fcfe681a28f093d69fb
+
+第 89笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5600
+  数量: 5.00份
+  金额: $2.80
+  交易哈希: 0xa771e66b532d1f3d884491240f3862c7a36f4709bc7ccabaed1caf5f0fdf76d8
+
+第 90笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5600
+  数量: 20.00份
+  金额: $11.20
+  交易哈希: 0x9c452d11a9dc0d42430bbee41b0507d42b5537e80dbe85a428617998aa663165
+
+第 91笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5600
+  数量: 10.00份
+  金额: $5.60
+  交易哈希: 0xc3d5f8de4fa459cdb21d773cd966b0e50f8f2c93f03eaf5f395b869d650244cb
+
+第 92笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5600
+  数量: 20.00份
+  金额: $11.20
+  交易哈希: 0x6f82cf0e0a73d24271d2c819e7da8d8c255398ca71950f47151cc71a690a33ef
+
+第 93笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5505
+  数量: 16.35份
+  金额: $9.00
+  交易哈希: 0xaf0c9f0d574d3034295b468bd4ba8cb9c02dce571538079abdbe45ad73a55ef0
+
+第 94笔 | 2026-05-07 00:20:32 北京时间 | 卖出
+  市场: Miguel Díaz-Canel out as leader of Cuba by June 30?
+  方向: No
+  价格: $0.8400
+  数量: 0.47份
+  金额: $0.39
+  交易哈希: 0x42f6825412875e1cc45a31119e3b0c16746fba446d91ff1e5e7cd2ef20166ab6
+
+第 95笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5500
+  数量: 12.27份
+  金额: $6.75
+  交易哈希: 0x70b1fde9afbd938118b3c0e63b5a705ea02c390c30c1950a62ce1a564d8372bf
+
+第 96笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5100
+  数量: 11.18份
+  金额: $5.70
+  交易哈希: 0xde31869e0d122fca9beda97454903dbf405362e19ab3e91e0aa15dc9ed3a7236
+
+第 97笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Ethereum Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Up
+  价格: $0.4500
+  数量: 11.10份
+  金额: $5.00
+  交易哈希: 0xbc641a1e21dd2f5e25989f763ab254a7596028f64ed5028be34d5be3177b0c76
+
+第 98笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Bitcoin Up or Down - May 6, 12:20PM-12:25PM ET
+  方向: Down
+  价格: $0.5300
+  数量: 9.43份
+  金额: $5.00
+  交易哈希: 0x31e59095d737ccfd038605a8a50d07c5b81e9ed294521f5d44fa7e87057d2c33
+
+第 99笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Solana Up or Down - May 6, 12:15PM-12:30PM ET
+  方向: Down
+  价格: $0.7700
+  数量: 5.00份
+  金额: $3.85
+  交易哈希: 0x9394ccac66b2e9ca9dc6058ca683e3f3ecff8ed868c4becf330775cb86ca6cef
+
+第100笔 | 2026-05-07 00:20:32 北京时间 | 买入
+  市场: Internazionali BNL d'Italia: Yulia Starodubtseva vs Simona Waltert
+  方向: Yulia Starodubtseva
+  价格: $0.4500
+  数量: 10.00份
+  金额: $4.50
+  交易哈希: 0x7727e6312fed6fbe486132a3895de30dece13f3dacfc8143b33224139b6bece9
+
+========================================================================================================================
+最终汇总
+========================================================================================================================
+总交易笔数: 100
+买入: 87笔, 总额: $2063.30
+卖出: 13笔, 总额: $734.45
+净投入: $1328.85
+
+初始存入: ~$50 (103.75 POL + 39.9 USDC)
+当前Polymarket余额: $0.00
+当前主钱包余额: ~$0.24 (残留POL)
+
+所有仓位已结算归零,没有剩余资金。
+买入金额($6,268)远大于初始投入($50),是因为中间赢利再投资+亏损循环。
+最终结果: ~$50 → $0.24, 亏损99.5%
