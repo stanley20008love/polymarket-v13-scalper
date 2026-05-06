@@ -3,8 +3,8 @@
 // ============================================================================
 
 import express, { Request, Response } from 'express';
-import { StrategyEngine } from './engine';
-import { StrategyConfig } from './config';
+import { StrategyEngine } from '../core/engine';
+import { StrategyConfig } from '../core/config';
 import { logger } from '../utils/logger';
 
 export function createApi(engine: StrategyEngine, config: StrategyConfig) {

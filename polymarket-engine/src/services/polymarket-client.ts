@@ -4,8 +4,9 @@
 // API client for Polymarket CLOB (Central Limit Order Book)
 
 import axios, { AxiosInstance } from 'axios';
-import { StrategyConfig } from './config';
-import { Market, OrderBook, OrderResult, WalletBalance } from './types';
+import { ethers } from 'ethers';
+import { StrategyConfig } from '../core/config';
+import { Market, OrderBook, OrderResult, WalletBalance } from '../core/types';
 import { logger } from '../utils/logger';
 
 export class PolymarketClient {
@@ -179,7 +180,6 @@ export class PolymarketClient {
    */
   async getWalletBalance(): Promise<WalletBalance> {
     try {
-      const { ethers } = await import('ethers');
       const provider = new ethers.JsonRpcProvider(this.config.polygonRpcUrl);
 
       const wallet = this.config.tradingWallet;
@@ -220,25 +220,24 @@ export class PolymarketClient {
    */
   async recoverProfits(amountUsdc: number): Promise<OrderResult> {
     try {
-      const { ethers } = await import('ethers');
       const provider = new ethers.JsonRpcProvider(this.config.polygonRpcUrl);
-      const wallet = new ethers.Wallet(this.config.privateKey, provider);
+      const signer = new ethers.Wallet(this.config.privateKey, provider);
 
       const usdc_e = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
       const erc20Abi = ['function transfer(address to, uint256 amount) returns (bool)'];
-      const usdcContract = new ethers.Contract(usdc_e, erc20Abi, wallet);
+      const usdcContract = new ethers.Contract(usdc_e, erc20Abi, signer);
 
       const amount = ethers.parseUnits(amountUsdc.toFixed(6), 6);
       const tx = await usdcContract.transfer(this.config.profitRecoveryWallet, amount);
-      await tx.wait();
+      const receipt = await tx.wait();
 
       logger.info('Profit recovered', {
         amount: amountUsdc,
         to: this.config.profitRecoveryWallet,
-        txHash: tx.hash,
+        txHash: receipt?.hash || tx.hash,
       });
 
-      return { success: true, transactionHash: tx.hash };
+      return { success: true, transactionHash: receipt?.hash || tx.hash };
     } catch (error: any) {
       logger.error('Failed to recover profits', { error: error.message });
       return { success: false, error: error.message };
@@ -267,8 +266,14 @@ export class PolymarketClient {
     callback: (book: OrderBook) => void
   ): Promise<void> {
     try {
-      const WebSocket = (await import('ws')).default;
-      const ws = new WebSocket(this.config.polymarketWsUrl);
+      let WS: any;
+      try {
+        WS = require('ws');
+      } catch {
+        logger.warn('ws module not available, skipping WebSocket subscription');
+        return;
+      }
+      const ws = new WS(this.config.polymarketWsUrl);
 
       ws.on('open', () => {
         logger.info('WebSocket connected', { tokenId });

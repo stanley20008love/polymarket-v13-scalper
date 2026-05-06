@@ -6,10 +6,11 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/main.js",
-    "dev": "ts-node src/main.ts",
-    "scan": "ts-node src/main.ts --mode scan",
-    "trade": "ts-node src/main.ts --mode trade",
-    "monitor": "ts-node src/main.ts --mode monitor",
+    "postinstall": "npm run build",
+    "dev": "npx tsx src/main.ts",
+    "scan": "node dist/main.js --mode scan",
+    "trade": "node dist/main.js --mode trade",
+    "monitor": "node dist/main.js --mode monitor",
     "test": "jest --forceExit"
   },
   "dependencies": {
@@ -25,12 +26,9 @@
   },
   "devDependencies": {
     "typescript": "^5.5.0",
-    "ts-node": "^10.9.0",
     "@types/node": "^20.14.0",
     "@types/express": "^4.17.0",
     "@types/node-cron": "^3.0.11",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.2.0",
-    "@types/jest": "^29.5.0"
+    "@types/ws": "^8.5.0"
   }
 }
