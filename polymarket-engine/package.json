@@ -6,7 +6,6 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/main.js",
-    "postinstall": "npm run build",
     "dev": "npx tsx src/main.ts",
     "scan": "node dist/main.js --mode scan",
     "trade": "node dist/main.js --mode trade",
