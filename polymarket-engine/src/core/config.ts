@@ -1,0 +1,76 @@
+// ============================================================================
+// Polymarket V11 Strategy Engine - Configuration
+// ============================================================================
+
+import dotenv from 'dotenv';
+dotenv.config();
+
+export interface StrategyConfig {
+  // Wallet
+  hubPublicWallet: string;
+  tradingWallet: string;
+  profitRecoveryWallet: string;
+  privateKey: string;
+
+  // API
+  polymarketApiUrl: string;
+  polymarketWsUrl: string;
+  polymarketApiKey: string;
+  polymarketApiSecret: string;
+  polymarketApiPassphrase: string;
+  polygonRpcUrl: string;
+
+  // Strategy V11
+  minEvPercent: number;        // EV > 5%
+  maxYesPrice: number;          // Yes < 0.2 → skip
+  takeProfitPercent: number;    // 止盈 40%
+  stopLossPercent: number;      // 止损 15%
+  kellyFraction: number;        // 半Kelly = 0.5
+  maxPositionPercent: number;   // 单仓 10%
+  minLiquidityUsd: number;      // 流动性 > $10k
+  maxSpreadPercent: number;     // 价差 < 5%
+  manipulationVolatilityThreshold: number;  // 反操纵 20%波动
+  manipulationPauseMinutes: number;         // 暂停60分钟
+  maxTradesPerHour: number;     // 每小时2笔
+  maxDailyLossUsd: number;      // 日亏$2暂停
+
+  // Server
+  port: number;
+  logLevel: string;
+  nodeEnv: string;
+}
+
+export function loadConfig(): StrategyConfig {
+  return {
+    hubPublicWallet: process.env.HUB_PUBLIC_WALLET || '0x2F88715F35712C8627b7AF2Ead04baA4a449542c',
+    tradingWallet: process.env.TRADING_WALLET || '0x13642cdE3d64d9d79b4837920667D881f285e937',
+    profitRecoveryWallet: process.env.PROFIT_RECOVERY_WALLET || '0xFe332cA54738CBa561518A3a458BA6eFFfc3636D',
+    privateKey: process.env.PRIVATE_KEY || '',
+
+    polymarketApiUrl: process.env.POLYMARKET_API_URL || 'https://clob.polymarket.com',
+    polymarketWsUrl: process.env.POLYMARKET_WS_URL || 'wss://ws-subscriptions-clob.polymarket.com/ws',
+    polymarketApiKey: process.env.POLYMARKET_API_KEY || '',
+    polymarketApiSecret: process.env.POLYMARKET_API_SECRET || '',
+    polymarketApiPassphrase: process.env.POLYMARKET_API_PASSPHRASE || '',
+    polygonRpcUrl: process.env.POLYGON_RPC_URL || 'https://1rpc.io/matic',
+
+    minEvPercent: parseFloat(process.env.MIN_EV_PERCENT || '5'),
+    maxYesPrice: parseFloat(process.env.MAX_YES_PRICE || '0.20'),
+    takeProfitPercent: parseFloat(process.env.TAKE_PROFIT_PERCENT || '40'),
+    stopLossPercent: parseFloat(process.env.STOP_LOSS_PERCENT || '15'),
+    kellyFraction: parseFloat(process.env.KELLY_FRACTION || '0.5'),
+    maxPositionPercent: parseFloat(process.env.MAX_POSITION_PERCENT || '10'),
+    minLiquidityUsd: parseFloat(process.env.MIN_LIQUIDITY_USD || '10000'),
+    maxSpreadPercent: parseFloat(process.env.MAX_SPREAD_PERCENT || '5'),
+    manipulationVolatilityThreshold: parseFloat(process.env.MANIPULATION_VOLATILITY_THRESHOLD || '20'),
+    manipulationPauseMinutes: parseFloat(process.env.MANIPULATION_PAUSE_MINUTES || '60'),
+    maxTradesPerHour: parseFloat(process.env.MAX_TRADES_PER_HOUR || '2'),
+    maxDailyLossUsd: parseFloat(process.env.MAX_DAILY_LOSS_USD || '2'),
+
+    port: parseInt(process.env.PORT || '3000', 10),
+    logLevel: process.env.LOG_LEVEL || 'info',
+    nodeEnv: process.env.NODE_ENV || 'development',
+  };
+}
+
+export const config = loadConfig();
