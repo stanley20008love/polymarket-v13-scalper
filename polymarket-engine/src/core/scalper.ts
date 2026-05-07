@@ -831,4 +831,6 @@ export class ScalperEngine {
   isRunning(): boolean { return this.running; }
 
   getMode(): string { return this.mode; }
+
+  getPaperBalance(): number { return this.paperBalance; }
 }

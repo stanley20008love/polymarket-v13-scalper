@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Polymarket V13 - BTC Scalper + Marketing101</title>
+  <title>Polymarket V13 - BTC 剥头皮 + Marketing101</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -293,27 +293,27 @@
   <div class="header">
     <div class="header-left">
       <div class="logo">Poly<span>Scalper</span></div>
-      <span class="version">V13.1</span>
+      <span class="version">V13.2</span>
       <div class="engine-status">
         <div class="status-dot idle" id="statusDot"></div>
-        <span class="status-text" id="statusText">IDLE</span>
+        <span class="status-text" id="statusText">空闲</span>
       </div>
-      <span class="mode-badge paper" id="modeBadge">PAPER</span>
+      <span class="mode-badge paper" id="modeBadge">模拟盘</span>
     </div>
     <div class="header-actions">
-      <button class="btn btn-start" id="btnStart" onclick="startEngine()">▶ Start</button>
-      <button class="btn btn-stop" id="btnStop" onclick="stopEngine()" disabled>■ Stop</button>
-      <button class="btn btn-export" onclick="exportData()">↓ Export</button>
+      <button class="btn btn-start" id="btnStart" onclick="startEngine()">▶ 启动</button>
+      <button class="btn btn-stop" id="btnStop" onclick="stopEngine()" disabled>■ 停止</button>
+      <button class="btn btn-export" onclick="exportData()">↓ 导出</button>
     </div>
   </div>
 
   <!-- Module Tabs -->
   <div class="module-tabs">
     <div class="module-tab active" onclick="switchTab('scalper')" id="tabScalper">
-      <span class="tab-icon">⚡</span> BTC 5MIN Scalper
+      <span class="tab-icon">⚡</span> BTC 5分钟剥头皮
     </div>
     <div class="module-tab" onclick="switchTab('m101')" id="tabM101">
-      <span class="tab-icon">🧠</span> Marketing101 Engine
+      <span class="tab-icon">🧠</span> Marketing101 引擎
     </div>
   </div>
 
@@ -324,16 +324,24 @@
       <div class="btc-price" id="btcPrice">$---</div>
     </div>
     <div>
-      <div class="btc-label">5M Change</div>
+      <div class="btc-label">5分钟变动</div>
       <div class="btc-change" id="btcChange">0.00%</div>
     </div>
     <div>
-      <div class="btc-label">5M Volume</div>
+      <div class="btc-label">5分钟成交量</div>
       <div class="btc-detail" id="btcVolume">$0</div>
     </div>
     <div>
-      <div class="btc-label">Depth Imbalance</div>
+      <div class="btc-label">深度失衡</div>
       <div class="btc-detail" id="btcImbalance">0%</div>
+    </div>
+    <div>
+      <div class="btc-label">剥头皮资金</div>
+      <div class="btc-detail" id="scalperBalance">$50.00</div>
+    </div>
+    <div>
+      <div class="btc-label">M101资金</div>
+      <div class="btc-detail" id="m101Balance">$50.00</div>
     </div>
     <div class="binance-status">
       <div class="status-dot idle" id="binanceDot"></div>
@@ -346,34 +354,34 @@
     <!-- KPI Cards -->
     <div class="kpi-grid">
       <div class="kpi-card">
-        <div class="kpi-label">Total P&L</div>
+        <div class="kpi-label">总盈亏</div>
         <div class="kpi-value" id="totalPnl">$0.00</div>
-        <div class="kpi-sub" id="totalPnlSub">0 trades</div>
+        <div class="kpi-sub" id="totalPnlSub">0 笔交易</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Daily P&L</div>
+        <div class="kpi-label">日盈亏</div>
         <div class="kpi-value" id="dailyPnl">$0.00</div>
-        <div class="kpi-sub" id="dailyCapSub">Cap: 0%</div>
+        <div class="kpi-sub" id="dailyCapSub">上限: 0%</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Win Rate</div>
+        <div class="kpi-label">胜率</div>
         <div class="kpi-value" id="winRate">0%</div>
         <div class="kpi-sub" id="winLossSub">0W / 0L</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Active Positions</div>
+        <div class="kpi-label">活跃仓位</div>
         <div class="kpi-value" id="activePositions">0</div>
-        <div class="kpi-sub">Max: 3</div>
+        <div class="kpi-sub">最大: 3</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Scan Count</div>
+        <div class="kpi-label">扫描次数</div>
         <div class="kpi-value" id="scanCount">0</div>
-        <div class="kpi-sub" id="skipSub">0 skipped</div>
+        <div class="kpi-sub" id="skipSub">0 跳过</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Uptime</div>
+        <div class="kpi-label">运行时间</div>
         <div class="kpi-value" id="uptime">0:00</div>
-        <div class="kpi-sub" id="hardStopSub">Hard Stop: OK</div>
+        <div class="kpi-sub" id="hardStopSub">硬止损: 正常</div>
       </div>
     </div>
 
@@ -382,8 +390,8 @@
       <!-- PnL Chart -->
       <div class="card">
         <div class="card-header">
-          <span class="card-title">Cumulative P&L</span>
-          <span class="card-badge" style="background:var(--blue-bg);color:var(--blue)">Real-time</span>
+          <span class="card-title">累计盈亏</span>
+          <span class="card-badge" style="background:var(--blue-bg);color:var(--blue)">实时</span>
         </div>
         <div class="card-body">
           <div class="chart-container">
@@ -395,15 +403,15 @@
       <!-- Signal Convergence -->
       <div class="card">
         <div class="card-header">
-          <span class="card-title">Signal Convergence (Force Graph)</span>
+          <span class="card-title">信号汇聚 (力导向图)</span>
           <span class="card-badge" id="convergenceBadge" style="background:var(--bg-card);color:var(--text-muted)">---%</span>
         </div>
         <div class="card-body">
           <div class="signal-grid" id="signalGrid"></div>
           <div class="convergence-display">
-            <div class="convergence-label">Convergence Direction</div>
+            <div class="convergence-label">汇聚方向</div>
             <div class="convergence-value neutral" id="convergenceValue">---</div>
-            <div class="convergence-dir" id="convergenceDir">Waiting for signals...</div>
+            <div class="convergence-dir" id="convergenceDir">等待信号...</div>
           </div>
         </div>
       </div>
@@ -411,14 +419,14 @@
       <!-- Active Positions -->
       <div class="card">
         <div class="card-header">
-          <span class="card-title">Active Positions</span>
+          <span class="card-title">活跃仓位</span>
           <span class="card-badge" id="positionsBadge" style="background:var(--blue-bg);color:var(--blue)">0</span>
         </div>
         <div class="card-body">
           <div class="table-container" id="positionsContainer">
-            <div class="positions-empty" id="noPositions">No active positions</div>
+            <div class="positions-empty" id="noPositions">暂无活跃仓位</div>
             <table id="positionsTable" style="display:none">
-              <thead><tr><th>Market</th><th>Type</th><th>Entry</th><th>Current</th><th>Size</th><th>Cost</th><th>P&L</th><th>P&L %</th><th>BTC</th><th>Lag</th><th>Age</th></tr></thead>
+              <thead><tr><th>市场</th><th>类型</th><th>入场</th><th>当前</th><th>数量</th><th>成本</th><th>盈亏</th><th>盈亏%</th><th>BTC</th><th>滞后</th><th>时长</th></tr></thead>
               <tbody id="positionsBody"></tbody>
             </table>
           </div>
@@ -428,18 +436,18 @@
       <!-- MiroFish Simulation Engine -->
       <div class="card">
         <div class="card-header">
-          <span class="card-title">🧬 MiroFish Monte Carlo Simulator</span>
-          <span class="card-badge" id="simBadge" style="background:var(--purple-bg);color:var(--purple)">10K LOOPS</span>
+          <span class="card-title">🧬 MiroFish 蒙特卡洛模拟器</span>
+          <span class="card-badge" id="simBadge" style="background:var(--purple-bg);color:var(--purple)">10K 循环</span>
         </div>
         <div class="card-body">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div style="background:var(--bg-card);border-radius:8px;padding:14px;text-align:center">
-              <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">Sim Direction</div>
+              <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">模拟方向</div>
               <div id="simDirection" style="font-size:22px;font-weight:800;color:var(--text-muted)">---</div>
               <div id="simProb" style="font-size:11px;color:var(--text-secondary)">UP: --% | DOWN: --%</div>
             </div>
             <div style="background:var(--bg-card);border-radius:8px;padding:14px;text-align:center">
-              <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">Sim Confidence</div>
+              <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">模拟置信度</div>
               <div id="simConfidence" style="font-size:22px;font-weight:800;color:var(--text-muted)">--%</div>
               <div id="simShouldTrade" style="font-size:11px">---</div>
             </div>
@@ -447,13 +455,13 @@
           <div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">
             <div style="font-size:11px;color:var(--text-muted)">Kelly: <span id="simKelly" style="color:var(--text-primary)">--%</span></div>
             <div style="font-size:11px;color:var(--text-muted)">Sharpe: <span id="simSharpe" style="color:var(--text-primary)">--</span></div>
-            <div style="font-size:11px;color:var(--text-muted)">Sims: <span id="simTotalCount" style="color:var(--text-primary)">0</span></div>
-            <div style="font-size:11px;color:var(--text-muted)">Calibration: <span id="simCalibration" style="color:var(--text-primary)">--%</span></div>
-            <div style="font-size:11px;color:var(--text-muted)">Latency: <span id="simLatency" style="color:var(--text-primary)">--ms</span></div>
+            <div style="font-size:11px;color:var(--text-muted)">模拟: <span id="simTotalCount" style="color:var(--text-primary)">0</span></div>
+            <div style="font-size:11px;color:var(--text-muted)">校准: <span id="simCalibration" style="color:var(--text-primary)">--%</span></div>
+            <div style="font-size:11px;color:var(--text-muted)">延迟: <span id="simLatency" style="color:var(--text-primary)">--ms</span></div>
           </div>
           <div style="margin-top:10px">
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:600">MARKET CONTEXT</div>
-            <div id="simContext" style="font-size:10px;color:var(--text-secondary);background:var(--bg-card);padding:8px;border-radius:6px;font-family:monospace;word-break:break-all">Waiting for data...</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:600">市场上下文</div>
+            <div id="simContext" style="font-size:10px;color:var(--text-secondary);background:var(--bg-card);padding:8px;border-radius:6px;font-family:monospace;word-break:break-all">等待数据...</div>
           </div>
         </div>
       </div>
@@ -461,15 +469,15 @@
       <!-- Trade History -->
       <div class="card full-width">
         <div class="card-header">
-          <span class="card-title">Trade History</span>
-          <span class="card-badge" id="tradesBadge" style="background:var(--bg-card);color:var(--text-secondary)">0 trades</span>
+          <span class="card-title">交易记录</span>
+          <span class="card-badge" id="tradesBadge" style="background:var(--bg-card);color:var(--text-secondary)">0 笔交易</span>
         </div>
         <div class="card-body">
           <div class="table-container">
             <table id="tradesTable">
-              <thead><tr><th>Time</th><th>Side</th><th>Type</th><th>Market</th><th>Price</th><th>Size</th><th>Cost</th><th>P&L</th><th>P&L %</th><th>BTC Price</th><th>Lag</th><th>Conv</th><th>Reason</th><th>Status</th></tr></thead>
+              <thead><tr><th>时间</th><th>方向</th><th>类型</th><th>市场</th><th>价格</th><th>数量</th><th>成本</th><th>盈亏</th><th>盈亏%</th><th>BTC价格</th><th>滞后</th><th>汇聚</th><th>原因</th><th>状态</th></tr></thead>
               <tbody id="tradesBody">
-                <tr><td colspan="14" style="text-align:center;color:var(--text-muted);padding:24px">No trades yet. Start the engine to begin scalping.</td></tr>
+                <tr><td colspan="14" style="text-align:center;color:var(--text-muted);padding:24px">暂无交易。启动引擎开始剥头皮交易。</td></tr>
               </tbody>
             </table>
           </div>
@@ -483,42 +491,42 @@
     <!-- M101 KPI Cards -->
     <div class="kpi-grid">
       <div class="kpi-card" style="border-left:3px solid var(--purple)">
-        <div class="kpi-label">M101 Total P&L</div>
+        <div class="kpi-label">M101 总盈亏</div>
         <div class="kpi-value" id="m101TotalPnl">$0.00</div>
-        <div class="kpi-sub" id="m101TradeCount">0 trades</div>
+        <div class="kpi-sub" id="m101TradeCount">0 笔交易</div>
       </div>
       <div class="kpi-card" style="border-left:3px solid var(--cyan)">
-        <div class="kpi-label">M101 Daily P&L</div>
+        <div class="kpi-label">M101 日盈亏</div>
         <div class="kpi-value" id="m101DailyPnl">$0.00</div>
-        <div class="kpi-sub">Paper Balance: $50 (50U)</div>
+        <div class="kpi-sub">模拟资金: $50 (50U)</div>
       </div>
       <div class="kpi-card" style="border-left:3px solid var(--green)">
-        <div class="kpi-label">M101 Win Rate</div>
+        <div class="kpi-label">M101 胜率</div>
         <div class="kpi-value" id="m101WinRate">0%</div>
         <div class="kpi-sub" id="m101WinLoss">0W / 0L</div>
       </div>
       <div class="kpi-card" style="border-left:3px solid var(--orange)">
-        <div class="kpi-label">Simulation Runs</div>
+        <div class="kpi-label">模拟运行</div>
         <div class="kpi-value" id="m101SimRuns">0</div>
-        <div class="kpi-sub" id="m101ScanSkip">0 scans / 0 skips</div>
+        <div class="kpi-sub" id="m101ScanSkip">0 扫描 / 0 跳过</div>
       </div>
       <div class="kpi-card" style="border-left:3px solid var(--yellow)">
-        <div class="kpi-label">Avg Trade Size</div>
+        <div class="kpi-label">平均仓位</div>
         <div class="kpi-value" id="m101AvgSize">$0</div>
-        <div class="kpi-sub">Target: $2-$10 (50U)</div>
+        <div class="kpi-sub">目标: $2-$10 (50U)</div>
       </div>
       <div class="kpi-card" style="border-left:3px solid var(--blue)">
-        <div class="kpi-label">M101 Uptime</div>
+        <div class="kpi-label">M101 运行时间</div>
         <div class="kpi-value" id="m101Uptime">0:00</div>
-        <div class="kpi-sub">5-Source Convergence</div>
+        <div class="kpi-sub">5源信号汇聚</div>
       </div>
     </div>
 
     <!-- 5-Source Signal Convergence -->
     <div class="card" style="margin-bottom:16px">
       <div class="card-header">
-        <span class="card-title">🧠 Marketing101 - 5-Source Signal Convergence</span>
-        <span class="card-badge" id="m101ConsensusBadge" style="background:var(--purple-bg);color:var(--purple)">4/5 CONSENSUS</span>
+        <span class="card-title">🧠 Marketing101 - 5源信号汇聚</span>
+        <span class="card-badge" id="m101ConsensusBadge" style="background:var(--purple-bg);color:var(--purple)">4/5 共识</span>
       </div>
       <div class="card-body">
         <!-- 5 Source Cards -->
@@ -526,7 +534,7 @@
           <div class="m101-source-card neutral">
             <div class="source-weight">30%</div>
             <div class="source-icon">🤖</div>
-            <div class="source-name">Claude Brain</div>
+            <div class="source-name">Claude 大脑</div>
             <div class="source-dir" style="color:var(--text-muted)">---</div>
             <div class="source-strength">--% | Conf: --%</div>
           </div>
@@ -540,21 +548,21 @@
           <div class="m101-source-card neutral">
             <div class="source-weight">20%</div>
             <div class="source-icon">📊</div>
-            <div class="source-name">BTC Simulator</div>
+            <div class="source-name">BTC 模拟器</div>
             <div class="source-dir" style="color:var(--text-muted)">---</div>
             <div class="source-strength">--% | Conf: --%</div>
           </div>
           <div class="m101-source-card neutral">
             <div class="source-weight">15%</div>
             <div class="source-icon">🏛️</div>
-            <div class="source-name">OTC Desk</div>
+            <div class="source-name">OTC 柜台</div>
             <div class="source-dir" style="color:var(--text-muted)">---</div>
             <div class="source-strength">--% | Conf: --%</div>
           </div>
           <div class="m101-source-card neutral">
             <div class="source-weight">10%</div>
             <div class="source-icon">📋</div>
-            <div class="source-name">Closed Book</div>
+            <div class="source-name">封闭订单簿</div>
             <div class="source-dir" style="color:var(--text-muted)">---</div>
             <div class="source-strength">--% | Conf: --%</div>
           </div>
@@ -563,8 +571,8 @@
         <!-- Consensus Bar -->
         <div style="margin-bottom:12px">
           <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px">
-            <span>Consensus</span>
-            <span id="m101ConsensusText">-- / 5 sources agree</span>
+            <span>共识</span>
+            <span id="m101ConsensusText">-- / 5 源同意</span>
           </div>
           <div class="consensus-bar" id="m101ConsensusBar">
             <div class="up-segment" style="width:0%"></div>
@@ -575,9 +583,9 @@
 
         <!-- Decision Box -->
         <div class="m101-decision-box skip" id="m101DecisionBox">
-          <div class="m101-decision-label">Marketing101 Decision</div>
-          <div class="m101-decision-value skip" id="m101DecisionValue">WAITING</div>
-          <div class="m101-decision-reason" id="m101DecisionReason">Waiting for 5-source convergence analysis...</div>
+          <div class="m101-decision-label">Marketing101 决策</div>
+          <div class="m101-decision-value skip" id="m101DecisionValue">等待中</div>
+          <div class="m101-decision-reason" id="m101DecisionReason">等待5源汇聚分析...</div>
         </div>
       </div>
     </div>
@@ -587,20 +595,20 @@
       <!-- BTC Simulator Results -->
       <div class="card">
         <div class="card-header">
-          <span class="card-title">📊 BTC Price Simulator</span>
-          <span class="card-badge" style="background:var(--cyan-bg);color:var(--cyan)">10K PATHS</span>
+          <span class="card-title">📊 BTC 价格模拟器</span>
+          <span class="card-badge" style="background:var(--cyan-bg);color:var(--cyan)">10K 路径</span>
         </div>
         <div class="card-body">
           <div class="m101-data-card">
-            <div class="m101-data-title">Price Distribution (5-min)</div>
-            <div class="m101-data-row"><span class="label">Current Price</span><span class="value" id="m101BtcCurrent">$---</span></div>
-            <div class="m101-data-row"><span class="label">UP paths</span><span class="value" style="color:var(--green)" id="m101BtcUp">---</span></div>
-            <div class="m101-data-row"><span class="label">DOWN paths</span><span class="value" style="color:var(--red)" id="m101BtcDown">---</span></div>
-            <div class="m101-data-row"><span class="label">Average Final</span><span class="value" id="m101BtcAvg">$---</span></div>
-            <div class="m101-data-row"><span class="label">P5 (Bear)</span><span class="value" style="color:var(--red)" id="m101BtcP5">$---</span></div>
-            <div class="m101-data-row"><span class="label">P50 (Median)</span><span class="value" id="m101BtcP50">$---</span></div>
-            <div class="m101-data-row"><span class="label">P95 (Bull)</span><span class="value" style="color:var(--green)" id="m101BtcP95">$---</span></div>
-            <div class="m101-data-row"><span class="label">Avg Jumps</span><span class="value" id="m101BtcJumps">---</span></div>
+            <div class="m101-data-title">价格分布 (5分钟)</div>
+            <div class="m101-data-row"><span class="label">当前价格</span><span class="value" id="m101BtcCurrent">$---</span></div>
+            <div class="m101-data-row"><span class="label">上涨路径</span><span class="value" style="color:var(--green)" id="m101BtcUp">---</span></div>
+            <div class="m101-data-row"><span class="label">下跌路径</span><span class="value" style="color:var(--red)" id="m101BtcDown">---</span></div>
+            <div class="m101-data-row"><span class="label">平均终价</span><span class="value" id="m101BtcAvg">$---</span></div>
+            <div class="m101-data-row"><span class="label">P5 (看跌)</span><span class="value" style="color:var(--red)" id="m101BtcP5">$---</span></div>
+            <div class="m101-data-row"><span class="label">P50 (中位数)</span><span class="value" id="m101BtcP50">$---</span></div>
+            <div class="m101-data-row"><span class="label">P95 (看涨)</span><span class="value" style="color:var(--green)" id="m101BtcP95">$---</span></div>
+            <div class="m101-data-row"><span class="label">平均跳跃</span><span class="value" id="m101BtcJumps">---</span></div>
           </div>
         </div>
       </div>
@@ -608,20 +616,20 @@
       <!-- OTC Desk Data -->
       <div class="card">
         <div class="card-header">
-          <span class="card-title">🏛️ OTC Desk Flow</span>
-          <span class="card-badge" id="m101OtcBadge" style="background:var(--orange-bg);color:var(--orange)">LIVE</span>
+          <span class="card-title">🏛️ OTC 柜台资金流</span>
+          <span class="card-badge" id="m101OtcBadge" style="background:var(--orange-bg);color:var(--orange)">实时</span>
         </div>
         <div class="card-body">
           <div class="m101-data-card">
-            <div class="m101-data-title">5-Min Flow Summary</div>
-            <div class="m101-data-row"><span class="label">Buy Flow</span><span class="value" style="color:var(--green)" id="m101OtcBuy">--- BTC</span></div>
-            <div class="m101-data-row"><span class="label">Sell Flow</span><span class="value" style="color:var(--red)" id="m101OtcSell">--- BTC</span></div>
-            <div class="m101-data-row"><span class="label">Net Flow</span><span class="value" id="m101OtcNet">--- BTC</span></div>
-            <div class="m101-data-row"><span class="label">Avg Buy Size</span><span class="value" id="m101OtcAvgBuy">--- BTC</span></div>
-            <div class="m101-data-row"><span class="label">Avg Sell Size</span><span class="value" id="m101OtcAvgSell">--- BTC</span></div>
-            <div class="m101-data-row"><span class="label">Signal</span><span class="value" id="m101OtcSignal">---</span></div>
-            <div class="m101-data-row"><span class="label">Confidence</span><span class="value" id="m101OtcConf">---%</span></div>
-            <div class="m101-data-row"><span class="label">Large Blocks</span><span class="value" id="m101OtcBlocks">---</span></div>
+            <div class="m101-data-title">5分钟资金流汇总</div>
+            <div class="m101-data-row"><span class="label">买入流</span><span class="value" style="color:var(--green)" id="m101OtcBuy">--- BTC</span></div>
+            <div class="m101-data-row"><span class="label">卖出流</span><span class="value" style="color:var(--red)" id="m101OtcSell">--- BTC</span></div>
+            <div class="m101-data-row"><span class="label">净流入</span><span class="value" id="m101OtcNet">--- BTC</span></div>
+            <div class="m101-data-row"><span class="label">平均买入量</span><span class="value" id="m101OtcAvgBuy">--- BTC</span></div>
+            <div class="m101-data-row"><span class="label">平均卖出量</span><span class="value" id="m101OtcAvgSell">--- BTC</span></div>
+            <div class="m101-data-row"><span class="label">信号</span><span class="value" id="m101OtcSignal">---</span></div>
+            <div class="m101-data-row"><span class="label">置信度</span><span class="value" id="m101OtcConf">---%</span></div>
+            <div class="m101-data-row"><span class="label">大宗交易</span><span class="value" id="m101OtcBlocks">---</span></div>
           </div>
         </div>
       </div>
@@ -629,20 +637,20 @@
       <!-- Closed Order Book -->
       <div class="card">
         <div class="card-header">
-          <span class="card-title">📋 Closed Order Book</span>
-          <span class="card-badge" style="background:var(--yellow-bg);color:var(--yellow)">SMART MONEY</span>
+          <span class="card-title">📋 封闭订单簿</span>
+          <span class="card-badge" style="background:var(--yellow-bg);color:var(--yellow)">聪明钱</span>
         </div>
         <div class="card-body">
           <div class="m101-data-card">
-            <div class="m101-data-title">Order Book Analysis</div>
-            <div class="m101-data-row"><span class="label">Maker Bias</span><span class="value" id="m101CbBias">---</span></div>
-            <div class="m101-data-row"><span class="label">Mispricing</span><span class="value" id="m101CbMispricing">---</span></div>
-            <div class="m101-data-row"><span class="label">Whale Bids</span><span class="value" style="color:var(--green)" id="m101CbWhaleBids">---</span></div>
-            <div class="m101-data-row"><span class="label">Whale Asks</span><span class="value" style="color:var(--red)" id="m101CbWhaleAsks">---</span></div>
-            <div class="m101-data-row"><span class="label">Hidden Liquidity</span><span class="value" id="m101CbHidden">---</span></div>
-            <div class="m101-data-row"><span class="label">Price Efficiency</span><span class="value" id="m101CbEfficiency">---</span></div>
-            <div class="m101-data-row"><span class="label">Bid Liquidity</span><span class="value" id="m101CbBidLiq">---</span></div>
-            <div class="m101-data-row"><span class="label">Ask Liquidity</span><span class="value" id="m101CbAskLiq">---</span></div>
+            <div class="m101-data-title">订单簿分析</div>
+            <div class="m101-data-row"><span class="label">做市商偏向</span><span class="value" id="m101CbBias">---</span></div>
+            <div class="m101-data-row"><span class="label">定价偏差</span><span class="value" id="m101CbMispricing">---</span></div>
+            <div class="m101-data-row"><span class="label">鲸鱼买</span><span class="value" style="color:var(--green)" id="m101CbWhaleBids">---</span></div>
+            <div class="m101-data-row"><span class="label">鲸鱼卖</span><span class="value" style="color:var(--red)" id="m101CbWhaleAsks">---</span></div>
+            <div class="m101-data-row"><span class="label">隐性流动性</span><span class="value" id="m101CbHidden">---</span></div>
+            <div class="m101-data-row"><span class="label">价格效率</span><span class="value" id="m101CbEfficiency">---</span></div>
+            <div class="m101-data-row"><span class="label">买方流动性</span><span class="value" id="m101CbBidLiq">---</span></div>
+            <div class="m101-data-row"><span class="label">卖方流动性</span><span class="value" id="m101CbAskLiq">---</span></div>
           </div>
         </div>
       </div>
@@ -652,33 +660,33 @@
     <div class="main-grid">
       <div class="card">
         <div class="card-header">
-          <span class="card-title">🧬 MiroFish 10K Monte Carlo</span>
-          <span class="card-badge" style="background:var(--purple-bg);color:var(--purple)">10K LOOPS</span>
+          <span class="card-title">🧬 MiroFish 10K 蒙特卡洛</span>
+          <span class="card-badge" style="background:var(--purple-bg);color:var(--purple)">10K 循环</span>
         </div>
         <div class="card-body">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div style="background:var(--bg-card);border-radius:8px;padding:14px;text-align:center">
-              <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">Direction</div>
+              <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">方向</div>
               <div id="m101SimDirection" style="font-size:22px;font-weight:800;color:var(--text-muted)">---</div>
               <div id="m101SimProb" style="font-size:11px;color:var(--text-secondary)">UP: --% | DOWN: --%</div>
             </div>
             <div style="background:var(--bg-card);border-radius:8px;padding:14px;text-align:center">
-              <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">Confidence</div>
+              <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">置信度</div>
               <div id="m101SimConfidence" style="font-size:22px;font-weight:800;color:var(--text-muted)">--%</div>
               <div id="m101SimTrade" style="font-size:11px">---</div>
             </div>
           </div>
           <div style="margin-top:10px">
-            <div class="m101-data-row"><span class="label">Kelly Fraction</span><span class="value" id="m101SimKelly">--%</span></div>
-            <div class="m101-data-row"><span class="label">Sharpe Ratio</span><span class="value" id="m101SimSharpe">--</span></div>
-            <div class="m101-data-row"><span class="label">Expected PnL</span><span class="value" id="m101SimExpPnl">$---</span></div>
-            <div class="m101-data-row"><span class="label">PnL Std Dev</span><span class="value" id="m101SimStd">$---</span></div>
-            <div class="m101-data-row"><span class="label">P50 PnL</span><span class="value" id="m101SimP50">$---</span></div>
-            <div class="m101-data-row"><span class="label">Sim Latency</span><span class="value" id="m101SimLatency">--ms</span></div>
+            <div class="m101-data-row"><span class="label">Kelly 比例</span><span class="value" id="m101SimKelly">--%</span></div>
+            <div class="m101-data-row"><span class="label">Sharpe 比率</span><span class="value" id="m101SimSharpe">--</span></div>
+            <div class="m101-data-row"><span class="label">预期盈亏</span><span class="value" id="m101SimExpPnl">$---</span></div>
+            <div class="m101-data-row"><span class="label">盈亏标准差</span><span class="value" id="m101SimStd">$---</span></div>
+            <div class="m101-data-row"><span class="label">P50 盈亏</span><span class="value" id="m101SimP50">$---</span></div>
+            <div class="m101-data-row"><span class="label">模拟延迟</span><span class="value" id="m101SimLatency">--ms</span></div>
           </div>
           <div style="margin-top:10px">
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;font-weight:600">CONTEXT</div>
-            <div id="m101SimContext" style="font-size:10px;color:var(--text-secondary);background:var(--bg-card);padding:8px;border-radius:6px;font-family:monospace;word-break:break-all">Waiting...</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;font-weight:600">上下文</div>
+            <div id="m101SimContext" style="font-size:10px;color:var(--text-secondary);background:var(--bg-card);padding:8px;border-radius:6px;font-family:monospace;word-break:break-all">等待...</div>
           </div>
         </div>
       </div>
@@ -686,29 +694,29 @@
       <!-- Claude Brain Analysis -->
       <div class="card">
         <div class="card-header">
-          <span class="card-title">🤖 Claude Brain Analysis</span>
-          <span class="card-badge" style="background:var(--blue-bg);color:var(--blue)">AI CORE</span>
+          <span class="card-title">🤖 Claude 大脑分析</span>
+          <span class="card-badge" style="background:var(--blue-bg);color:var(--blue)">AI 核心</span>
         </div>
         <div class="card-body">
           <div style="background:var(--bg-card);border-radius:8px;padding:16px;margin-bottom:12px">
-            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;font-weight:700">Reasoning Chain</div>
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;font-weight:700">推理链</div>
             <div id="m101ClaudeReasoning" style="font-size:12px;color:var(--text-secondary);line-height:1.8">
-              Waiting for Claude Brain analysis...
+              等待 Claude 大脑分析...
             </div>
           </div>
           <div style="background:var(--bg-card);border-radius:8px;padding:16px;margin-bottom:12px">
-            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;font-weight:700">Trade Parameters</div>
-            <div class="m101-data-row"><span class="label">Position Size</span><span class="value" id="m101PosSize">$---</span></div>
-            <div class="m101-data-row"><span class="label">Entry Price</span><span class="value" id="m101EntryPrice">---</span></div>
-            <div class="m101-data-row"><span class="label">Stop Loss</span><span class="value" style="color:var(--red)" id="m101StopLoss">---</span></div>
-            <div class="m101-data-row"><span class="label">Take Profit</span><span class="value" style="color:var(--green)" id="m101TakeProfit">---</span></div>
-            <div class="m101-data-row"><span class="label">Risk/Reward</span><span class="value" id="m101RR">---</span></div>
-            <div class="m101-data-row"><span class="label">Expected Value</span><span class="value" id="m101EV">$---</span></div>
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;font-weight:700">交易参数</div>
+            <div class="m101-data-row"><span class="label">仓位大小</span><span class="value" id="m101PosSize">$---</span></div>
+            <div class="m101-data-row"><span class="label">入场价格</span><span class="value" id="m101EntryPrice">---</span></div>
+            <div class="m101-data-row"><span class="label">止损</span><span class="value" style="color:var(--red)" id="m101StopLoss">---</span></div>
+            <div class="m101-data-row"><span class="label">止盈</span><span class="value" style="color:var(--green)" id="m101TakeProfit">---</span></div>
+            <div class="m101-data-row"><span class="label">盈亏比</span><span class="value" id="m101RR">---</span></div>
+            <div class="m101-data-row"><span class="label">期望值</span><span class="value" id="m101EV">$---</span></div>
           </div>
           <div style="background:var(--bg-card);border-radius:8px;padding:16px">
-            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;font-weight:700">Strategy Profile</div>
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;font-weight:700">策略简介</div>
             <div style="font-size:11px;color:var(--text-secondary);line-height:1.8">
-              Based on Marketing101 case study: Hong Kong marketer who made $374K/month on Polymarket using Claude as algorithmic brain + MiroFish simulation engine. This module runs 10,000 simulation loops before each entry, cross-referencing closed order book data, private OTC desk data, and high-precision BTC price paths.
+              基于 Marketing101 案例：香港营销者月赚 $374K，使用 Claude 作为算法大脑 + MiroFish 模拟引擎。此模块在每次入场前运行 10,000 次模拟循环，交叉参考封闭订单簿数据、私人OTC柜台数据和高精度BTC价格路径。
             </div>
           </div>
         </div>
@@ -742,7 +750,7 @@ function initChart() {
     data: {
       labels: [],
       datasets: [{
-        label: 'Cumulative P&L ($)',
+        label: '累计盈亏 ($)',
         data: [],
         borderColor: '#3b82f6',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -823,20 +831,20 @@ function updateUI(state) {
 
   if (state.running) {
     dot.className = 'status-dot running pulse';
-    text.textContent = 'RUNNING';
+    text.textContent = '运行中';
     text.style.color = '#22c55e';
     document.getElementById('btnStart').disabled = true;
     document.getElementById('btnStop').disabled = false;
   } else {
     dot.className = 'status-dot idle';
-    text.textContent = 'IDLE';
+    text.textContent = '空闲';
     text.style.color = '#64748b';
     document.getElementById('btnStart').disabled = false;
     document.getElementById('btnStop').disabled = true;
   }
 
   modeBadge.className = 'mode-badge ' + (state.mode === 'live' ? 'live' : 'paper');
-  modeBadge.textContent = state.mode === 'live' ? 'LIVE' : state.mode === 'paper' ? 'PAPER' : 'IDLE';
+  modeBadge.textContent = state.mode === 'live' ? '实盘' : state.mode === 'paper' ? '模拟盘' : '空闲';
 
   // BTC Ticker
   if (state.btcPrice > 0) {
@@ -852,30 +860,39 @@ function updateUI(state) {
   const binanceText = document.getElementById('binanceText');
   if (state.binanceConnected) {
     binanceDot.className = 'status-dot running';
-    binanceText.textContent = 'Binance: Connected';
+    binanceText.textContent = 'Binance: 已连接';
     binanceText.style.color = '#22c55e';
   } else {
     binanceDot.className = 'status-dot idle';
-    binanceText.textContent = 'Binance: Disconnected';
+    binanceText.textContent = 'Binance: 断开';
     binanceText.style.color = '#64748b';
+  }
+
+  // 双策略独立资金
+  if (state.scalperPaperBalance !== undefined) {
+    document.getElementById('scalperBalance').textContent = '$' + state.scalperPaperBalance.toFixed(2);
+  }
+  const m101Bal = state.m101?.paperBalance;
+  if (m101Bal !== undefined) {
+    document.getElementById('m101Balance').textContent = '$' + m101Bal.toFixed(2);
   }
 
   // Scalper KPIs
   const totalPnlEl = document.getElementById('totalPnl');
   totalPnlEl.textContent = '$' + (state.totalPnl || 0).toFixed(2);
   totalPnlEl.className = 'kpi-value ' + ((state.totalPnl || 0) >= 0 ? 'positive' : 'negative');
-  document.getElementById('totalPnlSub').textContent = (state.totalTrades || 0) + ' trades';
+  document.getElementById('totalPnlSub').textContent = (state.totalTrades || 0) + ' 笔交易';
 
   const dailyPnlEl = document.getElementById('dailyPnl');
   dailyPnlEl.textContent = '$' + (state.dailyPnl || 0).toFixed(2);
   dailyPnlEl.className = 'kpi-value ' + ((state.dailyPnl || 0) >= 0 ? 'positive' : 'negative');
-  document.getElementById('dailyCapSub').textContent = 'Cap: ' + (state.dailyCapLimit || 2) + '%';
+  document.getElementById('dailyCapSub').textContent = '上限: ' + (state.dailyCapLimit || 2) + '%';
 
   document.getElementById('winRate').textContent = (state.winRate || 0).toFixed(0) + '%';
   document.getElementById('winLossSub').textContent = (state.winningTrades || 0) + 'W / ' + (state.losingTrades || 0) + 'L';
   document.getElementById('activePositions').textContent = (state.positions || []).length;
   document.getElementById('scanCount').textContent = (state.scanCount || 0).toLocaleString();
-  document.getElementById('skipSub').textContent = (state.skipCount || 0) + ' skipped';
+  document.getElementById('skipSub').textContent = (state.skipCount || 0) + ' 跳过';
 
   if (state.startTime > 0) {
     const uptime = Date.now() - state.startTime;
@@ -885,7 +902,7 @@ function updateUI(state) {
   }
 
   const hardStopEl = document.getElementById('hardStopSub');
-  hardStopEl.textContent = state.hardStopTriggered ? 'Hard Stop: TRIGGERED' : 'Hard Stop: OK';
+  hardStopEl.textContent = state.hardStopTriggered ? '硬止损: 已触发' : '硬止损: 正常';
   hardStopEl.style.color = state.hardStopTriggered ? '#ef4444' : '';
 
   // Scalper Signals
@@ -914,7 +931,7 @@ function updateSignals(signals, convergence) {
       </div>`;
   }
   if (signals.length === 0) {
-    grid.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-muted)">Waiting for Binance data...</div>';
+    grid.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-muted)">等待 Binance 数据...</div>';
   }
   const convValue = document.getElementById('convergenceValue');
   const convDir = document.getElementById('convergenceDir');
@@ -957,9 +974,9 @@ function updatePositions(positions) {
 function updateTrades(trades) {
   const tbody = document.getElementById('tradesBody');
   const badge = document.getElementById('tradesBadge');
-  badge.textContent = trades.length + ' trades';
+  badge.textContent = trades.length + ' 笔交易';
   if (trades.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:var(--text-muted);padding:24px">No trades yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:var(--text-muted);padding:24px">暂无交易。</td></tr>';
     return;
   }
   tbody.innerHTML = '';
@@ -969,7 +986,7 @@ function updateTrades(trades) {
     const pnlClass = t.pnl > 0 ? 'pnl-positive' : t.pnl < 0 ? 'pnl-negative' : '';
     const typeClass = t.tradeType === 'UP' ? 'type-up' : 'type-down';
     const statusClass = t.status === 'open' ? 'status-open' : 'status-closed';
-    const paperBadge = t.isPaper ? '<span class="paper-badge">PAPER</span> ' : '';
+    const paperBadge = t.isPaper ? '<span class="paper-badge">模拟盘</span> ' : '';
     tbody.innerHTML += `<tr>
       <td>${time}</td><td class="${sideClass}">${paperBadge}${t.side}</td>
       <td class="${typeClass}" style="font-weight:600">${t.tradeType}</td>
@@ -985,12 +1002,12 @@ function updateTrades(trades) {
 function updatePnlChart(trades) {
   const closedTrades = trades.filter(t => t.side === 'SELL' && t.status === 'closed');
   if (closedTrades.length === 0) {
-    if (pnlChart.data.labels.length === 0) { pnlChart.data.labels = ['Start']; pnlChart.data.datasets[0].data = [0]; pnlChart.update('none'); }
+    if (pnlChart.data.labels.length === 0) { pnlChart.data.labels = ['开始']; pnlChart.data.datasets[0].data = [0]; pnlChart.update('none'); }
     return;
   }
   closedTrades.sort((a, b) => a.timestamp - b.timestamp);
   let cumPnl = 0;
-  const labels = ['Start']; const data = [0];
+  const labels = ['开始']; const data = [0];
   for (const t of closedTrades) { cumPnl += t.pnl; labels.push(new Date(t.timestamp).toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute: '2-digit'})); data.push(cumPnl); }
   pnlChart.data.labels = labels; pnlChart.data.datasets[0].data = data;
   pnlChart.data.datasets[0].borderColor = cumPnl >= 0 ? '#22c55e' : '#ef4444';
@@ -1007,7 +1024,7 @@ function updateMiroFish(sim, simCount, calibration) {
     document.getElementById('simKelly').textContent = '--%'; document.getElementById('simSharpe').textContent = '--';
     document.getElementById('simTotalCount').textContent = simCount;
     document.getElementById('simCalibration').textContent = '--%'; document.getElementById('simLatency').textContent = '--ms';
-    document.getElementById('simContext').textContent = 'Waiting for data...';
+    document.getElementById('simContext').textContent = '等待数据...';
     return;
   }
   const dirEl = document.getElementById('simDirection');
@@ -1018,7 +1035,7 @@ function updateMiroFish(sim, simCount, calibration) {
   confEl.textContent = sim.confidence.toFixed(1) + '%';
   confEl.style.color = sim.confidence >= 15 ? 'var(--green)' : 'var(--text-muted)';
   const shouldTradeEl = document.getElementById('simShouldTrade');
-  shouldTradeEl.textContent = sim.shouldTrade ? '✓ TRADE' : '✗ SKIP';
+  shouldTradeEl.textContent = sim.shouldTrade ? '✓ 交易' : '✗ 跳过';
   shouldTradeEl.style.color = sim.shouldTrade ? 'var(--green)' : 'var(--text-muted)';
   document.getElementById('simKelly').textContent = (sim.kellyFraction * 100).toFixed(2) + '%';
   document.getElementById('simSharpe').textContent = sim.sharpe.toFixed(3);
@@ -1036,7 +1053,7 @@ function updateM101(m101) {
   const totalPnlEl = document.getElementById('m101TotalPnl');
   totalPnlEl.textContent = '$' + (m101.totalPnl || 0).toFixed(2);
   totalPnlEl.className = 'kpi-value ' + ((m101.totalPnl || 0) >= 0 ? 'positive' : 'negative');
-  document.getElementById('m101TradeCount').textContent = (m101.tradeCount || 0) + ' trades';
+  document.getElementById('m101TradeCount').textContent = (m101.tradeCount || 0) + ' 笔交易';
 
   const dailyPnlEl = document.getElementById('m101DailyPnl');
   dailyPnlEl.textContent = '$' + (m101.dailyPnl || 0).toFixed(2);
@@ -1044,7 +1061,7 @@ function updateM101(m101) {
 
   document.getElementById('m101WinRate').textContent = (m101.winRate || 0).toFixed(0) + '%';
   document.getElementById('m101SimRuns').textContent = (m101.simulationRuns || 0).toLocaleString();
-  document.getElementById('m101ScanSkip').textContent = (m101.scanCount || 0) + ' scans / ' + (m101.skipCount || 0) + ' skips';
+  document.getElementById('m101ScanSkip').textContent = (m101.scanCount || 0) + ' 扫描 / ' + (m101.skipCount || 0) + ' 跳过';
   document.getElementById('m101AvgSize').textContent = '$' + (m101.avgTradeSize || 0).toFixed(0);
 
   if (m101.startTime > 0) {
@@ -1056,7 +1073,7 @@ function updateM101(m101) {
   const signals = m101.lastSignals || [];
   const sourceWeights = {'claude_brain': '30%', 'mirofish': '25%', 'btc_sim': '20%', 'otc': '15%', 'closed_book': '10%'};
   const sourceIcons = {'claude_brain': '🤖', 'mirofish': '🧬', 'btc_sim': '📊', 'otc': '🏛️', 'closed_book': '📋'};
-  const sourceNames = {'claude_brain': 'Claude Brain', 'mirofish': 'MiroFish 10K', 'btc_sim': 'BTC Simulator', 'otc': 'OTC Desk', 'closed_book': 'Closed Book'};
+  const sourceNames = {'claude_brain': 'Claude 大脑', 'mirofish': 'MiroFish 10K', 'btc_sim': 'BTC 模拟器', 'otc': 'OTC 柜台', 'closed_book': '封闭订单簿'};
   const sourceOrder = ['claude_brain', 'mirofish', 'btc_sim', 'otc', 'closed_book'];
 
   const grid = document.getElementById('m101SourceGrid');
@@ -1092,7 +1109,7 @@ function updateM101(m101) {
     <div class="down-segment" style="width:${(downCount/total)*100}%"></div>`;
 
   const agreeing = signals.filter(s => s.direction === dominantDir).length;
-  document.getElementById('m101ConsensusText').textContent = `${agreeing} / ${signals.length} sources agree (${dominantDir})`;
+  document.getElementById('m101ConsensusText').textContent = `${agreeing} / ${signals.length} 源同意 (${dominantDir})`;
 
   // Decision box
   const decision = m101.lastDecision;
@@ -1103,10 +1120,10 @@ function updateM101(m101) {
   if (decision) {
     decBox.className = 'm101-decision-box ' + (decision.shouldTrade ? 'trade' : 'skip');
     if (decision.shouldTrade) {
-      decValue.textContent = decision.direction + ' SIGNAL';
+      decValue.textContent = decision.direction + ' 信号';
       decValue.className = 'm101-decision-value ' + (decision.direction === 'UP' ? 'up' : 'down');
     } else {
-      decValue.textContent = 'SKIP';
+      decValue.textContent = '跳过';
       decValue.className = 'm101-decision-value skip';
     }
     decReason.textContent = decision.reasoning || '';
@@ -1166,7 +1183,7 @@ function updateM101(m101) {
     const confEl = document.getElementById('m101SimConfidence');
     confEl.textContent = sim.confidence.toFixed(1) + '%';
     confEl.style.color = sim.confidence >= 15 ? 'var(--green)' : 'var(--text-muted)';
-    document.getElementById('m101SimTrade').textContent = sim.shouldTrade ? '✓ TRADE' : '✗ SKIP';
+    document.getElementById('m101SimTrade').textContent = sim.shouldTrade ? '✓ 交易' : '✗ 跳过';
     document.getElementById('m101SimTrade').style.color = sim.shouldTrade ? 'var(--green)' : 'var(--text-muted)';
     document.getElementById('m101SimKelly').textContent = (sim.kellyFraction * 100).toFixed(2) + '%';
     document.getElementById('m101SimSharpe').textContent = sim.sharpe.toFixed(3);

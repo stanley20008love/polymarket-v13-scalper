@@ -1,8 +1,9 @@
 "use strict";
 // ============================================================================
-// Polymarket V13 Strategy Engine - Main Entry Point
+// Polymarket V13 策略引擎 - 主入口
 // ============================================================================
-// BTC 5MIN Scalper + V11 Strategy + Marketing101 Module + Visual Dashboard
+// BTC 5分钟剥头皮 + Marketing101 模块 + 可视化面板
+// 两个策略各用 50U 独立模拟盘
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -53,27 +54,29 @@ const logger_1 = require("./utils/logger");
 dotenv_1.default.config();
 const BANNER = `
 ╔══════════════════════════════════════════════════════════════════╗
-║         Polymarket V13 - BTC Scalper + Marketing101             ║
+║         Polymarket V13 - 双引擎50U模拟盘                         ║
 ║                                                                   ║
-║  Module 1: BTC 5MIN Scalper (CLOB Price Lag Exploitation)       ║
-║  - Binance WS → BTC Realtime + 5M Klines                        ║
-║  - Signal Convergence > 70% → Trade                              ║
-║  - Lag > 0.3% → Execute < 5s                                     ║
-║  - TP 0.8% | SL 0.3% | Daily Cap 2% | Hard Stop -0.4%          ║
+║  策略1: BTC 5分钟剥头皮 (CLOB价格滞后套利)                       ║
+║  - Binance WS → BTC实时价格 + 5分钟K线                           ║
+║  - 信号汇聚 > 70% → 交易                                        ║
+║  - 滞后 > 0.3% → 5秒内执行                                      ║
+║  - 止盈 0.8% | 止损 0.3% | 日亏帽 2% | 硬止损 -0.4%             ║
+║  - 独立资金: 50U (模拟盘)                                        ║
 ║                                                                   ║
-║  Module 2: Marketing101 Engine (AI + MiroFish 10K Sim)           ║
-║  - Claude Brain + MiroFish Monte Carlo (10K loops)               ║
-║  - BTC Price Simulator (Jump-Diffusion + Mean Reversion)         ║
-║  - OTC Desk Flow Data + Closed Order Book Analysis               ║
-║  - 5-Source Convergence: 4/5 must agree to trade                 ║
-║  - Position: $2-$10 (paper 50U) | Target: $5K-$15K (live)         ║
+║  策略2: Marketing101 引擎 (AI + MiroFish 10K模拟)                ║
+║  - Claude大脑 + MiroFish蒙特卡洛 (10K循环)                       ║
+║  - BTC价格模拟器 (跳跃扩散 + 均值回归)                           ║
+║  - OTC柜台数据流 + 封闭订单簿分析                                ║
+║  - 5源信号汇聚: 3/5同意即交易 (模拟盘)                           ║
+║  - 仓位: $2-$10 (模拟50U) | 目标: $5K-$15K (实盘)              ║
+║  - 独立资金: 50U (模拟盘)                                        ║
 ║                                                                   ║
-║  Paper Mode by default | Live when API keys set                   ║
+║  模拟盘模式 | 设置API密钥后切换实盘                               ║
 ╚══════════════════════════════════════════════════════════════════╝
 `;
 const config = (0, config_1.loadConfig)();
 const PORT = config.port;
-// Core components
+// 核心组件
 let scalper = null;
 let marketing101 = null;
 let binance = null;
@@ -83,22 +86,22 @@ async function main() {
     console.log(BANNER);
     const app = (0, express_1.default)();
     app.use(express_1.default.json());
-    // Serve dashboard static files
+    // 静态文件
     app.use(express_1.default.static(path.join(__dirname, '..', 'public')));
-    // ---- API Routes ----
-    // Health check
+    // ---- API路由 ----
+    // 健康检查
     app.get('/health', (_req, res) => {
         res.json({
             status: 'ok',
-            version: '13.1.0',
-            engine: scalper?.isRunning() ? 'running' : 'idle',
-            marketing101: marketing101?.isRunning() ? 'running' : 'idle',
-            mode: scalper?.getMode() || 'idle',
+            version: '13.2.0',
+            引擎: scalper?.isRunning() ? '运行中' : '空闲',
+            marketing101: marketing101?.isRunning() ? '运行中' : '空闲',
+            模式: scalper?.getMode() || '空闲',
             binance: binance?.isConnected() || false,
-            timestamp: Date.now(),
+            时间戳: Date.now(),
         });
     });
-    // Full engine state (for dashboard)
+    // 完整引擎状态 (给面板用)
     app.get('/api/state', (_req, res) => {
         try {
             if (!scalper) {
@@ -134,7 +137,6 @@ async function main() {
                     lastSimulation: null,
                     simulationCount: 0,
                     calibrationAccuracy: 0,
-                    // Marketing101 state
                     m101: null,
                 });
             }
@@ -142,6 +144,7 @@ async function main() {
             const m101State = marketing101?.getState() || null;
             res.json({
                 ...scalperState,
+                scalperPaperBalance: scalper.getPaperBalance(),
                 m101: m101State,
             });
         }
@@ -149,11 +152,11 @@ async function main() {
             res.status(500).json({ error: e.message });
         }
     });
-    // Marketing101 specific state
+    // Marketing101 状态
     app.get('/api/m101', (_req, res) => {
         try {
             if (!marketing101) {
-                return res.json({ running: false, message: 'Marketing101 engine not initialized' });
+                return res.json({ running: false, message: 'Marketing101引擎未初始化' });
             }
             res.json(marketing101.getState());
         }
@@ -161,7 +164,7 @@ async function main() {
             res.status(500).json({ error: e.message });
         }
     });
-    // Marketing101 signals
+    // Marketing101 信号
     app.get('/api/m101/signals', (_req, res) => {
         try {
             const state = marketing101?.getState();
@@ -178,7 +181,22 @@ async function main() {
             res.status(500).json({ error: e.message });
         }
     });
-    // Get all trades
+    // Marketing101 交易记录
+    app.get('/api/m101/trades', (_req, res) => {
+        try {
+            if (!marketing101) {
+                return res.json({ open: [], closed: [] });
+            }
+            res.json({
+                open: marketing101.getOpenPositions(),
+                closed: marketing101.getClosedTrades(),
+            });
+        }
+        catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+    // 所有交易
     app.get('/api/trades', (_req, res) => {
         try {
             const trades = store?.getTrades() || [];
@@ -188,7 +206,7 @@ async function main() {
             res.status(500).json({ error: e.message });
         }
     });
-    // Get open positions
+    // 持仓
     app.get('/api/positions', (_req, res) => {
         try {
             const positions = store?.getOpenPositions() || [];
@@ -198,7 +216,7 @@ async function main() {
             res.status(500).json({ error: e.message });
         }
     });
-    // Get closed positions
+    // 已平仓位
     app.get('/api/positions/closed', (_req, res) => {
         try {
             const trades = store?.getTrades() || [];
@@ -209,7 +227,7 @@ async function main() {
             res.status(500).json({ error: e.message });
         }
     });
-    // Get signals
+    // 信号
     app.get('/api/signals', (_req, res) => {
         try {
             const state = scalper?.getState();
@@ -223,52 +241,41 @@ async function main() {
             res.status(500).json({ error: e.message });
         }
     });
-    // Get config
+    // 配置
     app.get('/api/config', (_req, res) => {
         res.json({
-            version: 'V13.1',
-            scalper: {
-                enabled: config.scalperEnabled,
-                mode: config.scalperMode,
-                lagThreshold: config.lagThreshold + '%',
-                perTradeRisk: config.perTradeRiskPercent + '%',
-                dailyCap: config.dailyCapPercent + '%',
-                hardStop: config.hardStopPercent + '%',
-                minConvergence: config.minConvergence + '%',
-                maxActivePositions: config.maxActivePositions,
-                takeProfitScalp: config.takeProfitScalp + '%',
-                stopLossScalp: config.stopLossScalp + '%',
+            版本: 'V13.2',
+            剥头皮策略: {
+                启用: config.scalperEnabled,
+                模式: config.scalperMode === 'paper' ? '模拟盘' : '实盘',
+                滞后阈值: config.lagThreshold + '%',
+                每笔风险: config.perTradeRiskPercent + '%',
+                日亏帽: config.dailyCapPercent + '%',
+                硬止损: config.hardStopPercent + '%',
+                最低汇聚: config.minConvergence + '%',
+                最大持仓: config.maxActivePositions,
+                止盈: config.takeProfitScalp + '%',
+                止损: config.stopLossScalp + '%',
+                独立资金: '50U (模拟盘)',
             },
-            marketing101: {
-                enabled: true,
-                mode: 'paper',
-                sources: ['claude_brain', 'mirofish', 'btc_sim', 'otc', 'closed_book'],
-                consensusRequired: '4/5 (80%)',
-                simulationLoops: 10000,
-                positionSize: '$2-$10 (paper 50U) | $5K-$15K (live)',
-            },
-            wallets: {
-                trading: config.tradingWallet,
-                profitRecovery: config.profitRecoveryWallet,
-            },
-            binance: {
-                ws: config.binanceWsUrl ? 'configured' : 'default',
-                rest: config.binanceRestUrl ? 'configured' : 'default',
-            },
-            polymarket: {
-                apiUrl: config.polymarketApiUrl,
-                apiKeySet: !!config.polymarketApiKey,
+            marketing101策略: {
+                启用: true,
+                模式: '模拟盘',
+                信号源: ['Claude大脑', 'MiroFish', 'BTC模拟器', 'OTC柜台', '封闭订单簿'],
+                共识要求: '3/5 (60%)',
+                模拟循环: 10000,
+                仓位范围: '$2-$10 (模拟50U) | $5K-$15K (实盘)',
+                独立资金: '50U (模拟盘)',
             },
         });
     });
-    // Start scalper
+    // 启动引擎
     app.post('/api/start', async (req, res) => {
         try {
             const mode = req.body.mode || config.scalperMode;
             if (scalper?.isRunning()) {
-                return res.json({ success: false, error: 'Engine already running' });
+                return res.json({ success: false, error: '引擎已在运行' });
             }
-            // Initialize components if needed
             if (!binance)
                 binance = new binance_ws_1.BinanceFeed(config);
             if (!client)
@@ -276,25 +283,28 @@ async function main() {
             if (!store)
                 store = new trade_store_1.TradeStore();
             scalper = new scalper_1.ScalperEngine(config, binance, client, store);
-            // Override mode if specified
             if (mode === 'live' && !config.polymarketApiKey) {
-                logger_1.logger.warn('No API key set, falling back to paper mode');
+                logger_1.logger.warn('未设置API密钥，回退到模拟盘');
             }
             await scalper.start();
-            // Start Marketing101 engine
+            // 启动Marketing101引擎
             if (!marketing101) {
                 marketing101 = new marketing101_engine_1.Marketing101Engine(config);
             }
             const btcPrice = binance.getPrice() || 80000;
             await marketing101.start(btcPrice);
-            res.json({ success: true, mode: scalper.getMode(), m101: marketing101.isRunning() });
+            res.json({
+                success: true,
+                剥头皮: scalper.getMode(),
+                marketing101: marketing101.isRunning() ? '运行中' : '空闲',
+            });
         }
         catch (e) {
-            logger_1.logger.error('Failed to start scalper', { error: e.message });
+            logger_1.logger.error('启动引擎失败', { error: e.message });
             res.status(500).json({ success: false, error: e.message });
         }
     });
-    // Stop scalper
+    // 停止引擎
     app.post('/api/stop', (_req, res) => {
         try {
             if (scalper) {
@@ -304,13 +314,13 @@ async function main() {
             if (marketing101) {
                 marketing101.stop();
             }
-            res.json({ success: true });
+            res.json({ success: true, 消息: '引擎已停止' });
         }
         catch (e) {
             res.status(500).json({ success: false, error: e.message });
         }
     });
-    // Export all data
+    // 导出数据
     app.get('/api/export', (_req, res) => {
         try {
             const data = store?.exportAll() || { trades: [], positions: [], stats: {} };
@@ -322,41 +332,40 @@ async function main() {
             res.status(500).json({ error: e.message });
         }
     });
-    // Dashboard route
+    // 面板路由
     app.get('/', (_req, res) => {
         res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html'));
     });
-    // ---- Start Server ----
+    // ---- 启动服务器 ----
     app.listen(PORT, () => {
-        console.log(`[V13 Scalper] API server running on port ${PORT}`);
-        console.log(`[V13 Scalper] Dashboard: http://localhost:${PORT}/`);
-        console.log(`[V13 Scalper] API: http://localhost:${PORT}/api/`);
-        console.log(`[V13 Scalper] M101 API: http://localhost:${PORT}/api/m101/`);
-        console.log(`[V13 Scalper] Mode: ${config.scalperMode}${config.dryRun ? ' (DRY RUN)' : ''}`);
+        console.log(`[V13引擎] API服务器运行于端口 ${PORT}`);
+        console.log(`[V13引擎] 面板: http://localhost:${PORT}/`);
+        console.log(`[V13引擎] API: http://localhost:${PORT}/api/`);
+        console.log(`[V13引擎] M101 API: http://localhost:${PORT}/api/m101/`);
+        console.log(`[V13引擎] 模式: ${config.scalperMode}${config.dryRun ? ' (模拟)' : ''}`);
     });
-    // Auto-start scalper if enabled
+    // 自动启动
     if (config.scalperEnabled) {
         setTimeout(async () => {
             try {
-                console.log('[V13 Scalper] Auto-starting scalper engine...');
+                console.log('[V13引擎] 自动启动...');
                 binance = new binance_ws_1.BinanceFeed(config);
                 client = new polymarket_client_1.PolymarketClient(config);
                 store = new trade_store_1.TradeStore();
                 scalper = new scalper_1.ScalperEngine(config, binance, client, store);
                 await scalper.start();
-                // Start Marketing101 engine
                 marketing101 = new marketing101_engine_1.Marketing101Engine(config);
                 const btcPrice = binance.getPrice() || 80000;
                 await marketing101.start(btcPrice);
-                console.log('[V13 Scalper] Engine started successfully (Scalper + Marketing101)');
+                console.log('[V13引擎] 双引擎启动成功 (剥头皮50U + M101 50U)');
             }
             catch (e) {
-                console.error('[V13 Scalper] Auto-start failed:', e.message);
-                console.log('[V13 Scalper] Use POST /api/start to start manually');
+                console.error('[V13引擎] 自动启动失败:', e.message);
+                console.log('[V13引擎] 请使用 POST /api/start 手动启动');
             }
         }, 3000);
     }
-    // Update Marketing101 with BTC price from Binance feed
+    // 更新Marketing101的BTC价格
     setInterval(() => {
         if (binance && marketing101 && scalper?.isRunning()) {
             const price = binance.getPrice();
@@ -365,9 +374,9 @@ async function main() {
             }
         }
     }, 5000);
-    // Graceful shutdown
+    // 优雅关机
     const shutdown = () => {
-        console.log('[V13 Scalper] Shutting down...');
+        console.log('[V13引擎] 关机中...');
         if (scalper)
             scalper.stop();
         if (marketing101)
@@ -380,6 +389,6 @@ async function main() {
     process.on('SIGTERM', shutdown);
 }
 main().catch((error) => {
-    console.error('Fatal error:', error);
+    console.error('致命错误:', error);
     process.exit(1);
 });

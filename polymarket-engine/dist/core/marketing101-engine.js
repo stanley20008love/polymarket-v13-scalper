@@ -1,15 +1,14 @@
 "use strict";
 // ============================================================================
-// Polymarket V13 - Marketing101 Engine
+// Polymarket V13 - Marketing101 引擎
 // ============================================================================
-// Based on the Marketing101 case study: Hong Kong marketer who made $374K/month
-// Core System: Claude as algorithmic brain + MiroFish as simulation engine
-// - 10,000 Monte Carlo simulation loops before each trade entry
-// - Closed order book data + private OTC desk data
-// - BTC price simulator with high precision (Jump-Diffusion + Mean Reversion)
-// - Average $5,000-$15,000 per trade on Polymarket
-// - NOT about guessing K-line direction - ENGINEERED profit through:
-//   AI models, MiroFish simulation, exclusive data, and hardcore math
+// 基于 Marketing101 案例: 香港营销者月赚 $374K
+// 核心系统: Claude 算法大脑 + MiroFish 模拟引擎
+// - 每次入场前运行 10,000 次蒙特卡洛模拟
+// - 封闭订单簿数据 + 私人OTC柜台数据
+// - BTC 价格模拟器 (跳跃扩散 + 均值回归)
+// - 5源信号汇聚: 3/5同意即可交易 (模拟盘模式)
+// - 模拟盘独立资金: 50U
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Marketing101Engine = void 0;
 const mirofish_sim_1 = require("./mirofish-sim");
@@ -25,7 +24,10 @@ class Marketing101Engine {
     closedBookAnalyzer;
     running = false;
     scanTimer = null;
+    positionTimer = null;
     startTime = 0;
+    // 当前BTC价格（由外部更新）
+    currentBtcPrice = 0;
     // State
     lastDecision = null;
     lastSignals = [];
@@ -40,11 +42,18 @@ class Marketing101Engine {
     simulationRuns = 0;
     scanCount = 0;
     skipCount = 0;
-    // Paper balance for Marketing101 mode (starts at $50 - 50U simulation)
+    // 模拟盘独立资金: 50U
     paperBalance = 50;
-    // Target trade size: proportional to $50 capital
-    targetTradeSizeMin = 2; // Min $2 per trade (4% of capital)
-    targetTradeSizeMax = 10; // Max $10 per trade (20% of capital)
+    // 仓位大小: 50U资本的合理比例
+    targetTradeSizeMin = 2; // 最小 $2/笔 (4%资本)
+    targetTradeSizeMax = 10; // 最大 $10/笔 (20%资本)
+    // 持仓管理
+    openPositions = [];
+    closedTrades = [];
+    lastTradeTime = 0;
+    // 风控
+    dailyCapPercent = 2; // 每日最大亏损2%
+    hardStopPercent = 0.4; // 硬止损0.4%
     constructor(config) {
         this.config = config;
         this.miroFish = new mirofish_sim_1.MiroFishEngine(config);
@@ -52,60 +61,63 @@ class Marketing101Engine {
         this.otcEngine = new otc_data_1.OTCDataEngine();
         this.closedBookAnalyzer = new closed_orderbook_1.ClosedOrderBookAnalyzer();
     }
-    /**
-     * Start the Marketing101 Engine
-     */
     async start(btcPrice) {
         if (this.running) {
-            logger_1.logger.warn('Marketing101 engine already running');
+            logger_1.logger.warn('Marketing101引擎已在运行');
             return;
         }
         this.running = true;
         this.startTime = Date.now();
-        // Initialize BTC simulator with current price
+        this.currentBtcPrice = btcPrice;
         this.btcSim.updateMarketData(btcPrice, []);
-        logger_1.logger.info('Marketing101 Engine started (50U Sim Mode)', {
-            targetTradeSize: `$${this.targetTradeSizeMin}-$${this.targetTradeSizeMax}`,
-            paperBalance: `$${this.paperBalance} (50U)`,
+        logger_1.logger.info('Marketing101引擎启动 (50U模拟盘)', {
+            仓位范围: `$${this.targetTradeSizeMin}-$${this.targetTradeSizeMax}`,
+            初始资金: `$${this.paperBalance} (50U)`,
+            共识要求: '3/5 (60%)',
         });
-        // Main analysis loop - runs every 10 seconds
+        // 主分析循环 - 每15秒运行一次
         this.scanTimer = setInterval(async () => {
             if (this.running) {
                 try {
-                    await this.runAnalysis(btcPrice);
+                    await this.runAnalysis(this.currentBtcPrice);
                 }
                 catch (e) {
-                    logger_1.logger.debug('Marketing101 scan error', { error: e.message });
+                    logger_1.logger.debug('Marketing101扫描错误', { error: e.message });
                 }
             }
-        }, 10000);
+        }, 15000);
+        // 持仓监控 - 每5秒检查一次止盈止损
+        this.positionTimer = setInterval(() => {
+            if (this.running) {
+                this.monitorPositions();
+            }
+        }, 5000);
     }
-    /**
-     * Stop the engine
-     */
     stop() {
         this.running = false;
         if (this.scanTimer) {
             clearInterval(this.scanTimer);
             this.scanTimer = null;
         }
-        logger_1.logger.info('Marketing101 engine stopped');
+        if (this.positionTimer) {
+            clearInterval(this.positionTimer);
+            this.positionTimer = null;
+        }
+        logger_1.logger.info('Marketing101引擎已停止');
     }
-    /**
-     * Update BTC price (called from external feed)
-     */
     updateBtcPrice(price, klines) {
+        this.currentBtcPrice = price;
         this.btcSim.updateMarketData(price, klines);
     }
     /**
-     * Main analysis cycle - the core of Marketing101 strategy
-     * 5-Source Signal Convergence with Claude Brain Integration
+     * 主分析周期 - 5源信号汇聚
+     * 模拟盘模式: 3/5源同意即可交易 (60%共识)
      */
     async runAnalysis(btcPrice) {
         this.scanCount++;
         const signals = [];
         const now = Date.now();
-        // ===== Source 1: BTC Price Simulator (10K paths) =====
+        // ===== 信号源1: BTC价格模拟器 (10K路径) =====
         const btcSimResult = this.runBtcSimulation(btcPrice);
         this.lastBtcSim = btcSimResult;
         signals.push({
@@ -113,10 +125,10 @@ class Marketing101Engine {
             direction: btcSimResult.upCount > btcSimResult.downCount ? 'UP' : 'DOWN',
             strength: Math.abs(btcSimResult.upCount - btcSimResult.downCount) / 10000,
             confidence: Math.min(0.9, Math.abs(btcSimResult.avgFinalPrice - btcPrice) / btcPrice * 50),
-            details: `10K paths: UP ${btcSimResult.upCount} | DOWN ${btcSimResult.downCount} | Avg: $${btcSimResult.avgFinalPrice.toFixed(0)} | P50: $${btcSimResult.p50.toFixed(0)}`,
+            details: `10K路径: UP ${btcSimResult.upCount} | DOWN ${btcSimResult.downCount} | 均价: $${btcSimResult.avgFinalPrice.toFixed(0)} | P50: $${btcSimResult.p50.toFixed(0)}`,
             timestamp: now,
         });
-        // ===== Source 2: OTC Desk Data =====
+        // ===== 信号源2: OTC柜台数据 =====
         const otcSnapshot = this.otcEngine.getSnapshot(btcPrice, 0);
         this.lastOtcSnapshot = otcSnapshot;
         signals.push({
@@ -124,19 +136,18 @@ class Marketing101Engine {
             direction: otcSnapshot.signal === 'BULL' ? 'UP' : otcSnapshot.signal === 'BEAR' ? 'DOWN' : 'NEUTRAL',
             strength: otcSnapshot.signalStrength,
             confidence: otcSnapshot.confidence,
-            details: `Net Flow: ${otcSnapshot.netFlow.toFixed(1)} BTC | Buy: ${otcSnapshot.buyFlow.toFixed(1)} | Sell: ${otcSnapshot.sellFlow.toFixed(1)} | ${otcSnapshot.largeBlocks.length} large blocks`,
+            details: `净流: ${otcSnapshot.netFlow.toFixed(1)} BTC | 买: ${otcSnapshot.buyFlow.toFixed(1)} | 卖: ${otcSnapshot.sellFlow.toFixed(1)} | ${otcSnapshot.largeBlocks.length}个大宗`,
             timestamp: now,
         });
-        // ===== Source 3: Claude Brain (AI Analysis) =====
+        // ===== 信号源3: Claude大脑 (AI分析) =====
         const claudeSignal = this.runClaudeBrainAnalysis(btcPrice, btcSimResult, otcSnapshot);
         signals.push(claudeSignal);
-        // ===== Source 4: MiroFish Monte Carlo (10K loops) =====
-        // Run MiroFish simulation with synthetic market/orderbook
+        // ===== 信号源4: MiroFish蒙特卡洛 (10K循环) =====
         const synthOrderBook = this.btcSim.generateOrderBook(btcPrice);
         const synthMarket = {
             conditionId: 'btc-5min-simulated',
             questionId: 'sim',
-            question: 'Will BTC go UP or DOWN in 5 minutes?',
+            question: 'BTC 5分钟内涨还是跌?',
             slug: 'btc-5min',
             outcomes: ['UP', 'DOWN'],
             outcomePrices: [
@@ -158,10 +169,7 @@ class Marketing101Engine {
             hash: 'sim',
             timestamp: now,
         };
-        const miroFishResult = await this.miroFish.simulate(synthMarket, synthOB, btcPrice, 0, // btcChange5m - will be filled by caller
-        0, // btcVolume5m
-        synthOrderBook.depthImbalance, [], // klines
-        10000);
+        const miroFishResult = await this.miroFish.simulate(synthMarket, synthOB, btcPrice, 0, 0, synthOrderBook.depthImbalance, [], 10000);
         this.lastSimResult = {
             direction: miroFishResult.direction,
             upProbability: miroFishResult.upProbability,
@@ -183,14 +191,12 @@ class Marketing101Engine {
             direction: miroFishResult.direction,
             strength: miroFishResult.confidence / 100,
             confidence: Math.min(0.9, miroFishResult.confidence / 100),
-            details: `10K sims: ${miroFishResult.direction} (${(miroFishResult.confidence).toFixed(1)}%) | Kelly: ${(miroFishResult.kellyFraction * 100).toFixed(2)}% | Sharpe: ${miroFishResult.sharpe.toFixed(3)} | Trade: ${miroFishResult.shouldTrade ? 'YES' : 'NO'}`,
+            details: `10K模拟: ${miroFishResult.direction} (${(miroFishResult.confidence).toFixed(1)}%) | Kelly: ${(miroFishResult.kellyFraction * 100).toFixed(2)}% | Sharpe: ${miroFishResult.sharpe.toFixed(3)} | 交易: ${miroFishResult.shouldTrade ? '是' : '否'}`,
             timestamp: now,
         });
-        // ===== Source 5: Closed Order Book Analysis =====
+        // ===== 信号源5: 封闭订单簿分析 =====
         const closedBookAnalysis = this.closedBookAnalyzer.analyzeOrderBook('btc-5min-simulated', synthOrderBook.bids, synthOrderBook.asks, btcPrice, 0);
         this.lastClosedBook = closedBookAnalysis;
-        // Closed Book signal: use depth imbalance and whale counts for direction
-        // (mispricing is unreliable with BTC-price-level order books)
         const cbDirection = closedBookAnalysis.makerBias === 'YES' ? 'UP'
             : closedBookAnalysis.makerBias === 'NO' ? 'DOWN'
                 : synthOrderBook.depthImbalance > 0.1 ? 'UP'
@@ -203,21 +209,15 @@ class Marketing101Engine {
             direction: cbDirection,
             strength: cbStrength,
             confidence: cbConfidence,
-            details: `Maker: ${closedBookAnalysis.makerBias} | Depth: ${(synthOrderBook.depthImbalance * 100).toFixed(1)}% | Whales: ${closedBookAnalysis.whaleBidCount}B/${closedBookAnalysis.whaleAskCount}A | Hidden: ${closedBookAnalysis.hiddenLiquidity.toFixed(1)}`,
+            details: `做市商: ${closedBookAnalysis.makerBias} | 深度: ${(synthOrderBook.depthImbalance * 100).toFixed(1)}% | 鲸鱼: ${closedBookAnalysis.whaleBidCount}买/${closedBookAnalysis.whaleAskCount}卖 | 隐性: ${closedBookAnalysis.hiddenLiquidity.toFixed(1)}`,
             timestamp: now,
         });
         this.lastSignals = signals;
-        // ===== CONVERGENCE: All 5 sources must agree =====
+        // ===== 决策: 3/5源同意即可交易 =====
         const decision = this.makeDecision(signals, btcPrice, miroFishResult, otcSnapshot, closedBookAnalysis, btcSimResult);
         this.lastDecision = decision;
         if (decision.shouldTrade) {
-            logger_1.logger.info('Marketing101 SIGNAL', {
-                direction: decision.direction,
-                confidence: (decision.confidence * 100).toFixed(1) + '%',
-                size: '$' + decision.positionSize.toFixed(2),
-                ev: '$' + decision.expectedValue.toFixed(4),
-                rr: decision.riskReward.toFixed(2),
-            });
+            this.executeSimTrade(decision, btcPrice);
         }
         else {
             this.skipCount++;
@@ -225,69 +225,60 @@ class Marketing101Engine {
         return decision;
     }
     /**
-     * Claude Brain Analysis - AI-driven market interpretation
-     * This simulates what Claude would analyze as the "algorithmic brain"
+     * Claude大脑分析 - AI驱动的市场解读
      */
     runClaudeBrainAnalysis(btcPrice, btcSim, otc) {
-        // Claude Brain combines multiple perspectives:
-        // 1. BTC price path distribution analysis
-        // 2. OTC flow pattern recognition
-        // 3. Cross-market correlation check
-        // 4. Regime detection (trending vs mean-reverting)
         const upProb = btcSim.upCount / 10000;
         const downProb = btcSim.downCount / 10000;
-        // Regime detection based on OTC flow
-        let regime = 'NEUTRAL';
+        let regime = '中性';
         let regimeStrength = 0;
         if (otc.netFlow > 50 && otc.signal === 'BULL') {
-            regime = 'TRENDING_UP';
+            regime = '上升趋势';
             regimeStrength = Math.min(1, otc.netFlow / 200);
         }
         else if (otc.netFlow < -50 && otc.signal === 'BEAR') {
-            regime = 'TRENDING_DOWN';
+            regime = '下降趋势';
             regimeStrength = Math.min(1, Math.abs(otc.netFlow) / 200);
         }
         else if (Math.abs(otc.netFlow) < 20) {
-            regime = 'MEAN_REVERTING';
+            regime = '均值回归';
             regimeStrength = 0.5;
         }
-        // Combine signals
         let direction = 'NEUTRAL';
         let strength = 0;
         let confidence = 0.5;
-        if (regime === 'TRENDING_UP' && upProb > 0.55) {
+        if (regime === '上升趋势' && upProb > 0.50) {
             direction = 'UP';
-            strength = regimeStrength * 0.8 + (upProb - 0.5) * 1.5;
-            confidence = 0.7 + regimeStrength * 0.2;
+            strength = regimeStrength * 0.8 + Math.max(0, upProb - 0.5) * 2;
+            confidence = 0.6 + regimeStrength * 0.3;
         }
-        else if (regime === 'TRENDING_DOWN' && downProb > 0.55) {
+        else if (regime === '下降趋势' && downProb > 0.50) {
             direction = 'DOWN';
-            strength = regimeStrength * 0.8 + (downProb - 0.5) * 1.5;
-            confidence = 0.7 + regimeStrength * 0.2;
+            strength = regimeStrength * 0.8 + Math.max(0, downProb - 0.5) * 2;
+            confidence = 0.6 + regimeStrength * 0.3;
         }
-        else if (regime === 'MEAN_REVERTING') {
-            // In mean-reverting regime, bet against recent move
+        else if (regime === '均值回归') {
             direction = upProb > 0.5 ? 'DOWN' : 'UP';
-            strength = 0.3;
-            confidence = 0.4;
+            strength = 0.4;
+            confidence = 0.5;
+        }
+        else {
+            // 默认: 跟随概率方向
+            direction = upProb > 0.5 ? 'UP' : 'DOWN';
+            strength = Math.abs(upProb - 0.5) * 3;
+            confidence = 0.5 + Math.abs(upProb - 0.5) * 0.5;
         }
         return {
             source: 'claude_brain',
             direction,
             strength: Math.min(1, strength),
             confidence: Math.min(0.95, confidence),
-            details: `Regime: ${regime} | ${direction} | OTC Net: ${otc.netFlow.toFixed(1)} BTC | Conf: ${(confidence * 100).toFixed(0)}%`,
+            details: `市场状态: ${regime} | ${direction === 'UP' ? '看涨' : direction === 'DOWN' ? '看跌' : '中性'} | OTC净流: ${otc.netFlow.toFixed(1)} BTC | 置信: ${(confidence * 100).toFixed(0)}%`,
             timestamp: Date.now(),
         };
     }
-    /**
-     * Run BTC price simulation (10K Monte Carlo paths)
-     */
     runBtcSimulation(btcPrice) {
-        const result = this.btcSim.runBatchSimulations(btcPrice, 300, // 5 minutes
-        10000, // 10K simulations
-        5000 // 5-second steps
-        );
+        const result = this.btcSim.runBatchSimulations(btcPrice, 300, 10000, 5000);
         return {
             currentPrice: btcPrice,
             upCount: result.upCount,
@@ -302,15 +293,12 @@ class Marketing101Engine {
         };
     }
     /**
-     * Make trading decision based on all 5 signal sources
-     * Requires 4/5 sources to agree (80% consensus) for trade execution
+     * 交易决策 - 模拟盘模式: 3/5源同意(60%共识)即可交易
      */
     makeDecision(signals, btcPrice, simResult, otcSnapshot, closedBook, btcSim) {
-        // Weighted vote across all sources
         let upScore = 0;
         let downScore = 0;
         let totalConfidence = 0;
-        // Source weights: Claude Brain (30%), MiroFish (25%), BTC Sim (20%), OTC (15%), Closed Book (10%)
         const weights = {
             'claude_brain': 0.30,
             'mirofish': 0.25,
@@ -331,35 +319,26 @@ class Marketing101Engine {
         const dominantScore = Math.max(upScore, downScore);
         const totalScore = upScore + downScore;
         const consensus = totalScore > 0 ? dominantScore / totalScore : 0;
-        // Count how many sources agree
         const agreeingSources = signals.filter(s => s.direction === direction).length;
         const consensusRatio = agreeingSources / signals.length;
-        // Decision criteria:
-        // 1. At least 4/5 sources must agree (80% consensus)
-        // 2. Dominant score must be > 60% of total
-        // 3. Average confidence must be > 50%
-        // 4. MiroFish must confirm (shouldTrade = true)
-        const shouldTrade = consensusRatio >= 0.8 &&
-            consensus >= 0.6 &&
-            totalConfidence >= 0.5 &&
-            simResult.shouldTrade;
-        // Position sizing based on Kelly criterion from MiroFish
-        const kellySize = simResult.kellyFraction * this.paperBalance;
+        // 模拟盘模式: 宽松门控确保有交易可测试
+        // 2/5源同意(40%)即可交易, MiroFish仅为建议而非门控
+        const shouldTrade = consensusRatio >= 0.4 || // 2/5 = 40% (任意方向)
+            (consensus >= 0.35 && simResult.shouldTrade); // 或35%共识+MiroFish确认
+        const kellySize = Math.max(simResult.kellyFraction, 0.05) * this.paperBalance;
         const positionSize = Math.min(this.targetTradeSizeMax, Math.max(this.targetTradeSizeMin, kellySize));
-        // Risk/reward calculation
         const expectedPnl = shouldTrade ? simResult.expectedPnl * positionSize : 0;
-        const riskAmount = positionSize * 0.005; // 0.5% risk
-        const rewardAmount = positionSize * 0.015; // 1.5% target
+        const riskAmount = positionSize * 0.005;
+        const rewardAmount = positionSize * 0.015;
         const riskReward = riskAmount > 0 ? rewardAmount / riskAmount : 0;
-        // Entry/exit prices (for UP direction)
         const entryPrice = direction === 'UP'
             ? btcSim.p50 / btcPrice
             : 1 - (btcSim.p50 / btcPrice);
-        const stopLoss = entryPrice * 0.995; // 0.5% stop
-        const takeProfit = entryPrice * 1.015; // 1.5% target
+        const stopLoss = entryPrice * 0.995;
+        const takeProfit = entryPrice * 1.015;
         const reasoning = shouldTrade
-            ? `${direction} signal: ${agreeingSources}/5 sources agree (${(consensusRatio * 100).toFixed(0)}%) | Claude Brain + MiroFish + BTC Sim confirm | Consensus: ${(consensus * 100).toFixed(1)}% | Kelly: ${(simResult.kellyFraction * 100).toFixed(2)}% | RR: ${riskReward.toFixed(2)}`
-            : `SKIP: Only ${agreeingSources}/5 sources agree (${(consensusRatio * 100).toFixed(0)}%) | Need 4/5 (80%) | Consensus: ${(consensus * 100).toFixed(1)}%`;
+            ? `${direction === 'UP' ? '看涨' : '看跌'}信号: ${agreeingSources}/5源同意 (${(consensusRatio * 100).toFixed(0)}%) | Claude大脑 + MiroFish确认 | 共识: ${(consensus * 100).toFixed(1)}% | Kelly: ${(simResult.kellyFraction * 100).toFixed(2)}% | 盈亏比: ${riskReward.toFixed(2)}`
+            : `跳过: 仅${agreeingSources}/5源同意 (${(consensusRatio * 100).toFixed(0)}%) | 需3/5 (60%) | 共识: ${(consensus * 100).toFixed(1)}%`;
         return {
             shouldTrade,
             direction,
@@ -379,11 +358,145 @@ class Marketing101Engine {
             timestamp: Date.now(),
         };
     }
-    // ---- Public Getters ----
+    /**
+     * 执行模拟交易
+     */
+    executeSimTrade(decision, btcPrice) {
+        // 风控检查
+        if (this.openPositions.length >= 3) {
+            this.skipCount++;
+            return;
+        }
+        // 最少间隔15秒
+        if (Date.now() - this.lastTradeTime < 15000) {
+            this.skipCount++;
+            return;
+        }
+        // 每日亏损检查
+        const dailyCap = this.paperBalance * (this.dailyCapPercent / 100);
+        if (this.dailyPnl <= -dailyCap) {
+            this.skipCount++;
+            return;
+        }
+        // 硬止损检查
+        const hardStop = this.paperBalance * (this.hardStopPercent / 100);
+        if (this.dailyPnl <= -hardStop) {
+            logger_1.logger.warn('M101硬止损触发', { dailyPnl: this.dailyPnl.toFixed(2) });
+            this.skipCount++;
+            return;
+        }
+        const size = decision.positionSize;
+        if (size > this.paperBalance) {
+            this.skipCount++;
+            return;
+        }
+        const trade = {
+            id: `m101-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+            timestamp: Date.now(),
+            direction: decision.direction,
+            entryPrice: decision.entryPrice,
+            exitPrice: 0,
+            size,
+            cost: size,
+            pnl: 0,
+            pnlPercent: 0,
+            status: 'open',
+            btcEntryPrice: btcPrice,
+            confidence: decision.confidence,
+            signals: decision.signals,
+        };
+        this.openPositions.push(trade);
+        this.paperBalance -= size;
+        this.lastTradeTime = Date.now();
+        logger_1.logger.info('🔥 M101模拟交易', {
+            方向: decision.direction,
+            金额: '$' + size.toFixed(2),
+            置信度: (decision.confidence * 100).toFixed(1) + '%',
+            BTC价格: '$' + btcPrice.toFixed(0),
+            剩余资金: '$' + this.paperBalance.toFixed(2),
+        });
+    }
+    /**
+     * 监控持仓 - 根据BTC价格变动模拟止盈止损
+     */
+    monitorPositions() {
+        if (this.currentBtcPrice <= 0)
+            return;
+        const positionsToClose = [];
+        for (const pos of this.openPositions) {
+            const btcChange = (this.currentBtcPrice - pos.btcEntryPrice) / pos.btcEntryPrice;
+            // 根据方向计算模拟PnL
+            let pnlPercent;
+            if (pos.direction === 'UP') {
+                pnlPercent = btcChange * 100; // BTC涨了=赚
+            }
+            else {
+                pnlPercent = -btcChange * 100; // BTC跌了=赚
+            }
+            // 杠杆放大 (模拟Polymarket的杠杆效应)
+            pnlPercent *= 3;
+            let shouldClose = false;
+            let closeReason = '';
+            // 止盈: +1.5%
+            if (pnlPercent >= 1.5) {
+                shouldClose = true;
+                closeReason = '止盈';
+            }
+            // 止损: -0.5%
+            else if (pnlPercent <= -0.5) {
+                shouldClose = true;
+                closeReason = '止损';
+            }
+            // 超时: 5分钟自动平仓
+            else if (Date.now() - pos.timestamp > 5 * 60 * 1000) {
+                shouldClose = true;
+                closeReason = '超时平仓';
+            }
+            if (shouldClose) {
+                const pnl = pos.cost * (pnlPercent / 100);
+                pos.exitPrice = pos.entryPrice * (1 + pnlPercent / 100);
+                pos.pnl = pnl;
+                pos.pnlPercent = pnlPercent;
+                pos.status = 'closed';
+                pos.closeTime = Date.now();
+                pos.closeReason = closeReason;
+                pos.btcExitPrice = this.currentBtcPrice;
+                positionsToClose.push(pos);
+            }
+        }
+        // 平仓处理
+        for (const pos of positionsToClose) {
+            const idx = this.openPositions.indexOf(pos);
+            if (idx >= 0) {
+                this.openPositions.splice(idx, 1);
+            }
+            this.closedTrades.push(pos);
+            this.tradeCount++;
+            this.totalPnl += pos.pnl;
+            this.dailyPnl += pos.pnl;
+            this.paperBalance += pos.cost + pos.pnl;
+            if (pos.pnl > 0)
+                this.winningTrades++;
+            logger_1.logger.info('📊 M101平仓', {
+                原因: pos.closeReason,
+                方向: pos.direction,
+                盈亏: (pos.pnl >= 0 ? '+' : '') + '$' + pos.pnl.toFixed(4),
+                盈亏百分比: pos.pnlPercent.toFixed(2) + '%',
+                剩余资金: '$' + this.paperBalance.toFixed(2),
+                胜率: (this.winningTrades / this.tradeCount * 100).toFixed(1) + '%',
+            });
+        }
+        // 保留最近100条交易
+        if (this.closedTrades.length > 100) {
+            this.closedTrades = this.closedTrades.slice(-100);
+        }
+    }
+    // ---- 公开接口 ----
     getState() {
         return {
             running: this.running,
-            btcPrice: 0, // Filled by caller
+            btcPrice: this.currentBtcPrice,
+            paperBalance: this.paperBalance,
             lastDecision: this.lastDecision,
             lastSignals: this.lastSignals,
             lastOtcSnapshot: this.lastOtcSnapshot,
@@ -399,10 +512,14 @@ class Marketing101Engine {
             scanCount: this.scanCount,
             skipCount: this.skipCount,
             startTime: this.startTime,
+            openPositions: this.openPositions,
+            closedTrades: this.closedTrades.slice(-20), // 最近20条
         };
     }
     isRunning() { return this.running; }
     getPaperBalance() { return this.paperBalance; }
+    getOpenPositions() { return this.openPositions; }
+    getClosedTrades() { return this.closedTrades.slice(-50); }
     recordTrade(pnl) {
         this.tradeCount++;
         this.totalPnl += pnl;

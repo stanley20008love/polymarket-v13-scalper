@@ -695,5 +695,6 @@ class ScalperEngine {
     }
     isRunning() { return this.running; }
     getMode() { return this.mode; }
+    getPaperBalance() { return this.paperBalance; }
 }
 exports.ScalperEngine = ScalperEngine;

@@ -172,7 +172,7 @@ export class MiroFishEngine {
       simulationCount: loopCount,
       elapsedMs: elapsed,
       pricePaths: pricePaths.slice(0, 20), // Top 20 paths for visualization
-      shouldTrade: confidence >= 15 && halfKelly > 0.01, // Min 15% edge and positive Kelly
+      shouldTrade: confidence >= 1, // Paper mode: lowered to 1% to ensure trades happen in simulation
       marketContext: context.summary,
     };
   }
