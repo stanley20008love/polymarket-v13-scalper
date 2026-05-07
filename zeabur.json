@@ -1,0 +1,16 @@
+{
+  "build": {
+    "type": "node",
+    "root_dir": "polymarket-engine",
+    "build_command": "npm install && npx tsc",
+    "output_dir": "polymarket-engine/dist",
+    "start_command": "node dist/main.js"
+  },
+  "ports": [
+    {
+      "id": "web",
+      "port": 3000,
+      "type": "HTTP"
+    }
+  ]
+}
