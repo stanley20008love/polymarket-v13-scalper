@@ -189,12 +189,21 @@ class Marketing101Engine {
         // ===== Source 5: Closed Order Book Analysis =====
         const closedBookAnalysis = this.closedBookAnalyzer.analyzeOrderBook('btc-5min-simulated', synthOrderBook.bids, synthOrderBook.asks, btcPrice, 0);
         this.lastClosedBook = closedBookAnalysis;
+        // Closed Book signal: use depth imbalance and whale counts for direction
+        // (mispricing is unreliable with BTC-price-level order books)
+        const cbDirection = closedBookAnalysis.makerBias === 'YES' ? 'UP'
+            : closedBookAnalysis.makerBias === 'NO' ? 'DOWN'
+                : synthOrderBook.depthImbalance > 0.1 ? 'UP'
+                    : synthOrderBook.depthImbalance < -0.1 ? 'DOWN'
+                        : 'NEUTRAL';
+        const cbStrength = Math.min(1, Math.abs(synthOrderBook.depthImbalance) * 2);
+        const cbConfidence = Math.min(0.9, 0.3 + (Math.abs(closedBookAnalysis.whaleBidCount - closedBookAnalysis.whaleAskCount) / Math.max(1, closedBookAnalysis.whaleBidCount + closedBookAnalysis.whaleAskCount)) * 0.5);
         signals.push({
             source: 'closed_book',
-            direction: closedBookAnalysis.makerBias === 'YES' ? 'UP' : closedBookAnalysis.makerBias === 'NO' ? 'DOWN' : 'NEUTRAL',
-            strength: Math.abs(closedBookAnalysis.mispricing) / 10,
-            confidence: closedBookAnalysis.priceEfficiency,
-            details: `Maker: ${closedBookAnalysis.makerBias} | Mispricing: ${closedBookAnalysis.mispricing.toFixed(3)}% | Whales: ${closedBookAnalysis.whaleBidCount}B/${closedBookAnalysis.whaleAskCount}A | Hidden: ${closedBookAnalysis.hiddenLiquidity.toFixed(1)}`,
+            direction: cbDirection,
+            strength: cbStrength,
+            confidence: cbConfidence,
+            details: `Maker: ${closedBookAnalysis.makerBias} | Depth: ${(synthOrderBook.depthImbalance * 100).toFixed(1)}% | Whales: ${closedBookAnalysis.whaleBidCount}B/${closedBookAnalysis.whaleAskCount}A | Hidden: ${closedBookAnalysis.hiddenLiquidity.toFixed(1)}`,
             timestamp: now,
         });
         this.lastSignals = signals;
