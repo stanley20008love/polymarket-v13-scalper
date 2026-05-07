@@ -6,6 +6,7 @@
 // When BTC moves and Polymarket UP/DOWN 5MIN markets haven't re-priced → trade the lag
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ScalperEngine = void 0;
+const mirofish_sim_1 = require("./mirofish-sim");
 const logger_1 = require("../utils/logger");
 class ScalperEngine {
     config;
@@ -37,6 +38,10 @@ class ScalperEngine {
     lastSignals = [];
     lastConvergence = null;
     lastSignalTime = 0;
+    // MiroFish simulation
+    miroFish;
+    lastSimulation = null;
+    simulationCount = 0;
     // Simulated balance for paper trading
     paperBalance = 100; // Start with $100
     constructor(config, binance, client, store) {
@@ -44,6 +49,7 @@ class ScalperEngine {
         this.binance = binance;
         this.client = client;
         this.store = store;
+        this.miroFish = new mirofish_sim_1.MiroFishEngine(config);
     }
     async start() {
         if (this.running) {
@@ -215,7 +221,29 @@ class ScalperEngine {
             this.skipCount++;
             return;
         }
-        // 8. Execute trade
+        // 8. Run MiroFish Monte Carlo simulation (10K loops)
+        const klinesClose = this.klines5m.map(k => k.close);
+        const simResult = await this.miroFish.simulate(targetMarket, orderBook, btcPrice, this.btcChange5m, this.binance.getVolume5m(), this.binance.getDepthImbalance(), klinesClose, 10000);
+        this.lastSimulation = simResult;
+        this.simulationCount++;
+        if (!simResult.shouldTrade) {
+            logger_1.logger.info('MiroFish says SKIP', {
+                direction: simResult.direction,
+                confidence: simResult.confidence.toFixed(1) + '%',
+            });
+            this.skipCount++;
+            return;
+        }
+        // Override trade side with MiroFish direction if it disagrees
+        if (simResult.direction === 'DOWN' && convergence.tradeSide === 'UP') {
+            convergence.tradeSide = 'DOWN';
+            convergence.direction = 'BEAR';
+        }
+        else if (simResult.direction === 'UP' && convergence.tradeSide === 'DOWN') {
+            convergence.tradeSide = 'UP';
+            convergence.direction = 'BULL';
+        }
+        // 9. Execute trade
         await this.executeTrade(targetMarket, tokenId, orderBook, convergence, polymarketLag, btcPrice);
     }
     // ---- Signal Analysis (Force-Graph Convergence) ----
@@ -660,6 +688,9 @@ class ScalperEngine {
             binanceConnected: this.binance.isConnected(),
             polymarketConnected: true,
             lastError: null,
+            lastSimulation: this.lastSimulation,
+            simulationCount: this.simulationCount,
+            calibrationAccuracy: this.miroFish.getCalibrationStats().accuracy * 100,
         };
     }
     isRunning() { return this.running; }

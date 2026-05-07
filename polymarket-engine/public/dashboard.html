@@ -338,6 +338,58 @@
       </div>
     </div>
 
+    <!-- MiroFish Simulation Engine -->
+    <div class="card full-width">
+      <div class="card-header">
+        <span class="card-title">🧬 MiroFish Monte Carlo Simulator</span>
+        <span class="card-badge" id="simBadge" style="background:var(--purple-bg,rgba(168,85,247,0.1));color:var(--purple)">10K LOOPS</span>
+      </div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;margin-bottom:16px">
+          <div style="background:var(--bg-card);border-radius:8px;padding:16px;text-align:center">
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">Sim Direction</div>
+            <div id="simDirection" style="font-size:24px;font-weight:800;color:var(--text-muted)">---</div>
+            <div id="simProb" style="font-size:12px;color:var(--text-secondary)">UP: --% | DOWN: --%</div>
+          </div>
+          <div style="background:var(--bg-card);border-radius:8px;padding:16px;text-align:center">
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">Sim Confidence</div>
+            <div id="simConfidence" style="font-size:24px;font-weight:800;color:var(--text-muted)">--%</div>
+            <div id="simShouldTrade" style="font-size:12px">---</div>
+          </div>
+          <div style="background:var(--bg-card);border-radius:8px;padding:16px;text-align:center">
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">Sim Kelly</div>
+            <div id="simKelly" style="font-size:24px;font-weight:800;color:var(--text-muted)">--%</div>
+            <div id="simSharpe" style="font-size:12px;color:var(--text-secondary)">Sharpe: --</div>
+          </div>
+          <div style="background:var(--bg-card);border-radius:8px;padding:16px;text-align:center">
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">PnL Distribution</div>
+            <div id="simPnlDist" style="font-size:13px;font-variant-numeric:tabular-nums;line-height:1.8">
+              <span style="color:var(--text-muted)">No simulation yet</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600">AGENTS (Swarm Intelligence)</div>
+            <div id="simAgents" style="display:flex;flex-wrap:wrap;gap:6px">
+              <span style="font-size:11px;color:var(--text-muted)">Waiting for simulation...</span>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600">MARKET CONTEXT (Seed Packet)</div>
+            <div id="simContext" style="font-size:11px;color:var(--text-secondary);background:var(--bg-card);padding:10px;border-radius:6px;font-family:monospace;word-break:break-all">
+              Waiting for data...
+            </div>
+            <div style="margin-top:8px;display:flex;gap:8px">
+              <div style="font-size:11px;color:var(--text-muted)">Sims: <span id="simTotalCount" style="color:var(--text-primary)">0</span></div>
+              <div style="font-size:11px;color:var(--text-muted)">Calibration: <span id="simCalibration" style="color:var(--text-primary)">--%</span></div>
+              <div style="font-size:11px;color:var(--text-muted)">Latency: <span id="simLatency" style="color:var(--text-primary)">--ms</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Trade History -->
     <div class="card full-width">
       <div class="card-header">
@@ -574,6 +626,9 @@ function updateUI(state) {
   // Signals
   updateSignals(state.signals || [], state.activeConvergence);
 
+  // MiroFish Simulation
+  updateMiroFish(state.lastSimulation, state.simulationCount || 0, state.calibrationAccuracy || 0);
+
   // Positions
   updatePositions(state.positions || []);
 
@@ -751,6 +806,91 @@ function updatePnlChart(trades) {
   pnlChart.data.datasets[0].backgroundColor = cumPnl >= 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)';
 
   pnlChart.update('none');
+}
+
+function updateMiroFish(sim, simCount, calibration) {
+  if (!sim) {
+    document.getElementById('simDirection').textContent = '---';
+    document.getElementById('simDirection').style.color = 'var(--text-muted)';
+    document.getElementById('simProb').textContent = 'UP: --% | DOWN: --%';
+    document.getElementById('simConfidence').textContent = '--%';
+    document.getElementById('simShouldTrade').textContent = '---';
+    document.getElementById('simKelly').textContent = '--%';
+    document.getElementById('simSharpe').textContent = 'Sharpe: --';
+    document.getElementById('simPnlDist').innerHTML = '<span style="color:var(--text-muted)">No simulation yet</span>';
+    document.getElementById('simAgents').innerHTML = '<span style="font-size:11px;color:var(--text-muted)">Waiting for simulation...</span>';
+    document.getElementById('simContext').textContent = 'Waiting for data...';
+    document.getElementById('simTotalCount').textContent = simCount;
+    document.getElementById('simCalibration').textContent = '--%';
+    document.getElementById('simLatency').textContent = '--ms';
+    return;
+  }
+
+  // Direction
+  const dirEl = document.getElementById('simDirection');
+  dirEl.textContent = sim.direction;
+  dirEl.style.color = sim.direction === 'UP' ? 'var(--green)' : 'var(--red)';
+
+  // Probabilities
+  document.getElementById('simProb').innerHTML =
+    `UP: <span style="color:${sim.upProbability > sim.downProbability ? 'var(--green)' : 'var(--text-secondary)'}">${(sim.upProbability * 100).toFixed(1)}%</span> | DOWN: <span style="color:${sim.downProbability > sim.upProbability ? 'var(--red)' : 'var(--text-secondary)'}">${(sim.downProbability * 100).toFixed(1)}%</span>`;
+
+  // Confidence
+  const confEl = document.getElementById('simConfidence');
+  confEl.textContent = sim.confidence.toFixed(1) + '%';
+  confEl.style.color = sim.confidence >= 15 ? 'var(--green)' : 'var(--text-muted)';
+
+  // Should trade
+  const shouldTradeEl = document.getElementById('simShouldTrade');
+  if (sim.shouldTrade) {
+    shouldTradeEl.textContent = '✓ TRADE SIGNAL';
+    shouldTradeEl.style.color = 'var(--green)';
+  } else {
+    shouldTradeEl.textContent = '✗ SKIP';
+    shouldTradeEl.style.color = 'var(--text-muted)';
+  }
+
+  // Kelly
+  const kellyEl = document.getElementById('simKelly');
+  kellyEl.textContent = (sim.kellyFraction * 100).toFixed(2) + '%';
+  kellyEl.style.color = sim.kellyFraction > 0 ? 'var(--green)' : 'var(--red)';
+
+  // Sharpe
+  document.getElementById('simSharpe').textContent = 'Sharpe: ' + sim.sharpe.toFixed(3);
+
+  // PnL Distribution
+  const dist = sim.pnlDistribution;
+  document.getElementById('simPnlDist').innerHTML =
+    `<div>P5: <span style="color:${dist.p5 >= 0 ? 'var(--green)' : 'var(--red)'}">$${dist.p5.toFixed(4)}</span></div>` +
+    `<div>P25: <span style="color:${dist.p25 >= 0 ? 'var(--green)' : 'var(--red)'}">$${dist.p25.toFixed(4)}</span></div>` +
+    `<div><b>P50: <span style="color:${dist.p50 >= 0 ? 'var(--green)' : 'var(--red)'}">$${dist.p50.toFixed(4)}</span></b></div>` +
+    `<div>P75: <span style="color:var(--green)">$${dist.p75.toFixed(4)}</span></div>` +
+    `<div>P95: <span style="color:var(--green)">$${dist.p95.toFixed(4)}</span></div>`;
+
+  // Agents
+  const agentTypes = [
+    { type: 'momentum_trader', count: 3, icon: '📈' },
+    { type: 'market_maker', count: 2, icon: '🏦' },
+    { type: 'contrarian', count: 2, icon: '🔄' },
+    { type: 'otc_desk', count: 1, icon: '🏛️' },
+    { type: 'institutional', count: 1, icon: '🏢' },
+    { type: 'retail_fomo', count: 1, icon: '🏃' },
+    { type: 'retail_panic', count: 1, icon: '😱' },
+    { type: 'whale', count: 1, icon: '🐋' },
+  ];
+  let agentsHtml = '';
+  for (const a of agentTypes) {
+    agentsHtml += `<span style="font-size:11px;background:var(--bg-primary);padding:3px 8px;border-radius:4px;border:1px solid var(--border)">${a.icon} ${a.type.replace(/_/g,' ')} ×${a.count}</span>`;
+  }
+  document.getElementById('simAgents').innerHTML = agentsHtml;
+
+  // Context
+  document.getElementById('simContext').textContent = sim.marketContext || 'N/A';
+
+  // Stats
+  document.getElementById('simTotalCount').textContent = simCount;
+  document.getElementById('simCalibration').textContent = calibration.toFixed(1) + '%';
+  document.getElementById('simLatency').textContent = sim.elapsedMs + 'ms';
 }
 
 // ===== Init =====

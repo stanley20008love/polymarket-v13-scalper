@@ -258,4 +258,54 @@ export interface ScalperState {
   binanceConnected: boolean;
   polymarketConnected: boolean;
   lastError: string | null;
+  // MiroFish simulation
+  lastSimulation: SimulationResult | null;
+  simulationCount: number;
+  calibrationAccuracy: number;
+}
+
+// ---- MiroFish Simulation Types ----
+
+export interface SimulationAgent {
+  type: string;
+  bias: number;
+  weight: number;
+  description: string;
+}
+
+export interface SimulationState {
+  btcPrice: number;
+  btcChange5m: number;
+  btcVolume5m: number;
+  depthImbalance: number;
+  trend: number;
+  volatility: number;
+  midPrice: number;
+  spread: number;
+  depthRatio: number;
+  klinesClose: number[];
+  summary: string;
+}
+
+export interface SimulationResult {
+  direction: 'UP' | 'DOWN';
+  upProbability: number;
+  downProbability: number;
+  confidence: number;
+  expectedPnl: number;
+  pnlStdDev: number;
+  sharpe: number;
+  kellyFraction: number;
+  pnlDistribution: {
+    p5: number;
+    p25: number;
+    p50: number;
+    p75: number;
+    p95: number;
+  };
+  simulationCount: number;
+  elapsedMs: number;
+  pricePaths: number[][];
+  shouldTrade: boolean;
+  marketContext: string;
 }
