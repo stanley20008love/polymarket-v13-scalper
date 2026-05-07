@@ -66,7 +66,7 @@ const BANNER = `
 ║  - BTC Price Simulator (Jump-Diffusion + Mean Reversion)         ║
 ║  - OTC Desk Flow Data + Closed Order Book Analysis               ║
 ║  - 5-Source Convergence: 4/5 must agree to trade                 ║
-║  - Position: $50-$150 (paper) | Target: $5K-$15K (live)         ║
+║  - Position: $2-$10 (paper 50U) | Target: $5K-$15K (live)         ║
 ║                                                                   ║
 ║  Paper Mode by default | Live when API keys set                   ║
 ╚══════════════════════════════════════════════════════════════════╝
@@ -245,7 +245,7 @@ async function main() {
                 sources: ['claude_brain', 'mirofish', 'btc_sim', 'otc', 'closed_book'],
                 consensusRequired: '4/5 (80%)',
                 simulationLoops: 10000,
-                positionSize: '$50-$150 (paper) | $5K-$15K (live)',
+                positionSize: '$2-$10 (paper 50U) | $5K-$15K (live)',
             },
             wallets: {
                 trading: config.tradingWallet,

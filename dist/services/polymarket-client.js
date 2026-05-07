@@ -39,7 +39,24 @@ class PolymarketClient {
                     offset: params?.offset ?? 0,
                 },
             });
-            const markets = response.data;
+            // Handle various Polymarket API response formats
+            let markets = [];
+            if (Array.isArray(response.data)) {
+                markets = response.data;
+            }
+            else if (response.data && Array.isArray(response.data.data)) {
+                markets = response.data.data;
+            }
+            else if (response.data && typeof response.data === 'object') {
+                // Try to find an array property in the response
+                const keys = Object.keys(response.data);
+                for (const key of keys) {
+                    if (Array.isArray(response.data[key])) {
+                        markets = response.data[key];
+                        break;
+                    }
+                }
+            }
             logger_1.logger.info('Fetched markets', { count: markets.length });
             return markets;
         }

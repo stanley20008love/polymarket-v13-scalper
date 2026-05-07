@@ -134,11 +134,11 @@ export class Marketing101Engine {
   private scanCount: number = 0;
   private skipCount: number = 0;
 
-  // Paper balance for Marketing101 mode (starts at $1000 - higher capital)
-  private paperBalance: number = 1000;
-  // Target trade size: $5,000-$15,000 per trade
-  private targetTradeSizeMin: number = 50;    // Min $50 in paper mode
-  private targetTradeSizeMax: number = 150;   // Max $150 in paper mode
+  // Paper balance for Marketing101 mode (starts at $50 - 50U simulation)
+  private paperBalance: number = 50;
+  // Target trade size: proportional to $50 capital
+  private targetTradeSizeMin: number = 2;     // Min $2 per trade (4% of capital)
+  private targetTradeSizeMax: number = 10;    // Max $10 per trade (20% of capital)
 
   constructor(config: StrategyConfig) {
     this.config = config;
@@ -163,9 +163,9 @@ export class Marketing101Engine {
     // Initialize BTC simulator with current price
     this.btcSim.updateMarketData(btcPrice, []);
 
-    logger.info('Marketing101 Engine started', {
+    logger.info('Marketing101 Engine started (50U Sim Mode)', {
       targetTradeSize: `$${this.targetTradeSizeMin}-$${this.targetTradeSizeMax}`,
-      paperBalance: this.paperBalance,
+      paperBalance: `$${this.paperBalance} (50U)`,
     });
 
     // Main analysis loop - runs every 10 seconds

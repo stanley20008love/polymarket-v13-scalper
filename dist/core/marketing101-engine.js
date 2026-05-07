@@ -40,11 +40,11 @@ class Marketing101Engine {
     simulationRuns = 0;
     scanCount = 0;
     skipCount = 0;
-    // Paper balance for Marketing101 mode (starts at $1000 - higher capital)
-    paperBalance = 1000;
-    // Target trade size: $5,000-$15,000 per trade
-    targetTradeSizeMin = 50; // Min $50 in paper mode
-    targetTradeSizeMax = 150; // Max $150 in paper mode
+    // Paper balance for Marketing101 mode (starts at $50 - 50U simulation)
+    paperBalance = 50;
+    // Target trade size: proportional to $50 capital
+    targetTradeSizeMin = 2; // Min $2 per trade (4% of capital)
+    targetTradeSizeMax = 10; // Max $10 per trade (20% of capital)
     constructor(config) {
         this.config = config;
         this.miroFish = new mirofish_sim_1.MiroFishEngine(config);
@@ -64,9 +64,9 @@ class Marketing101Engine {
         this.startTime = Date.now();
         // Initialize BTC simulator with current price
         this.btcSim.updateMarketData(btcPrice, []);
-        logger_1.logger.info('Marketing101 Engine started', {
+        logger_1.logger.info('Marketing101 Engine started (50U Sim Mode)', {
             targetTradeSize: `$${this.targetTradeSizeMin}-$${this.targetTradeSizeMax}`,
-            paperBalance: this.paperBalance,
+            paperBalance: `$${this.paperBalance} (50U)`,
         });
         // Main analysis loop - runs every 10 seconds
         this.scanTimer = setInterval(async () => {
