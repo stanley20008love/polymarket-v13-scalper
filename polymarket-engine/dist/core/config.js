@@ -1,6 +1,6 @@
 "use strict";
 // ============================================================================
-// Polymarket V11 Strategy Engine - Configuration
+// Polymarket V13 Strategy Engine - Configuration
 // ============================================================================
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -22,6 +22,8 @@ function loadConfig() {
         polymarketApiSecret: process.env.POLYMARKET_API_SECRET || '',
         polymarketApiPassphrase: process.env.POLYMARKET_API_PASSPHRASE || '',
         polygonRpcUrl: process.env.POLYGON_RPC_URL || 'https://1rpc.io/matic',
+        binanceWsUrl: process.env.BINANCE_WS_URL || 'wss://stream.binance.com:9443/ws',
+        binanceRestUrl: process.env.BINANCE_REST_URL || 'https://api.binance.com',
         minEvPercent: parseFloat(process.env.MIN_EV_PERCENT || '5'),
         maxYesPrice: parseFloat(process.env.MAX_YES_PRICE || '0.20'),
         takeProfitPercent: parseFloat(process.env.TAKE_PROFIT_PERCENT || '40'),
@@ -34,9 +36,21 @@ function loadConfig() {
         manipulationPauseMinutes: parseFloat(process.env.MANIPULATION_PAUSE_MINUTES || '60'),
         maxTradesPerHour: parseFloat(process.env.MAX_TRADES_PER_HOUR || '2'),
         maxDailyLossUsd: parseFloat(process.env.MAX_DAILY_LOSS_USD || '2'),
+        scalperEnabled: process.env.SCALPER_ENABLED !== 'false',
+        scalperMode: process.env.SCALPER_MODE || 'paper',
+        lagThreshold: parseFloat(process.env.LAG_THRESHOLD || '0.3'),
+        perTradeRiskPercent: parseFloat(process.env.PER_TRADE_RISK_PERCENT || '0.5'),
+        dailyCapPercent: parseFloat(process.env.DAILY_CAP_PERCENT || '2'),
+        hardStopPercent: parseFloat(process.env.HARD_STOP_PERCENT || '-0.4'),
+        minConvergence: parseFloat(process.env.MIN_CONVERGENCE || '70'),
+        maxActivePositions: parseInt(process.env.MAX_ACTIVE_POSITIONS || '3', 10),
+        positionTimeoutMs: parseInt(process.env.POSITION_TIMEOUT_MS || '300000', 10),
+        takeProfitScalp: parseFloat(process.env.TAKE_PROFIT_SCALP || '0.8'),
+        stopLossScalp: parseFloat(process.env.STOP_LOSS_SCALP || '0.3'),
         port: parseInt(process.env.PORT || '3000', 10),
         logLevel: process.env.LOG_LEVEL || 'info',
         nodeEnv: process.env.NODE_ENV || 'development',
+        dryRun: process.env.DRY_RUN === 'true',
     };
 }
 exports.config = loadConfig();

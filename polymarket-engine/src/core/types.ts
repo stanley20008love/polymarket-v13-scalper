@@ -1,6 +1,8 @@
 // ============================================================================
-// Polymarket V11 Strategy Engine - Types
+// Polymarket V13 Strategy Engine - Types
 // ============================================================================
+
+// ---- Original V11 Types ----
 
 export interface Market {
   conditionId: string;
@@ -140,4 +142,120 @@ export interface EVCalculation {
   kellySize: number;
   adjustedKellySize: number;
   details: string;
+}
+
+// ---- V13 Scalper Types ----
+
+export interface BtcTick {
+  price: number;
+  quantity: number;
+  timestamp: number;
+  direction: 'up' | 'down';
+}
+
+export interface Kline5m {
+  openTime: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  closeTime: number;
+  isFinal: boolean;
+}
+
+export interface SignalNode {
+  name: string;
+  direction: 'BULL' | 'BEAR' | 'NEUTRAL';
+  strength: number;
+  weight: number;
+  details: string;
+}
+
+export interface ConvergenceResult {
+  direction: 'BULL' | 'BEAR' | 'NEUTRAL';
+  strength: number;
+  confidence: number;
+  signals: SignalNode[];
+  polymarketLag: number;
+  shouldTrade: boolean;
+  tradeSide: 'UP' | 'DOWN' | null;
+  details: string;
+}
+
+export interface ScalperTrade {
+  id: string;
+  timestamp: number;
+  marketQuestion: string;
+  conditionId: string;
+  tokenId: string;
+  side: 'BUY' | 'SELL';
+  outcome: 'YES' | 'NO';
+  tradeType: 'UP' | 'DOWN';
+  price: number;
+  size: number;
+  cost: number;
+  pnl: number;
+  pnlPercent: number;
+  btcPrice: number;
+  polymarketLag: number;
+  convergence: number;
+  reason: string;
+  status: 'open' | 'closed';
+  closeTimestamp?: number;
+  closePrice?: number;
+  orderId?: string;
+  isPaper: boolean;
+}
+
+export interface ScalperPosition {
+  id: string;
+  conditionId: string;
+  tokenId: string;
+  marketQuestion: string;
+  tradeType: 'UP' | 'DOWN';
+  outcome: 'YES' | 'NO';
+  entryPrice: number;
+  currentPrice: number;
+  size: number;
+  cost: number;
+  pnl: number;
+  pnlPercent: number;
+  entryTime: number;
+  btcEntryPrice: number;
+  polymarketLag: number;
+  convergence: number;
+  status: 'open' | 'closed';
+  isPaper: boolean;
+}
+
+export interface ScalperState {
+  running: boolean;
+  mode: 'paper' | 'live' | 'idle';
+  btcPrice: number;
+  btcPrice5mAgo: number;
+  btcPriceChange5m: number;
+  activeConvergence: ConvergenceResult | null;
+  positions: ScalperPosition[];
+  trades: ScalperTrade[];
+  totalPnl: number;
+  dailyPnl: number;
+  winRate: number;
+  totalTrades: number;
+  winningTrades: number;
+  losingTrades: number;
+  signals: SignalNode[];
+  lastSignalTime: number;
+  scanCount: number;
+  tradeCount: number;
+  skipCount: number;
+  startTime: number;
+  dailyCapUsed: number;
+  dailyCapLimit: number;
+  hardStopTriggered: boolean;
+  klines5m: Kline5m[];
+  btcVolume5m: number;
+  binanceConnected: boolean;
+  polymarketConnected: boolean;
+  lastError: string | null;
 }

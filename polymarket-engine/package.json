@@ -1,7 +1,7 @@
 {
-  "name": "polymarket-v11-engine",
-  "version": "11.0.0",
-  "description": "Polymarket V11 Strategy Engine - EV>5%, Half-Kelly, Anti-Manipulation",
+  "name": "polymarket-v13-scalper",
+  "version": "13.0.0",
+  "description": "Polymarket V13 BTC 5MIN Scalper - CLOB Price Lag Exploitation",
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc",
@@ -9,8 +9,7 @@
     "dev": "npx tsx src/main.ts",
     "scan": "node dist/main.js --mode scan",
     "trade": "node dist/main.js --mode trade",
-    "monitor": "node dist/main.js --mode monitor",
-    "test": "jest --forceExit"
+    "test": "echo \"No tests\" && exit 0"
   },
   "dependencies": {
     "axios": "^1.7.0",

@@ -1,66 +1,41 @@
 // ============================================================================
-// Polymarket V11 Strategy Engine - Main Entry Point
+// Polymarket V13 Strategy Engine - Main Entry Point
 // ============================================================================
+// BTC 5MIN Scalper + V11 Strategy + Visual Dashboard
 
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
+import * as path from 'path';
+import { StrategyConfig, loadConfig } from './core/config';
+import { ScalperEngine } from './core/scalper';
+import { BinanceFeed } from './feeds/binance-ws';
+import { PolymarketClient } from './services/polymarket-client';
+import { TradeStore } from './storage/trade-store';
+import { logger } from './utils/logger';
+
 dotenv.config();
 
 const BANNER = `
-╔══════════════════════════════════════════════════════════╗
-║           Polymarket V11 Strategy Engine                 ║
-║                                                          ║
-║  EV>5% | Yes<0.2 Skip | TP40% SL15% | Half-Kelly 10%  ║
-║  Liquidity>$10k | Spread<5% | Anti-Manipulation 20%    ║
-║  2 trades/hour | $2 daily loss limit                     ║
-╚══════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════╗
+║           Polymarket V13 - BTC 5MIN Scalper Engine               ║
+║                                                                   ║
+║  Edge: CLOB Price Lag Exploitation                                ║
+║  - Binance WS → BTC Realtime + 5M Klines                         ║
+║  - Signal Convergence > 70% → Trade                               ║
+║  - Lag > 0.3% → Execute < 5s                                      ║
+║  - TP 0.8% | SL 0.3% | Daily Cap 2% | Hard Stop -0.4%           ║
+║  - Paper Mode by default | Live when API keys set                 ║
+╚══════════════════════════════════════════════════════════════════╝
 `;
 
-const PORT = parseInt(process.env.PORT || '3000', 10);
+const config: StrategyConfig = loadConfig();
+const PORT = config.port;
 
-// V11 Strategy Parameters
-const STRATEGY_CONFIG = {
-  minEvPercent: parseFloat(process.env.MIN_EV_PERCENT || '5'),
-  maxYesPrice: parseFloat(process.env.MAX_YES_PRICE || '0.20'),
-  takeProfitPercent: parseFloat(process.env.TAKE_PROFIT_PERCENT || '40'),
-  stopLossPercent: parseFloat(process.env.STOP_LOSS_PERCENT || '15'),
-  kellyFraction: parseFloat(process.env.KELLY_FRACTION || '0.5'),
-  maxPositionPercent: parseFloat(process.env.MAX_POSITION_PERCENT || '10'),
-  minLiquidityUsd: parseFloat(process.env.MIN_LIQUIDITY_USD || '10000'),
-  maxSpreadPercent: parseFloat(process.env.MAX_SPREAD_PERCENT || '5'),
-  manipulationVolatilityThreshold: parseFloat(process.env.MANIPULATION_VOLATILITY_THRESHOLD || '20'),
-  manipulationPauseMinutes: parseFloat(process.env.MANIPULATION_PAUSE_MINUTES || '60'),
-  maxTradesPerHour: parseFloat(process.env.MAX_TRADES_PER_HOUR || '2'),
-  maxDailyLossUsd: parseFloat(process.env.MAX_DAILY_LOSS_USD || '2'),
-  tradingWallet: process.env.TRADING_WALLET || '0x13642cdE3d64d9d79b4837920667D881f285e937',
-  profitRecoveryWallet: process.env.PROFIT_RECOVERY_WALLET || '0xFe332cA54738CBa561518A3a458BA6eFFfc3636D',
-  hubPublicWallet: process.env.HUB_PUBLIC_WALLET || '0x2F88715F35712C8627b7AF2Ead04baA4a449542c',
-};
-
-// Engine state
-let engineRunning = false;
-let engineMode = 'idle';
-let positions: any[] = [];
-let trades: any[] = [];
-let totalPnl = 0;
-let dailyPnl = 0;
-let lastScanTime = 0;
-
-// Lazy-loaded engine (heavy deps loaded on demand)
-let StrategyEngine: any = null;
-
-async function loadEngine() {
-  if (StrategyEngine) return StrategyEngine;
-  try {
-    const { StrategyEngine: Engine } = await import('./core/engine');
-    const { config } = await import('./core/config');
-    StrategyEngine = new Engine(config);
-    return StrategyEngine;
-  } catch (error: any) {
-    console.error('Failed to load engine:', error.message);
-    return null;
-  }
-}
+// Core components
+let scalper: ScalperEngine | null = null;
+let binance: BinanceFeed | null = null;
+let client: PolymarketClient | null = null;
+let store: TradeStore | null = null;
 
 async function main() {
   console.log(BANNER);
@@ -68,138 +43,230 @@ async function main() {
   const app = express();
   app.use(express.json());
 
+  // Serve dashboard static files
+  app.use(express.static(path.join(__dirname, '..', 'public')));
+
+  // ---- API Routes ----
+
   // Health check
   app.get('/health', (_req: Request, res: Response) => {
     res.json({
       status: 'ok',
-      version: '11.0.0',
-      engine: engineRunning ? 'running' : 'idle',
-      mode: engineMode,
+      version: '13.0.0',
+      engine: scalper?.isRunning() ? 'running' : 'idle',
+      mode: scalper?.getMode() || 'idle',
+      binance: binance?.isConnected() || false,
       timestamp: Date.now(),
     });
   });
 
-  // Engine state
+  // Full engine state (for dashboard)
   app.get('/api/state', (_req: Request, res: Response) => {
-    res.json({
-      running: engineRunning,
-      mode: engineMode,
-      totalPnl: totalPnl.toFixed(4),
-      dailyPnl: dailyPnl.toFixed(4),
-      positionsCount: positions.length,
-      tradeCount: trades.length,
-      lastScanTime: lastScanTime ? new Date(lastScanTime).toISOString() : null,
-    });
+    try {
+      if (!scalper) {
+        return res.json({
+          running: false,
+          mode: 'idle',
+          btcPrice: 0,
+          btcPrice5mAgo: 0,
+          btcPriceChange5m: 0,
+          activeConvergence: null,
+          positions: [],
+          trades: [],
+          totalPnl: 0,
+          dailyPnl: 0,
+          winRate: 0,
+          totalTrades: 0,
+          winningTrades: 0,
+          losingTrades: 0,
+          signals: [],
+          lastSignalTime: 0,
+          scanCount: 0,
+          tradeCount: 0,
+          skipCount: 0,
+          startTime: 0,
+          dailyCapUsed: 0,
+          dailyCapLimit: config.dailyCapPercent,
+          hardStopTriggered: false,
+          klines5m: [],
+          btcVolume5m: 0,
+          binanceConnected: false,
+          polymarketConnected: false,
+          lastError: null,
+        });
+      }
+      res.json(scalper.getState());
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
   });
 
-  // Get positions
-  app.get('/api/positions', (_req: Request, res: Response) => {
-    res.json(positions);
-  });
-
-  // Get trade history
+  // Get all trades
   app.get('/api/trades', (_req: Request, res: Response) => {
-    res.json(trades);
-  });
-
-  // Start engine
-  app.post('/api/start', async (req: Request, res: Response) => {
-    const mode = req.body.mode || 'scan';
     try {
-      const engine = await loadEngine();
-      if (engine) {
-        await engine.start(mode);
-        engineRunning = true;
-        engineMode = mode;
-        res.json({ success: true, mode });
-      } else {
-        // Fallback: start in lightweight mode
-        engineRunning = true;
-        engineMode = mode;
-        res.json({ success: true, mode, note: 'Running in lightweight mode (no trading)' });
-      }
-    } catch (error: any) {
-      res.status(500).json({ success: false, error: error.message });
+      const trades = store?.getTrades() || [];
+      res.json(trades);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
     }
   });
 
-  // Stop engine
-  app.post('/api/stop', (_req: Request, res: Response) => {
-    engineRunning = false;
-    engineMode = 'idle';
-    res.json({ success: true });
-  });
-
-  // Scan markets (lightweight)
-  app.post('/api/scan', async (_req: Request, res: Response) => {
+  // Get open positions
+  app.get('/api/positions', (_req: Request, res: Response) => {
     try {
-      const engine = await loadEngine();
-      if (engine) {
-        const results = await engine.scanMarkets();
-        lastScanTime = Date.now();
-        res.json({
-          total: results.length,
-          passed: results.filter((r: any) => r.pass).length,
-          results: results.slice(0, 20),
-        });
-      } else {
-        lastScanTime = Date.now();
-        res.json({
-          total: 0,
-          passed: 0,
-          message: 'Engine not available. Configure API keys to enable scanning.',
-          config: STRATEGY_CONFIG,
-        });
-      }
-    } catch (error: any) {
-      res.status(500).json({ success: false, error: error.message });
+      const positions = store?.getOpenPositions() || [];
+      res.json(positions);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
     }
   });
 
-  // Config info
+  // Get closed positions
+  app.get('/api/positions/closed', (_req: Request, res: Response) => {
+    try {
+      const trades = store?.getTrades() || [];
+      const closedTrades = trades.filter(t => t.status === 'closed' && t.side === 'SELL');
+      res.json(closedTrades);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // Get signals
+  app.get('/api/signals', (_req: Request, res: Response) => {
+    try {
+      const state = scalper?.getState();
+      res.json({
+        signals: state?.signals || [],
+        convergence: state?.activeConvergence || null,
+        lastSignalTime: state?.lastSignalTime || 0,
+      });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // Get config
   app.get('/api/config', (_req: Request, res: Response) => {
     res.json({
-      strategy: 'V11',
-      parameters: STRATEGY_CONFIG,
+      version: 'V13',
+      scalper: {
+        enabled: config.scalperEnabled,
+        mode: config.scalperMode,
+        lagThreshold: config.lagThreshold + '%',
+        perTradeRisk: config.perTradeRiskPercent + '%',
+        dailyCap: config.dailyCapPercent + '%',
+        hardStop: config.hardStopPercent + '%',
+        minConvergence: config.minConvergence + '%',
+        maxActivePositions: config.maxActivePositions,
+        takeProfitScalp: config.takeProfitScalp + '%',
+        stopLossScalp: config.stopLossScalp + '%',
+      },
+      wallets: {
+        trading: config.tradingWallet,
+        profitRecovery: config.profitRecoveryWallet,
+      },
+      binance: {
+        ws: config.binanceWsUrl ? 'configured' : 'default',
+        rest: config.binanceRestUrl ? 'configured' : 'default',
+      },
+      polymarket: {
+        apiUrl: config.polymarketApiUrl,
+        apiKeySet: !!config.polymarketApiKey,
+      },
     });
   });
 
-  // Wallet info
-  app.get('/api/wallet', async (_req: Request, res: Response) => {
+  // Start scalper
+  app.post('/api/start', async (req: Request, res: Response) => {
     try {
-      const { ethers } = await import('ethers');
-      const rpc = process.env.POLYGON_RPC_URL || 'https://1rpc.io/matic';
-      const provider = new ethers.JsonRpcProvider(rpc);
-      const wallet = STRATEGY_CONFIG.tradingWallet;
+      const mode = req.body.mode || config.scalperMode;
 
-      const polBalance = await provider.getBalance(wallet);
-      const pol = parseFloat(ethers.formatEther(polBalance));
+      if (scalper?.isRunning()) {
+        return res.json({ success: false, error: 'Engine already running' });
+      }
 
-      res.json({
-        wallet,
-        network: 'polygon',
-        pol: pol.toFixed(6),
-        note: 'USDC balance requires contract call',
-      });
-    } catch (error: any) {
-      res.json({
-        wallet: STRATEGY_CONFIG.tradingWallet,
-        network: 'polygon',
-        error: error.message,
-      });
+      // Initialize components if needed
+      if (!binance) binance = new BinanceFeed(config);
+      if (!client) client = new PolymarketClient(config);
+      if (!store) store = new TradeStore();
+
+      scalper = new ScalperEngine(config, binance, client, store);
+
+      // Override mode if specified
+      if (mode === 'live' && !config.polymarketApiKey) {
+        logger.warn('No API key set, falling back to paper mode');
+      }
+
+      await scalper.start();
+      res.json({ success: true, mode: scalper.getMode() });
+    } catch (e: any) {
+      logger.error('Failed to start scalper', { error: e.message });
+      res.status(500).json({ success: false, error: e.message });
     }
   });
 
-  // Start server
-  app.listen(PORT, () => {
-    console.log(`[V11 Engine] API server running on port ${PORT}`);
-    console.log(`[V11 Engine] Health: http://localhost:${PORT}/health`);
-    console.log(`[V11 Engine] API: http://localhost:${PORT}/api/`);
+  // Stop scalper
+  app.post('/api/stop', (_req: Request, res: Response) => {
+    try {
+      if (scalper) {
+        scalper.stop();
+        scalper = null;
+      }
+      res.json({ success: true });
+    } catch (e: any) {
+      res.status(500).json({ success: false, error: e.message });
+    }
   });
+
+  // Export all data
+  app.get('/api/export', (_req: Request, res: Response) => {
+    try {
+      const data = store?.exportAll() || { trades: [], positions: [], stats: {} };
+      res.setHeader('Content-Disposition', 'attachment; filename=polymarket-export.json');
+      res.json(data);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // Dashboard route
+  app.get('/', (_req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html'));
+  });
+
+  // ---- Start Server ----
+
+  app.listen(PORT, () => {
+    console.log(`[V13 Scalper] API server running on port ${PORT}`);
+    console.log(`[V13 Scalper] Dashboard: http://localhost:${PORT}/`);
+    console.log(`[V13 Scalper] API: http://localhost:${PORT}/api/`);
+    console.log(`[V13 Scalper] Mode: ${config.scalperMode}${config.dryRun ? ' (DRY RUN)' : ''}`);
+  });
+
+  // Auto-start scalper if enabled
+  if (config.scalperEnabled) {
+    setTimeout(async () => {
+      try {
+        console.log('[V13 Scalper] Auto-starting scalper engine...');
+        binance = new BinanceFeed(config);
+        client = new PolymarketClient(config);
+        store = new TradeStore();
+        scalper = new ScalperEngine(config, binance, client, store);
+        await scalper.start();
+        console.log('[V13 Scalper] Engine started successfully');
+      } catch (e: any) {
+        console.error('[V13 Scalper] Auto-start failed:', e.message);
+        console.log('[V13 Scalper] Use POST /api/start to start manually');
+      }
+    }, 3000);
+  }
 
   // Graceful shutdown
   const shutdown = () => {
-    console.log('[V11 Engine] Shutting down...');
+    console.log('[V13 Scalper] Shutting down...');
+    if (scalper) scalper.stop();
+    if (store) store.save();
     process.exit(0);
   };
 

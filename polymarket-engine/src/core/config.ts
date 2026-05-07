@@ -1,5 +1,5 @@
 // ============================================================================
-// Polymarket V11 Strategy Engine - Configuration
+// Polymarket V13 Strategy Engine - Configuration
 // ============================================================================
 
 import dotenv from 'dotenv';
@@ -20,24 +20,42 @@ export interface StrategyConfig {
   polymarketApiPassphrase: string;
   polygonRpcUrl: string;
 
+  // Binance
+  binanceWsUrl: string;
+  binanceRestUrl: string;
+
   // Strategy V11
-  minEvPercent: number;        // EV > 5%
-  maxYesPrice: number;          // Yes < 0.2 → skip
-  takeProfitPercent: number;    // 止盈 40%
-  stopLossPercent: number;      // 止损 15%
-  kellyFraction: number;        // 半Kelly = 0.5
-  maxPositionPercent: number;   // 单仓 10%
-  minLiquidityUsd: number;      // 流动性 > $10k
-  maxSpreadPercent: number;     // 价差 < 5%
-  manipulationVolatilityThreshold: number;  // 反操纵 20%波动
-  manipulationPauseMinutes: number;         // 暂停60分钟
-  maxTradesPerHour: number;     // 每小时2笔
-  maxDailyLossUsd: number;      // 日亏$2暂停
+  minEvPercent: number;
+  maxYesPrice: number;
+  takeProfitPercent: number;
+  stopLossPercent: number;
+  kellyFraction: number;
+  maxPositionPercent: number;
+  minLiquidityUsd: number;
+  maxSpreadPercent: number;
+  manipulationVolatilityThreshold: number;
+  manipulationPauseMinutes: number;
+  maxTradesPerHour: number;
+  maxDailyLossUsd: number;
+
+  // V13 Scalper
+  scalperEnabled: boolean;
+  scalperMode: 'paper' | 'live';
+  lagThreshold: number;           // 0.3% minimum lag to trade
+  perTradeRiskPercent: number;    // 0.5% risk per trade
+  dailyCapPercent: number;        // 2% daily cap
+  hardStopPercent: number;        // -0.4% hard stop
+  minConvergence: number;         // 70% signal convergence required
+  maxActivePositions: number;     // max concurrent positions
+  positionTimeoutMs: number;      // close position after timeout
+  takeProfitScalp: number;        // 0.8% take profit for scalp
+  stopLossScalp: number;          // 0.3% stop loss for scalp
 
   // Server
   port: number;
   logLevel: string;
   nodeEnv: string;
+  dryRun: boolean;
 }
 
 export function loadConfig(): StrategyConfig {
@@ -54,6 +72,9 @@ export function loadConfig(): StrategyConfig {
     polymarketApiPassphrase: process.env.POLYMARKET_API_PASSPHRASE || '',
     polygonRpcUrl: process.env.POLYGON_RPC_URL || 'https://1rpc.io/matic',
 
+    binanceWsUrl: process.env.BINANCE_WS_URL || 'wss://stream.binance.com:9443/ws',
+    binanceRestUrl: process.env.BINANCE_REST_URL || 'https://api.binance.com',
+
     minEvPercent: parseFloat(process.env.MIN_EV_PERCENT || '5'),
     maxYesPrice: parseFloat(process.env.MAX_YES_PRICE || '0.20'),
     takeProfitPercent: parseFloat(process.env.TAKE_PROFIT_PERCENT || '40'),
@@ -67,9 +88,22 @@ export function loadConfig(): StrategyConfig {
     maxTradesPerHour: parseFloat(process.env.MAX_TRADES_PER_HOUR || '2'),
     maxDailyLossUsd: parseFloat(process.env.MAX_DAILY_LOSS_USD || '2'),
 
+    scalperEnabled: process.env.SCALPER_ENABLED !== 'false',
+    scalperMode: (process.env.SCALPER_MODE as 'paper' | 'live') || 'paper',
+    lagThreshold: parseFloat(process.env.LAG_THRESHOLD || '0.3'),
+    perTradeRiskPercent: parseFloat(process.env.PER_TRADE_RISK_PERCENT || '0.5'),
+    dailyCapPercent: parseFloat(process.env.DAILY_CAP_PERCENT || '2'),
+    hardStopPercent: parseFloat(process.env.HARD_STOP_PERCENT || '-0.4'),
+    minConvergence: parseFloat(process.env.MIN_CONVERGENCE || '70'),
+    maxActivePositions: parseInt(process.env.MAX_ACTIVE_POSITIONS || '3', 10),
+    positionTimeoutMs: parseInt(process.env.POSITION_TIMEOUT_MS || '300000', 10),
+    takeProfitScalp: parseFloat(process.env.TAKE_PROFIT_SCALP || '0.8'),
+    stopLossScalp: parseFloat(process.env.STOP_LOSS_SCALP || '0.3'),
+
     port: parseInt(process.env.PORT || '3000', 10),
     logLevel: process.env.LOG_LEVEL || 'info',
     nodeEnv: process.env.NODE_ENV || 'development',
+    dryRun: process.env.DRY_RUN === 'true',
   };
 }
 

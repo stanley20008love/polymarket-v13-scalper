@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Polymarket V13 - BTC Scalper Terminal</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg-primary: #0a0e17;
+      --bg-secondary: #111827;
+      --bg-card: #1a2332;
+      --bg-hover: #243044;
+      --border: #2d3a4d;
+      --text-primary: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --green: #22c55e;
+      --green-bg: rgba(34, 197, 94, 0.1);
+      --red: #ef4444;
+      --red-bg: rgba(239, 68, 68, 0.1);
+      --blue: #3b82f6;
+      --blue-bg: rgba(59, 130, 246, 0.1);
+      --yellow: #eab308;
+      --yellow-bg: rgba(234, 179, 8, 0.1);
+      --purple: #a855f7;
+    }
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro', sans-serif;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+    .app { max-width: 1600px; margin: 0 auto; padding: 16px; }
+
+    /* Header */
+    .header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 24px; background: var(--bg-secondary);
+      border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px;
+    }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo span { color: var(--blue); }
+    .version { font-size: 11px; background: var(--blue-bg); color: var(--blue);
+      padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+    .engine-status { display: flex; align-items: center; gap: 8px; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .status-dot.running { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .status-dot.idle { background: var(--text-muted); }
+    .status-dot.error { background: var(--red); }
+    .status-text { font-size: 13px; font-weight: 600; }
+    .mode-badge { font-size: 11px; padding: 2px 10px; border-radius: 4px; font-weight: 700; }
+    .mode-badge.paper { background: var(--yellow-bg); color: var(--yellow); }
+    .mode-badge.live { background: var(--green-bg); color: var(--green); }
+    .header-actions { display: flex; gap: 8px; }
+    .btn { padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px;
+      font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn-start { background: var(--green); color: #000; }
+    .btn-start:hover { filter: brightness(1.1); }
+    .btn-stop { background: var(--red); color: #fff; }
+    .btn-stop:hover { filter: brightness(1.1); }
+    .btn-export { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); }
+    .btn-export:hover { background: var(--bg-hover); }
+
+    /* BTC Ticker */
+    .btc-ticker {
+      display: flex; align-items: center; gap: 24px; padding: 12px 24px;
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 10px; margin-bottom: 16px;
+    }
+    .btc-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+    .btc-price { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .btc-change { font-size: 16px; font-weight: 700; }
+    .btc-change.up { color: var(--green); }
+    .btc-change.down { color: var(--red); }
+    .btc-detail { font-size: 12px; color: var(--text-secondary); }
+    .binance-status { margin-left: auto; font-size: 11px; display: flex; align-items: center; gap: 6px; }
+
+    /* KPI Cards */
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 16px;
+    }
+    .kpi-card {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px;
+    }
+    .kpi-label { font-size: 11px; color: var(--text-muted); font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .kpi-value { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .kpi-value.positive { color: var(--green); }
+    .kpi-value.negative { color: var(--red); }
+    .kpi-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+    /* Main Grid */
+    .main-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+    }
+    .card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
+    }
+    .card-title { font-size: 14px; font-weight: 700; }
+    .card-badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+    .card-body { padding: 16px 20px; }
+
+    /* PnL Chart */
+    .chart-container { position: relative; height: 250px; }
+
+    /* Signal Nodes */
+    .signal-grid { display: flex; flex-direction: column; gap: 8px; }
+    .signal-row {
+      display: flex; align-items: center; gap: 12px; padding: 8px 12px;
+      background: var(--bg-card); border-radius: 8px;
+    }
+    .signal-name { font-size: 12px; font-weight: 600; min-width: 120px; }
+    .signal-bar-bg { flex: 1; height: 6px; background: var(--bg-primary);
+      border-radius: 3px; overflow: hidden; }
+    .signal-bar { height: 100%; border-radius: 3px; transition: width 0.5s; }
+    .signal-bar.bull { background: var(--green); }
+    .signal-bar.bear { background: var(--red); }
+    .signal-bar.neutral { background: var(--text-muted); }
+    .signal-dir { font-size: 11px; font-weight: 700; min-width: 50px; text-align: right; }
+    .signal-dir.bull { color: var(--green); }
+    .signal-dir.bear { color: var(--red); }
+    .signal-dir.neutral { color: var(--text-muted); }
+    .signal-details { font-size: 10px; color: var(--text-secondary); min-width: 150px; text-align: right; }
+
+    .convergence-display {
+      margin-top: 12px; padding: 12px; background: var(--bg-card);
+      border-radius: 8px; text-align: center;
+    }
+    .convergence-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+    .convergence-value { font-size: 32px; font-weight: 800; }
+    .convergence-value.bull { color: var(--green); }
+    .convergence-value.bear { color: var(--red); }
+    .convergence-value.neutral { color: var(--text-muted); }
+    .convergence-dir { font-size: 14px; font-weight: 700; margin-top: 2px; }
+
+    /* Tables */
+    .table-container { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { text-align: left; padding: 10px 12px; font-size: 11px; color: var(--text-muted);
+      font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border); }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border);
+      font-variant-numeric: tabular-nums; }
+    tr:hover { background: var(--bg-hover); }
+    .side-buy { color: var(--green); font-weight: 700; }
+    .side-sell { color: var(--red); font-weight: 700; }
+    .pnl-positive { color: var(--green); font-weight: 600; }
+    .pnl-negative { color: var(--red); font-weight: 600; }
+    .type-up { color: var(--green); }
+    .type-down { color: var(--red); }
+    .paper-badge { font-size: 9px; background: var(--yellow-bg); color: var(--yellow);
+      padding: 1px 5px; border-radius: 3px; font-weight: 700; }
+    .status-open { color: var(--blue); }
+    .status-closed { color: var(--text-secondary); }
+
+    /* Full Width Section */
+    .full-width { grid-column: 1 / -1; }
+
+    /* Positions */
+    .positions-empty { text-align: center; padding: 32px; color: var(--text-muted); font-size: 14px; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+      .main-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .header { flex-direction: column; gap: 12px; }
+      .btc-ticker { flex-wrap: wrap; }
+    }
+
+    /* Pulse animation */
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .pulse { animation: pulse 2s infinite; }
+
+    /* Trade detail row expand */
+    .trade-reason { font-size: 10px; color: var(--text-secondary); max-width: 200px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">Poly<span>Scalper</span></div>
+      <span class="version">V13</span>
+      <div class="engine-status">
+        <div class="status-dot idle" id="statusDot"></div>
+        <span class="status-text" id="statusText">IDLE</span>
+      </div>
+      <span class="mode-badge paper" id="modeBadge">PAPER</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-start" id="btnStart" onclick="startEngine()">▶ Start</button>
+      <button class="btn btn-stop" id="btnStop" onclick="stopEngine()" disabled>■ Stop</button>
+      <button class="btn btn-export" onclick="exportData()">↓ Export</button>
+    </div>
+  </div>
+
+  <!-- BTC Ticker -->
+  <div class="btc-ticker">
+    <div>
+      <div class="btc-label">BTC/USDT</div>
+      <div class="btc-price" id="btcPrice">$---</div>
+    </div>
+    <div>
+      <div class="btc-label">5M Change</div>
+      <div class="btc-change" id="btcChange">0.00%</div>
+    </div>
+    <div>
+      <div class="btc-label">5M Volume</div>
+      <div class="btc-detail" id="btcVolume">$0</div>
+    </div>
+    <div>
+      <div class="btc-label">Depth Imbalance</div>
+      <div class="btc-detail" id="btcImbalance">0%</div>
+    </div>
+    <div class="binance-status">
+      <div class="status-dot idle" id="binanceDot"></div>
+      <span id="binanceText">Binance: ---</span>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Total P&L</div>
+      <div class="kpi-value" id="totalPnl">$0.00</div>
+      <div class="kpi-sub" id="totalPnlSub">0 trades</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Daily P&L</div>
+      <div class="kpi-value" id="dailyPnl">$0.00</div>
+      <div class="kpi-sub" id="dailyCapSub">Cap: 0%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Win Rate</div>
+      <div class="kpi-value" id="winRate">0%</div>
+      <div class="kpi-sub" id="winLossSub">0W / 0L</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Active Positions</div>
+      <div class="kpi-value" id="activePositions">0</div>
+      <div class="kpi-sub">Max: 3</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Scan Count</div>
+      <div class="kpi-value" id="scanCount">0</div>
+      <div class="kpi-sub" id="skipSub">0 skipped</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Uptime</div>
+      <div class="kpi-value" id="uptime">0:00</div>
+      <div class="kpi-sub" id="hardStopSub">Hard Stop: OK</div>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="main-grid">
+    <!-- PnL Chart -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Cumulative P&L</span>
+        <span class="card-badge" style="background:var(--blue-bg);color:var(--blue)">Real-time</span>
+      </div>
+      <div class="card-body">
+        <div class="chart-container">
+          <canvas id="pnlChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Signal Convergence -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Signal Convergence (Force Graph)</span>
+        <span class="card-badge" id="convergenceBadge" style="background:var(--bg-card);color:var(--text-muted)">---%</span>
+      </div>
+      <div class="card-body">
+        <div class="signal-grid" id="signalGrid">
+          <!-- Filled by JS -->
+        </div>
+        <div class="convergence-display">
+          <div class="convergence-label">Convergence Direction</div>
+          <div class="convergence-value neutral" id="convergenceValue">---</div>
+          <div class="convergence-dir" id="convergenceDir">Waiting for signals...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Positions -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Active Positions</span>
+        <span class="card-badge" id="positionsBadge" style="background:var(--blue-bg);color:var(--blue)">0</span>
+      </div>
+      <div class="card-body">
+        <div class="table-container" id="positionsContainer">
+          <div class="positions-empty" id="noPositions">No active positions</div>
+          <table id="positionsTable" style="display:none">
+            <thead>
+              <tr>
+                <th>Market</th>
+                <th>Type</th>
+                <th>Entry</th>
+                <th>Current</th>
+                <th>Size</th>
+                <th>Cost</th>
+                <th>P&L</th>
+                <th>P&L %</th>
+                <th>BTC</th>
+                <th>Lag</th>
+                <th>Age</th>
+              </tr>
+            </thead>
+            <tbody id="positionsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trade History -->
+    <div class="card full-width">
+      <div class="card-header">
+        <span class="card-title">Trade History</span>
+        <span class="card-badge" id="tradesBadge" style="background:var(--bg-card);color:var(--text-secondary)">0 trades</span>
+      </div>
+      <div class="card-body">
+        <div class="table-container">
+          <table id="tradesTable">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Side</th>
+                <th>Type</th>
+                <th>Market</th>
+                <th>Price</th>
+                <th>Size</th>
+                <th>Cost</th>
+                <th>P&L</th>
+                <th>P&L %</th>
+                <th>BTC Price</th>
+                <th>Lag</th>
+                <th>Conv</th>
+                <th>Reason</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tradesBody">
+              <tr><td colspan="14" style="text-align:center;color:var(--text-muted);padding:24px">No trades yet. Start the engine to begin scalping.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== State =====
+let engineRunning = false;
+let engineMode = 'idle';
+let pnlData = [];
+let pnlLabels = [];
+let pnlChart = null;
+let refreshTimer = null;
+
+// ===== Initialize Chart =====
+function initChart() {
+  const ctx = document.getElementById('pnlChart').getContext('2d');
+  pnlChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Cumulative P&L ($)',
+        data: [],
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 0,
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a2332',
+          titleColor: '#e2e8f0',
+          bodyColor: '#94a3b8',
+          borderColor: '#2d3a4d',
+          borderWidth: 1,
+        }
+      },
+      scales: {
+        x: {
+          display: true,
+          grid: { color: 'rgba(45, 58, 77, 0.5)' },
+          ticks: { color: '#64748b', maxTicksLimit: 10, font: { size: 10 } },
+        },
+        y: {
+          display: true,
+          grid: { color: 'rgba(45, 58, 77, 0.5)' },
+          ticks: { color: '#64748b', font: { size: 10 },
+            callback: v => '$' + v.toFixed(2) },
+        }
+      },
+      interaction: { intersect: false, mode: 'index' },
+    }
+  });
+}
+
+// ===== API Calls =====
+async function fetchState() {
+  try {
+    const resp = await fetch('/api/state');
+    const data = await resp.json();
+    updateUI(data);
+  } catch (e) {
+    console.error('Fetch error:', e);
+  }
+}
+
+async function startEngine() {
+  try {
+    const resp = await fetch('/api/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'paper' }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      document.getElementById('btnStart').disabled = true;
+      document.getElementById('btnStop').disabled = false;
+    }
+  } catch (e) {
+    console.error('Start error:', e);
+  }
+}
+
+async function stopEngine() {
+  try {
+    const resp = await fetch('/api/stop', { method: 'POST' });
+    const data = await resp.json();
+    if (data.success) {
+      document.getElementById('btnStart').disabled = false;
+      document.getElementById('btnStop').disabled = true;
+    }
+  } catch (e) {
+    console.error('Stop error:', e);
+  }
+}
+
+function exportData() {
+  window.open('/api/export', '_blank');
+}
+
+// ===== Update UI =====
+function updateUI(state) {
+  // Header
+  engineRunning = state.running;
+  engineMode = state.mode;
+
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  const modeBadge = document.getElementById('modeBadge');
+
+  if (state.running) {
+    dot.className = 'status-dot running pulse';
+    text.textContent = 'RUNNING';
+    text.style.color = '#22c55e';
+    document.getElementById('btnStart').disabled = true;
+    document.getElementById('btnStop').disabled = false;
+  } else {
+    dot.className = 'status-dot idle';
+    text.textContent = 'IDLE';
+    text.style.color = '#64748b';
+    document.getElementById('btnStart').disabled = false;
+    document.getElementById('btnStop').disabled = true;
+  }
+
+  if (state.mode === 'paper') {
+    modeBadge.className = 'mode-badge paper';
+    modeBadge.textContent = 'PAPER';
+  } else if (state.mode === 'live') {
+    modeBadge.className = 'mode-badge live';
+    modeBadge.textContent = 'LIVE';
+  } else {
+    modeBadge.className = 'mode-badge paper';
+    modeBadge.textContent = 'IDLE';
+  }
+
+  // BTC Ticker
+  if (state.btcPrice > 0) {
+    document.getElementById('btcPrice').textContent = '$' + state.btcPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+
+  const changeEl = document.getElementById('btcChange');
+  const change5m = state.btcPriceChange5m || 0;
+  changeEl.textContent = (change5m >= 0 ? '+' : '') + change5m.toFixed(3) + '%';
+  changeEl.className = 'btc-change ' + (change5m >= 0 ? 'up' : 'down');
+
+  document.getElementById('btcVolume').textContent = '$' + ((state.btcVolume5m || 0) / 1e6).toFixed(1) + 'M';
+
+  const binanceDot = document.getElementById('binanceDot');
+  const binanceText = document.getElementById('binanceText');
+  if (state.binanceConnected) {
+    binanceDot.className = 'status-dot running';
+    binanceText.textContent = 'Binance: Connected';
+    binanceText.style.color = '#22c55e';
+  } else {
+    binanceDot.className = 'status-dot idle';
+    binanceText.textContent = 'Binance: Disconnected';
+    binanceText.style.color = '#64748b';
+  }
+
+  // KPIs
+  const totalPnlEl = document.getElementById('totalPnl');
+  totalPnlEl.textContent = '$' + (state.totalPnl || 0).toFixed(2);
+  totalPnlEl.className = 'kpi-value ' + ((state.totalPnl || 0) >= 0 ? 'positive' : 'negative');
+  document.getElementById('totalPnlSub').textContent = (state.totalTrades || 0) + ' trades';
+
+  const dailyPnlEl = document.getElementById('dailyPnl');
+  dailyPnlEl.textContent = '$' + (state.dailyPnl || 0).toFixed(2);
+  dailyPnlEl.className = 'kpi-value ' + ((state.dailyPnl || 0) >= 0 ? 'positive' : 'negative');
+  document.getElementById('dailyCapSub').textContent = 'Cap: ' + (state.dailyCapLimit || 2) + '%';
+
+  document.getElementById('winRate').textContent = (state.winRate || 0).toFixed(0) + '%';
+  document.getElementById('winLossSub').textContent = (state.winningTrades || 0) + 'W / ' + (state.losingTrades || 0) + 'L';
+
+  document.getElementById('activePositions').textContent = (state.positions || []).length;
+  document.getElementById('scanCount').textContent = (state.scanCount || 0).toLocaleString();
+  document.getElementById('skipSub').textContent = (state.skipCount || 0) + ' skipped';
+
+  if (state.startTime > 0) {
+    const uptime = Date.now() - state.startTime;
+    const hours = Math.floor(uptime / 3600000);
+    const mins = Math.floor((uptime % 3600000) / 60000);
+    document.getElementById('uptime').textContent = hours + ':' + String(mins).padStart(2, '0');
+  }
+
+  const hardStopEl = document.getElementById('hardStopSub');
+  if (state.hardStopTriggered) {
+    hardStopEl.textContent = 'Hard Stop: TRIGGERED';
+    hardStopEl.style.color = '#ef4444';
+  } else {
+    hardStopEl.textContent = 'Hard Stop: OK';
+    hardStopEl.style.color = '';
+  }
+
+  // Signals
+  updateSignals(state.signals || [], state.activeConvergence);
+
+  // Positions
+  updatePositions(state.positions || []);
+
+  // Trades
+  updateTrades(state.trades || []);
+
+  // PnL Chart
+  updatePnlChart(state.trades || []);
+}
+
+function updateSignals(signals, convergence) {
+  const grid = document.getElementById('signalGrid');
+  grid.innerHTML = '';
+
+  for (const sig of signals) {
+    const dirClass = sig.direction === 'BULL' ? 'bull' : sig.direction === 'BEAR' ? 'bear' : 'neutral';
+    const barWidth = Math.max(5, sig.strength * 100);
+
+    grid.innerHTML += `
+      <div class="signal-row">
+        <span class="signal-name">${sig.name}</span>
+        <div class="signal-bar-bg">
+          <div class="signal-bar ${dirClass}" style="width:${barWidth}%"></div>
+        </div>
+        <span class="signal-dir ${dirClass}">${sig.direction}</span>
+        <span class="signal-details">${sig.details || ''}</span>
+      </div>
+    `;
+  }
+
+  if (signals.length === 0) {
+    grid.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-muted)">Waiting for Binance data...</div>';
+  }
+
+  // Convergence
+  const convValue = document.getElementById('convergenceValue');
+  const convDir = document.getElementById('convergenceDir');
+  const convBadge = document.getElementById('convergenceBadge');
+
+  if (convergence) {
+    const dirClass = convergence.direction === 'BULL' ? 'bull' : convergence.direction === 'BEAR' ? 'bear' : 'neutral';
+    convValue.className = 'convergence-value ' + dirClass;
+    convValue.textContent = convergence.confidence.toFixed(0) + '%';
+    convDir.textContent = convergence.details || convergence.direction;
+    convDir.className = 'convergence-dir';
+
+    const badgeBg = convergence.shouldTrade
+      ? (convergence.direction === 'BULL' ? 'background:var(--green-bg);color:var(--green)' : 'background:var(--red-bg);color:var(--red)')
+      : 'background:var(--bg-card);color:var(--text-muted)';
+    convBadge.style = badgeBg;
+    convBadge.textContent = convergence.shouldTrade ? (convergence.tradeSide || convergence.direction) : convergence.confidence.toFixed(0) + '%';
+  }
+}
+
+function updatePositions(positions) {
+  const container = document.getElementById('positionsContainer');
+  const table = document.getElementById('positionsTable');
+  const noPos = document.getElementById('noPositions');
+  const badge = document.getElementById('positionsBadge');
+
+  badge.textContent = positions.length;
+
+  if (positions.length === 0) {
+    table.style.display = 'none';
+    noPos.style.display = 'block';
+    return;
+  }
+
+  table.style.display = 'table';
+  noPos.style.display = 'none';
+
+  const tbody = document.getElementById('positionsBody');
+  tbody.innerHTML = '';
+
+  for (const pos of positions) {
+    const age = Date.now() - pos.entryTime;
+    const ageMin = Math.floor(age / 60000);
+    const ageSec = Math.floor((age % 60000) / 1000);
+
+    const pnlClass = pos.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+    const typeClass = pos.tradeType === 'UP' ? 'type-up' : 'type-down';
+
+    tbody.innerHTML += `
+      <tr>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pos.marketQuestion || pos.conditionId}</td>
+        <td class="${typeClass}" style="font-weight:700">${pos.tradeType}</td>
+        <td>${pos.entryPrice.toFixed(4)}</td>
+        <td>${pos.currentPrice.toFixed(4)}</td>
+        <td>${pos.size}</td>
+        <td>$${pos.cost.toFixed(2)}</td>
+        <td class="${pnlClass}">$${pos.pnl.toFixed(4)}</td>
+        <td class="${pnlClass}">${pos.pnlPercent.toFixed(2)}%</td>
+        <td>$${(pos.btcEntryPrice || 0).toFixed(0)}</td>
+        <td>${pos.polymarketLag.toFixed(2)}%</td>
+        <td>${ageMin}m ${ageSec}s</td>
+      </tr>
+    `;
+  }
+}
+
+function updateTrades(trades) {
+  const tbody = document.getElementById('tradesBody');
+  const badge = document.getElementById('tradesBadge');
+
+  badge.textContent = trades.length + ' trades';
+
+  if (trades.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:var(--text-muted);padding:24px">No trades yet. Start the engine to begin scalping.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  for (const t of trades) {
+    const time = new Date(t.timestamp).toLocaleTimeString('en-US', {hour12: false});
+    const sideClass = t.side === 'BUY' ? 'side-buy' : 'side-sell';
+    const pnlClass = t.pnl > 0 ? 'pnl-positive' : t.pnl < 0 ? 'pnl-negative' : '';
+    const typeClass = t.tradeType === 'UP' ? 'type-up' : 'type-down';
+    const statusClass = t.status === 'open' ? 'status-open' : 'status-closed';
+    const paperBadge = t.isPaper ? '<span class="paper-badge">PAPER</span> ' : '';
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${time}</td>
+        <td class="${sideClass}">${paperBadge}${t.side}</td>
+        <td class="${typeClass}" style="font-weight:600">${t.tradeType}</td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.marketQuestion || t.conditionId}</td>
+        <td>${t.price.toFixed(4)}</td>
+        <td>${t.size}</td>
+        <td>$${t.cost.toFixed(2)}</td>
+        <td class="${pnlClass}">$${t.pnl.toFixed(4)}</td>
+        <td class="${pnlClass}">${t.pnlPercent.toFixed(2)}%</td>
+        <td>$${(t.btcPrice || 0).toFixed(0)}</td>
+        <td>${t.polymarketLag.toFixed(2)}%</td>
+        <td>${t.convergence.toFixed(0)}%</td>
+        <td class="trade-reason">${t.reason || ''}</td>
+        <td class="${statusClass}">${t.status}</td>
+      </tr>
+    `;
+  }
+}
+
+function updatePnlChart(trades) {
+  // Build cumulative P&L from closed SELL trades
+  const closedTrades = trades.filter(t => t.side === 'SELL' && t.status === 'closed');
+
+  if (closedTrades.length === 0) {
+    // Add a zero point
+    if (pnlChart.data.labels.length === 0) {
+      pnlChart.data.labels = ['Start'];
+      pnlChart.data.datasets[0].data = [0];
+      pnlChart.update('none');
+    }
+    return;
+  }
+
+  // Sort by timestamp
+  closedTrades.sort((a, b) => a.timestamp - b.timestamp);
+
+  let cumPnl = 0;
+  const labels = ['Start'];
+  const data = [0];
+
+  for (const t of closedTrades) {
+    cumPnl += t.pnl;
+    labels.push(new Date(t.timestamp).toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute: '2-digit'}));
+    data.push(cumPnl);
+  }
+
+  pnlChart.data.labels = labels;
+  pnlChart.data.datasets[0].data = data;
+
+  // Color based on current P&L
+  const color = cumPnl >= 0 ? '#22c55e' : '#ef4444';
+  pnlChart.data.datasets[0].borderColor = color;
+  pnlChart.data.datasets[0].backgroundColor = cumPnl >= 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+
+  pnlChart.update('none');
+}
+
+// ===== Init =====
+document.addEventListener('DOMContentLoaded', () => {
+  initChart();
+
+  // Initial fetch
+  fetchState();
+
+  // Auto-refresh every 2 seconds
+  refreshTimer = setInterval(fetchState, 2000);
+});
+</script>
+</body>
+</html>
