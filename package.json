@@ -1,0 +1,32 @@
+{
+  "name": "polymarket-v13-scalper",
+  "version": "13.0.0",
+  "description": "Polymarket V13 BTC 5MIN Scalper - CLOB Price Lag Exploitation",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "dev": "npx tsx src/main.ts",
+    "scan": "node dist/main.js --mode scan",
+    "trade": "node dist/main.js --mode trade",
+    "test": "echo \"No tests\" && exit 0"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "dotenv": "^16.4.0",
+    "ethers": "^6.13.0",
+    "winston": "^3.13.0",
+    "node-cron": "^3.0.3",
+    "express": "^4.19.0",
+    "@polymarket/clob-client": "^5.8.0",
+    "@polymarket/order-utils": "^3.0.1",
+    "ws": "^8.17.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/node": "^20.14.0",
+    "@types/express": "^4.17.0",
+    "@types/node-cron": "^3.0.11",
+    "@types/ws": "^8.5.0"
+  }
+}
