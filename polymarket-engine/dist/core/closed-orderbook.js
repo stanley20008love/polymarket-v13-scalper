@@ -89,13 +89,17 @@ class ClosedOrderBookAnalyzer {
         const hiddenLiquidity = icebergRatio > 2
             ? totalBidLiquidity * (icebergRatio - 1) * 0.3
             : 0;
-        // Price efficiency: how close is the mid price to the "efficient" price
-        // implied by BTC movement
-        const midPrice = (bestBid + bestAsk) / 2;
-        const btcImpliedProb = btcChange5m > 0 ? 0.5 + Math.min(0.4, btcChange5m * 10) : 0.5;
-        const priceEfficiency = 1 - Math.abs(midPrice - btcImpliedProb);
-        // Mispricing: difference between Polymarket price and BTC-implied price
-        const mispricing = (midPrice - btcImpliedProb) * 100;
+        // Price efficiency: based on how balanced the book is
+        // (For BTC-level order books, we use bid/ask balance instead of probability comparison)
+        const totalLiquidity = totalBidLiquidity + totalAskLiquidity;
+        const balanceRatio = totalLiquidity > 0
+            ? Math.abs(totalBidLiquidity - totalAskLiquidity) / totalLiquidity
+            : 0;
+        const priceEfficiency = 1 - balanceRatio; // 1.0 = perfectly balanced, 0 = one-sided
+        // Mispricing: based on depth imbalance (normalized to 0-100%)
+        const mispricing = totalLiquidity > 0
+            ? ((totalBidLiquidity - totalAskLiquidity) / totalLiquidity) * 100
+            : 0;
         const analysis = {
             conditionId,
             finalYesPrice: bestAsk,
