@@ -309,3 +309,120 @@ export interface SimulationResult {
   shouldTrade: boolean;
   marketContext: string;
 }
+
+// ---- Marketing101 Module Types ----
+
+export interface M101Signal {
+  source: string;
+  direction: 'UP' | 'DOWN' | 'NEUTRAL';
+  strength: number;
+  confidence: number;
+  details: string;
+  timestamp: number;
+}
+
+export interface M101Decision {
+  shouldTrade: boolean;
+  direction: 'UP' | 'DOWN';
+  positionSize: number;
+  entryPrice: number;
+  stopLoss: number;
+  takeProfit: number;
+  confidence: number;
+  expectedValue: number;
+  riskReward: number;
+  signals: M101Signal[];
+  simulationResult: any;
+  otcSnapshot: any;
+  closedBookAnalysis: any;
+  btcSimResult: any;
+  reasoning: string;
+  timestamp: number;
+}
+
+export interface M101SimResult {
+  direction: 'UP' | 'DOWN';
+  upProbability: number;
+  downProbability: number;
+  confidence: number;
+  expectedPnl: number;
+  pnlStdDev: number;
+  sharpe: number;
+  kellyFraction: number;
+  pnlDistribution: { p5: number; p25: number; p50: number; p75: number; p95: number };
+  simulationCount: number;
+  elapsedMs: number;
+  shouldTrade: boolean;
+  marketContext: string;
+}
+
+export interface BtcSimResult {
+  currentPrice: number;
+  upCount: number;
+  downCount: number;
+  avgFinalPrice: number;
+  p5: number;
+  p50: number;
+  p95: number;
+  maxPrice: number;
+  minPrice: number;
+  avgJumpCount: number;
+}
+
+export interface M101State {
+  running: boolean;
+  btcPrice: number;
+  lastDecision: M101Decision | null;
+  lastSignals: M101Signal[];
+  lastOtcSnapshot: any;
+  lastClosedBook: any;
+  lastBtcSim: BtcSimResult | null;
+  lastSimResult: M101SimResult | null;
+  tradeCount: number;
+  totalPnl: number;
+  dailyPnl: number;
+  winRate: number;
+  avgTradeSize: number;
+  simulationRuns: number;
+  scanCount: number;
+  skipCount: number;
+  startTime: number;
+}
+
+export interface OTCFlowData {
+  timestamp: number;
+  direction: 'BUY' | 'SELL';
+  size: number;
+  price: number;
+  venue: string;
+  confidence: number;
+  impact: number;
+}
+
+export interface OTCDeskSnapshotData {
+  buyFlow: number;
+  sellFlow: number;
+  netFlow: number;
+  avgBuySize: number;
+  avgSellSize: number;
+  largeBlocks: OTCFlowData[];
+  confidence: number;
+  signal: 'BULL' | 'BEAR' | 'NEUTRAL';
+  signalStrength: number;
+  lastUpdate: number;
+}
+
+export interface ClosedBookAnalysisData {
+  conditionId: string;
+  finalYesPrice: number;
+  finalNoPrice: number;
+  totalBidLiquidity: number;
+  totalAskLiquidity: number;
+  whaleBidCount: number;
+  whaleAskCount: number;
+  makerBias: 'YES' | 'NO' | 'NEUTRAL';
+  hiddenLiquidity: number;
+  priceEfficiency: number;
+  mispricing: number;
+  timestamp: number;
+}

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Polymarket V13 - BTC Scalper Terminal</title>
+  <title>Polymarket V13 - BTC Scalper + Marketing101</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -25,6 +25,11 @@
       --yellow: #eab308;
       --yellow-bg: rgba(234, 179, 8, 0.1);
       --purple: #a855f7;
+      --purple-bg: rgba(168, 85, 247, 0.1);
+      --cyan: #06b6d4;
+      --cyan-bg: rgba(6, 182, 212, 0.1);
+      --orange: #f97316;
+      --orange-bg: rgba(249, 115, 22, 0.1);
     }
     body {
       background: var(--bg-primary);
@@ -33,7 +38,7 @@
       line-height: 1.5;
       overflow-x: hidden;
     }
-    .app { max-width: 1600px; margin: 0 auto; padding: 16px; }
+    .app { max-width: 1800px; margin: 0 auto; padding: 16px; }
 
     /* Header */
     .header {
@@ -64,6 +69,21 @@
     .btn-stop:hover { filter: brightness(1.1); }
     .btn-export { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); }
     .btn-export:hover { background: var(--bg-hover); }
+
+    /* Module Tabs */
+    .module-tabs {
+      display: flex; gap: 0; margin-bottom: 16px;
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden;
+    }
+    .module-tab {
+      flex: 1; padding: 12px 20px; text-align: center; cursor: pointer;
+      font-size: 13px; font-weight: 700; transition: all 0.2s;
+      border-bottom: 3px solid transparent;
+    }
+    .module-tab:hover { background: var(--bg-hover); }
+    .module-tab.active { background: var(--bg-card); border-bottom-color: var(--blue); color: var(--blue); }
+    .module-tab .tab-icon { margin-right: 6px; }
 
     /* BTC Ticker */
     .btc-ticker {
@@ -171,6 +191,73 @@
     /* Positions */
     .positions-empty { text-align: center; padding: 32px; color: var(--text-muted); font-size: 14px; }
 
+    /* Module panels */
+    .module-panel { display: none; }
+    .module-panel.active { display: block; }
+
+    /* Marketing101 Specific */
+    .m101-source-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 16px;
+    }
+    .m101-source-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px; text-align: center; position: relative;
+    }
+    .m101-source-card .source-icon { font-size: 24px; margin-bottom: 6px; }
+    .m101-source-card .source-name { font-size: 11px; color: var(--text-muted);
+      text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .m101-source-card .source-dir { font-size: 18px; font-weight: 800; margin-bottom: 2px; }
+    .m101-source-card .source-strength { font-size: 11px; color: var(--text-secondary); }
+    .m101-source-card .source-weight { font-size: 10px; color: var(--text-muted);
+      position: absolute; top: 8px; right: 10px; background: var(--bg-primary);
+      padding: 2px 6px; border-radius: 3px; }
+    .m101-source-card.up { border-top: 3px solid var(--green); }
+    .m101-source-card.down { border-top: 3px solid var(--red); }
+    .m101-source-card.neutral { border-top: 3px solid var(--text-muted); }
+
+    .m101-decision-box {
+      background: var(--bg-card); border: 2px solid var(--border);
+      border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 16px;
+    }
+    .m101-decision-box.trade { border-color: var(--green); box-shadow: 0 0 20px rgba(34, 197, 94, 0.1); }
+    .m101-decision-box.skip { border-color: var(--text-muted); }
+    .m101-decision-label { font-size: 11px; color: var(--text-muted);
+      text-transform: uppercase; font-weight: 700; margin-bottom: 8px; }
+    .m101-decision-value { font-size: 36px; font-weight: 800; }
+    .m101-decision-value.up { color: var(--green); }
+    .m101-decision-value.down { color: var(--red); }
+    .m101-decision-value.skip { color: var(--text-muted); }
+    .m101-decision-reason { font-size: 12px; color: var(--text-secondary);
+      margin-top: 8px; line-height: 1.6; }
+
+    .m101-data-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;
+    }
+    .m101-data-card {
+      background: var(--bg-card); border-radius: 10px; padding: 14px;
+    }
+    .m101-data-title { font-size: 11px; color: var(--text-muted); font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 6px; }
+    .m101-data-row { display: flex; justify-content: space-between;
+      padding: 3px 0; font-size: 12px; }
+    .m101-data-row .label { color: var(--text-secondary); }
+    .m101-data-row .value { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    .otc-flow-item {
+      display: flex; align-items: center; gap: 8px; padding: 4px 0;
+      font-size: 11px; border-bottom: 1px solid var(--border);
+    }
+    .otc-flow-item:last-child { border-bottom: none; }
+
+    .consensus-bar {
+      display: flex; height: 8px; border-radius: 4px; overflow: hidden;
+      background: var(--bg-primary); margin-top: 8px;
+    }
+    .consensus-bar .up-segment { background: var(--green); transition: width 0.5s; }
+    .consensus-bar .down-segment { background: var(--red); transition: width 0.5s; }
+    .consensus-bar .neutral-segment { background: var(--text-muted); transition: width 0.5s; }
+
     /* Scrollbar */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: var(--bg-primary); }
@@ -180,11 +267,15 @@
     @media (max-width: 1200px) {
       .kpi-grid { grid-template-columns: repeat(3, 1fr); }
       .main-grid { grid-template-columns: 1fr; }
+      .m101-source-grid { grid-template-columns: repeat(3, 1fr); }
+      .m101-data-grid { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 768px) {
       .kpi-grid { grid-template-columns: repeat(2, 1fr); }
       .header { flex-direction: column; gap: 12px; }
       .btc-ticker { flex-wrap: wrap; }
+      .m101-source-grid { grid-template-columns: repeat(2, 1fr); }
+      .m101-data-grid { grid-template-columns: 1fr; }
     }
 
     /* Pulse animation */
@@ -202,7 +293,7 @@
   <div class="header">
     <div class="header-left">
       <div class="logo">Poly<span>Scalper</span></div>
-      <span class="version">V13</span>
+      <span class="version">V13.1</span>
       <div class="engine-status">
         <div class="status-dot idle" id="statusDot"></div>
         <span class="status-text" id="statusText">IDLE</span>
@@ -216,7 +307,17 @@
     </div>
   </div>
 
-  <!-- BTC Ticker -->
+  <!-- Module Tabs -->
+  <div class="module-tabs">
+    <div class="module-tab active" onclick="switchTab('scalper')" id="tabScalper">
+      <span class="tab-icon">⚡</span> BTC 5MIN Scalper
+    </div>
+    <div class="module-tab" onclick="switchTab('m101')" id="tabM101">
+      <span class="tab-icon">🧠</span> Marketing101 Engine
+    </div>
+  </div>
+
+  <!-- BTC Ticker (shared) -->
   <div class="btc-ticker">
     <div>
       <div class="btc-label">BTC/USDT</div>
@@ -240,187 +341,376 @@
     </div>
   </div>
 
-  <!-- KPI Cards -->
-  <div class="kpi-grid">
-    <div class="kpi-card">
-      <div class="kpi-label">Total P&L</div>
-      <div class="kpi-value" id="totalPnl">$0.00</div>
-      <div class="kpi-sub" id="totalPnlSub">0 trades</div>
+  <!-- ===== MODULE 1: Scalper Panel ===== -->
+  <div class="module-panel active" id="panelScalper">
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Total P&L</div>
+        <div class="kpi-value" id="totalPnl">$0.00</div>
+        <div class="kpi-sub" id="totalPnlSub">0 trades</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Daily P&L</div>
+        <div class="kpi-value" id="dailyPnl">$0.00</div>
+        <div class="kpi-sub" id="dailyCapSub">Cap: 0%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Win Rate</div>
+        <div class="kpi-value" id="winRate">0%</div>
+        <div class="kpi-sub" id="winLossSub">0W / 0L</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Active Positions</div>
+        <div class="kpi-value" id="activePositions">0</div>
+        <div class="kpi-sub">Max: 3</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Scan Count</div>
+        <div class="kpi-value" id="scanCount">0</div>
+        <div class="kpi-sub" id="skipSub">0 skipped</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Uptime</div>
+        <div class="kpi-value" id="uptime">0:00</div>
+        <div class="kpi-sub" id="hardStopSub">Hard Stop: OK</div>
+      </div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Daily P&L</div>
-      <div class="kpi-value" id="dailyPnl">$0.00</div>
-      <div class="kpi-sub" id="dailyCapSub">Cap: 0%</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Win Rate</div>
-      <div class="kpi-value" id="winRate">0%</div>
-      <div class="kpi-sub" id="winLossSub">0W / 0L</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Active Positions</div>
-      <div class="kpi-value" id="activePositions">0</div>
-      <div class="kpi-sub">Max: 3</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Scan Count</div>
-      <div class="kpi-value" id="scanCount">0</div>
-      <div class="kpi-sub" id="skipSub">0 skipped</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Uptime</div>
-      <div class="kpi-value" id="uptime">0:00</div>
-      <div class="kpi-sub" id="hardStopSub">Hard Stop: OK</div>
+
+    <!-- Main Grid -->
+    <div class="main-grid">
+      <!-- PnL Chart -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Cumulative P&L</span>
+          <span class="card-badge" style="background:var(--blue-bg);color:var(--blue)">Real-time</span>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas id="pnlChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Signal Convergence -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Signal Convergence (Force Graph)</span>
+          <span class="card-badge" id="convergenceBadge" style="background:var(--bg-card);color:var(--text-muted)">---%</span>
+        </div>
+        <div class="card-body">
+          <div class="signal-grid" id="signalGrid"></div>
+          <div class="convergence-display">
+            <div class="convergence-label">Convergence Direction</div>
+            <div class="convergence-value neutral" id="convergenceValue">---</div>
+            <div class="convergence-dir" id="convergenceDir">Waiting for signals...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Positions -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Active Positions</span>
+          <span class="card-badge" id="positionsBadge" style="background:var(--blue-bg);color:var(--blue)">0</span>
+        </div>
+        <div class="card-body">
+          <div class="table-container" id="positionsContainer">
+            <div class="positions-empty" id="noPositions">No active positions</div>
+            <table id="positionsTable" style="display:none">
+              <thead><tr><th>Market</th><th>Type</th><th>Entry</th><th>Current</th><th>Size</th><th>Cost</th><th>P&L</th><th>P&L %</th><th>BTC</th><th>Lag</th><th>Age</th></tr></thead>
+              <tbody id="positionsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MiroFish Simulation Engine -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🧬 MiroFish Monte Carlo Simulator</span>
+          <span class="card-badge" id="simBadge" style="background:var(--purple-bg);color:var(--purple)">10K LOOPS</span>
+        </div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div style="background:var(--bg-card);border-radius:8px;padding:14px;text-align:center">
+              <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">Sim Direction</div>
+              <div id="simDirection" style="font-size:22px;font-weight:800;color:var(--text-muted)">---</div>
+              <div id="simProb" style="font-size:11px;color:var(--text-secondary)">UP: --% | DOWN: --%</div>
+            </div>
+            <div style="background:var(--bg-card);border-radius:8px;padding:14px;text-align:center">
+              <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">Sim Confidence</div>
+              <div id="simConfidence" style="font-size:22px;font-weight:800;color:var(--text-muted)">--%</div>
+              <div id="simShouldTrade" style="font-size:11px">---</div>
+            </div>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">
+            <div style="font-size:11px;color:var(--text-muted)">Kelly: <span id="simKelly" style="color:var(--text-primary)">--%</span></div>
+            <div style="font-size:11px;color:var(--text-muted)">Sharpe: <span id="simSharpe" style="color:var(--text-primary)">--</span></div>
+            <div style="font-size:11px;color:var(--text-muted)">Sims: <span id="simTotalCount" style="color:var(--text-primary)">0</span></div>
+            <div style="font-size:11px;color:var(--text-muted)">Calibration: <span id="simCalibration" style="color:var(--text-primary)">--%</span></div>
+            <div style="font-size:11px;color:var(--text-muted)">Latency: <span id="simLatency" style="color:var(--text-primary)">--ms</span></div>
+          </div>
+          <div style="margin-top:10px">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:600">MARKET CONTEXT</div>
+            <div id="simContext" style="font-size:10px;color:var(--text-secondary);background:var(--bg-card);padding:8px;border-radius:6px;font-family:monospace;word-break:break-all">Waiting for data...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trade History -->
+      <div class="card full-width">
+        <div class="card-header">
+          <span class="card-title">Trade History</span>
+          <span class="card-badge" id="tradesBadge" style="background:var(--bg-card);color:var(--text-secondary)">0 trades</span>
+        </div>
+        <div class="card-body">
+          <div class="table-container">
+            <table id="tradesTable">
+              <thead><tr><th>Time</th><th>Side</th><th>Type</th><th>Market</th><th>Price</th><th>Size</th><th>Cost</th><th>P&L</th><th>P&L %</th><th>BTC Price</th><th>Lag</th><th>Conv</th><th>Reason</th><th>Status</th></tr></thead>
+              <tbody id="tradesBody">
+                <tr><td colspan="14" style="text-align:center;color:var(--text-muted);padding:24px">No trades yet. Start the engine to begin scalping.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Main Grid -->
-  <div class="main-grid">
-    <!-- PnL Chart -->
-    <div class="card">
+  <!-- ===== MODULE 2: Marketing101 Panel ===== -->
+  <div class="module-panel" id="panelM101">
+    <!-- M101 KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card" style="border-left:3px solid var(--purple)">
+        <div class="kpi-label">M101 Total P&L</div>
+        <div class="kpi-value" id="m101TotalPnl">$0.00</div>
+        <div class="kpi-sub" id="m101TradeCount">0 trades</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--cyan)">
+        <div class="kpi-label">M101 Daily P&L</div>
+        <div class="kpi-value" id="m101DailyPnl">$0.00</div>
+        <div class="kpi-sub">Paper Balance: $1000</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--green)">
+        <div class="kpi-label">M101 Win Rate</div>
+        <div class="kpi-value" id="m101WinRate">0%</div>
+        <div class="kpi-sub" id="m101WinLoss">0W / 0L</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--orange)">
+        <div class="kpi-label">Simulation Runs</div>
+        <div class="kpi-value" id="m101SimRuns">0</div>
+        <div class="kpi-sub" id="m101ScanSkip">0 scans / 0 skips</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--yellow)">
+        <div class="kpi-label">Avg Trade Size</div>
+        <div class="kpi-value" id="m101AvgSize">$0</div>
+        <div class="kpi-sub">Target: $5K-$15K</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--blue)">
+        <div class="kpi-label">M101 Uptime</div>
+        <div class="kpi-value" id="m101Uptime">0:00</div>
+        <div class="kpi-sub">5-Source Convergence</div>
+      </div>
+    </div>
+
+    <!-- 5-Source Signal Convergence -->
+    <div class="card" style="margin-bottom:16px">
       <div class="card-header">
-        <span class="card-title">Cumulative P&L</span>
-        <span class="card-badge" style="background:var(--blue-bg);color:var(--blue)">Real-time</span>
+        <span class="card-title">🧠 Marketing101 - 5-Source Signal Convergence</span>
+        <span class="card-badge" id="m101ConsensusBadge" style="background:var(--purple-bg);color:var(--purple)">4/5 CONSENSUS</span>
       </div>
       <div class="card-body">
-        <div class="chart-container">
-          <canvas id="pnlChart"></canvas>
+        <!-- 5 Source Cards -->
+        <div class="m101-source-grid" id="m101SourceGrid">
+          <div class="m101-source-card neutral">
+            <div class="source-weight">30%</div>
+            <div class="source-icon">🤖</div>
+            <div class="source-name">Claude Brain</div>
+            <div class="source-dir" style="color:var(--text-muted)">---</div>
+            <div class="source-strength">--% | Conf: --%</div>
+          </div>
+          <div class="m101-source-card neutral">
+            <div class="source-weight">25%</div>
+            <div class="source-icon">🧬</div>
+            <div class="source-name">MiroFish 10K</div>
+            <div class="source-dir" style="color:var(--text-muted)">---</div>
+            <div class="source-strength">--% | Conf: --%</div>
+          </div>
+          <div class="m101-source-card neutral">
+            <div class="source-weight">20%</div>
+            <div class="source-icon">📊</div>
+            <div class="source-name">BTC Simulator</div>
+            <div class="source-dir" style="color:var(--text-muted)">---</div>
+            <div class="source-strength">--% | Conf: --%</div>
+          </div>
+          <div class="m101-source-card neutral">
+            <div class="source-weight">15%</div>
+            <div class="source-icon">🏛️</div>
+            <div class="source-name">OTC Desk</div>
+            <div class="source-dir" style="color:var(--text-muted)">---</div>
+            <div class="source-strength">--% | Conf: --%</div>
+          </div>
+          <div class="m101-source-card neutral">
+            <div class="source-weight">10%</div>
+            <div class="source-icon">📋</div>
+            <div class="source-name">Closed Book</div>
+            <div class="source-dir" style="color:var(--text-muted)">---</div>
+            <div class="source-strength">--% | Conf: --%</div>
+          </div>
+        </div>
+
+        <!-- Consensus Bar -->
+        <div style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px">
+            <span>Consensus</span>
+            <span id="m101ConsensusText">-- / 5 sources agree</span>
+          </div>
+          <div class="consensus-bar" id="m101ConsensusBar">
+            <div class="up-segment" style="width:0%"></div>
+            <div class="neutral-segment" style="width:100%"></div>
+            <div class="down-segment" style="width:0%"></div>
+          </div>
+        </div>
+
+        <!-- Decision Box -->
+        <div class="m101-decision-box skip" id="m101DecisionBox">
+          <div class="m101-decision-label">Marketing101 Decision</div>
+          <div class="m101-decision-value skip" id="m101DecisionValue">WAITING</div>
+          <div class="m101-decision-reason" id="m101DecisionReason">Waiting for 5-source convergence analysis...</div>
         </div>
       </div>
     </div>
 
-    <!-- Signal Convergence -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">Signal Convergence (Force Graph)</span>
-        <span class="card-badge" id="convergenceBadge" style="background:var(--bg-card);color:var(--text-muted)">---%</span>
-      </div>
-      <div class="card-body">
-        <div class="signal-grid" id="signalGrid">
-          <!-- Filled by JS -->
+    <!-- Data Panels -->
+    <div class="m101-data-grid">
+      <!-- BTC Simulator Results -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📊 BTC Price Simulator</span>
+          <span class="card-badge" style="background:var(--cyan-bg);color:var(--cyan)">10K PATHS</span>
         </div>
-        <div class="convergence-display">
-          <div class="convergence-label">Convergence Direction</div>
-          <div class="convergence-value neutral" id="convergenceValue">---</div>
-          <div class="convergence-dir" id="convergenceDir">Waiting for signals...</div>
+        <div class="card-body">
+          <div class="m101-data-card">
+            <div class="m101-data-title">Price Distribution (5-min)</div>
+            <div class="m101-data-row"><span class="label">Current Price</span><span class="value" id="m101BtcCurrent">$---</span></div>
+            <div class="m101-data-row"><span class="label">UP paths</span><span class="value" style="color:var(--green)" id="m101BtcUp">---</span></div>
+            <div class="m101-data-row"><span class="label">DOWN paths</span><span class="value" style="color:var(--red)" id="m101BtcDown">---</span></div>
+            <div class="m101-data-row"><span class="label">Average Final</span><span class="value" id="m101BtcAvg">$---</span></div>
+            <div class="m101-data-row"><span class="label">P5 (Bear)</span><span class="value" style="color:var(--red)" id="m101BtcP5">$---</span></div>
+            <div class="m101-data-row"><span class="label">P50 (Median)</span><span class="value" id="m101BtcP50">$---</span></div>
+            <div class="m101-data-row"><span class="label">P95 (Bull)</span><span class="value" style="color:var(--green)" id="m101BtcP95">$---</span></div>
+            <div class="m101-data-row"><span class="label">Avg Jumps</span><span class="value" id="m101BtcJumps">---</span></div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Active Positions -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">Active Positions</span>
-        <span class="card-badge" id="positionsBadge" style="background:var(--blue-bg);color:var(--blue)">0</span>
-      </div>
-      <div class="card-body">
-        <div class="table-container" id="positionsContainer">
-          <div class="positions-empty" id="noPositions">No active positions</div>
-          <table id="positionsTable" style="display:none">
-            <thead>
-              <tr>
-                <th>Market</th>
-                <th>Type</th>
-                <th>Entry</th>
-                <th>Current</th>
-                <th>Size</th>
-                <th>Cost</th>
-                <th>P&L</th>
-                <th>P&L %</th>
-                <th>BTC</th>
-                <th>Lag</th>
-                <th>Age</th>
-              </tr>
-            </thead>
-            <tbody id="positionsBody"></tbody>
-          </table>
+      <!-- OTC Desk Data -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🏛️ OTC Desk Flow</span>
+          <span class="card-badge" id="m101OtcBadge" style="background:var(--orange-bg);color:var(--orange)">LIVE</span>
+        </div>
+        <div class="card-body">
+          <div class="m101-data-card">
+            <div class="m101-data-title">5-Min Flow Summary</div>
+            <div class="m101-data-row"><span class="label">Buy Flow</span><span class="value" style="color:var(--green)" id="m101OtcBuy">--- BTC</span></div>
+            <div class="m101-data-row"><span class="label">Sell Flow</span><span class="value" style="color:var(--red)" id="m101OtcSell">--- BTC</span></div>
+            <div class="m101-data-row"><span class="label">Net Flow</span><span class="value" id="m101OtcNet">--- BTC</span></div>
+            <div class="m101-data-row"><span class="label">Avg Buy Size</span><span class="value" id="m101OtcAvgBuy">--- BTC</span></div>
+            <div class="m101-data-row"><span class="label">Avg Sell Size</span><span class="value" id="m101OtcAvgSell">--- BTC</span></div>
+            <div class="m101-data-row"><span class="label">Signal</span><span class="value" id="m101OtcSignal">---</span></div>
+            <div class="m101-data-row"><span class="label">Confidence</span><span class="value" id="m101OtcConf">---%</span></div>
+            <div class="m101-data-row"><span class="label">Large Blocks</span><span class="value" id="m101OtcBlocks">---</span></div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- MiroFish Simulation Engine -->
-    <div class="card full-width">
-      <div class="card-header">
-        <span class="card-title">🧬 MiroFish Monte Carlo Simulator</span>
-        <span class="card-badge" id="simBadge" style="background:var(--purple-bg,rgba(168,85,247,0.1));color:var(--purple)">10K LOOPS</span>
-      </div>
-      <div class="card-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;margin-bottom:16px">
-          <div style="background:var(--bg-card);border-radius:8px;padding:16px;text-align:center">
-            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">Sim Direction</div>
-            <div id="simDirection" style="font-size:24px;font-weight:800;color:var(--text-muted)">---</div>
-            <div id="simProb" style="font-size:12px;color:var(--text-secondary)">UP: --% | DOWN: --%</div>
-          </div>
-          <div style="background:var(--bg-card);border-radius:8px;padding:16px;text-align:center">
-            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">Sim Confidence</div>
-            <div id="simConfidence" style="font-size:24px;font-weight:800;color:var(--text-muted)">--%</div>
-            <div id="simShouldTrade" style="font-size:12px">---</div>
-          </div>
-          <div style="background:var(--bg-card);border-radius:8px;padding:16px;text-align:center">
-            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">Sim Kelly</div>
-            <div id="simKelly" style="font-size:24px;font-weight:800;color:var(--text-muted)">--%</div>
-            <div id="simSharpe" style="font-size:12px;color:var(--text-secondary)">Sharpe: --</div>
-          </div>
-          <div style="background:var(--bg-card);border-radius:8px;padding:16px;text-align:center">
-            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">PnL Distribution</div>
-            <div id="simPnlDist" style="font-size:13px;font-variant-numeric:tabular-nums;line-height:1.8">
-              <span style="color:var(--text-muted)">No simulation yet</span>
-            </div>
-          </div>
+      <!-- Closed Order Book -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📋 Closed Order Book</span>
+          <span class="card-badge" style="background:var(--yellow-bg);color:var(--yellow)">SMART MONEY</span>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div>
-            <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600">AGENTS (Swarm Intelligence)</div>
-            <div id="simAgents" style="display:flex;flex-wrap:wrap;gap:6px">
-              <span style="font-size:11px;color:var(--text-muted)">Waiting for simulation...</span>
-            </div>
-          </div>
-          <div>
-            <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600">MARKET CONTEXT (Seed Packet)</div>
-            <div id="simContext" style="font-size:11px;color:var(--text-secondary);background:var(--bg-card);padding:10px;border-radius:6px;font-family:monospace;word-break:break-all">
-              Waiting for data...
-            </div>
-            <div style="margin-top:8px;display:flex;gap:8px">
-              <div style="font-size:11px;color:var(--text-muted)">Sims: <span id="simTotalCount" style="color:var(--text-primary)">0</span></div>
-              <div style="font-size:11px;color:var(--text-muted)">Calibration: <span id="simCalibration" style="color:var(--text-primary)">--%</span></div>
-              <div style="font-size:11px;color:var(--text-muted)">Latency: <span id="simLatency" style="color:var(--text-primary)">--ms</span></div>
-            </div>
+        <div class="card-body">
+          <div class="m101-data-card">
+            <div class="m101-data-title">Order Book Analysis</div>
+            <div class="m101-data-row"><span class="label">Maker Bias</span><span class="value" id="m101CbBias">---</span></div>
+            <div class="m101-data-row"><span class="label">Mispricing</span><span class="value" id="m101CbMispricing">---</span></div>
+            <div class="m101-data-row"><span class="label">Whale Bids</span><span class="value" style="color:var(--green)" id="m101CbWhaleBids">---</span></div>
+            <div class="m101-data-row"><span class="label">Whale Asks</span><span class="value" style="color:var(--red)" id="m101CbWhaleAsks">---</span></div>
+            <div class="m101-data-row"><span class="label">Hidden Liquidity</span><span class="value" id="m101CbHidden">---</span></div>
+            <div class="m101-data-row"><span class="label">Price Efficiency</span><span class="value" id="m101CbEfficiency">---</span></div>
+            <div class="m101-data-row"><span class="label">Bid Liquidity</span><span class="value" id="m101CbBidLiq">---</span></div>
+            <div class="m101-data-row"><span class="label">Ask Liquidity</span><span class="value" id="m101CbAskLiq">---</span></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Trade History -->
-    <div class="card full-width">
-      <div class="card-header">
-        <span class="card-title">Trade History</span>
-        <span class="card-badge" id="tradesBadge" style="background:var(--bg-card);color:var(--text-secondary)">0 trades</span>
+    <!-- MiroFish + Decision Detail -->
+    <div class="main-grid">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🧬 MiroFish 10K Monte Carlo</span>
+          <span class="card-badge" style="background:var(--purple-bg);color:var(--purple)">10K LOOPS</span>
+        </div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div style="background:var(--bg-card);border-radius:8px;padding:14px;text-align:center">
+              <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">Direction</div>
+              <div id="m101SimDirection" style="font-size:22px;font-weight:800;color:var(--text-muted)">---</div>
+              <div id="m101SimProb" style="font-size:11px;color:var(--text-secondary)">UP: --% | DOWN: --%</div>
+            </div>
+            <div style="background:var(--bg-card);border-radius:8px;padding:14px;text-align:center">
+              <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">Confidence</div>
+              <div id="m101SimConfidence" style="font-size:22px;font-weight:800;color:var(--text-muted)">--%</div>
+              <div id="m101SimTrade" style="font-size:11px">---</div>
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <div class="m101-data-row"><span class="label">Kelly Fraction</span><span class="value" id="m101SimKelly">--%</span></div>
+            <div class="m101-data-row"><span class="label">Sharpe Ratio</span><span class="value" id="m101SimSharpe">--</span></div>
+            <div class="m101-data-row"><span class="label">Expected PnL</span><span class="value" id="m101SimExpPnl">$---</span></div>
+            <div class="m101-data-row"><span class="label">PnL Std Dev</span><span class="value" id="m101SimStd">$---</span></div>
+            <div class="m101-data-row"><span class="label">P50 PnL</span><span class="value" id="m101SimP50">$---</span></div>
+            <div class="m101-data-row"><span class="label">Sim Latency</span><span class="value" id="m101SimLatency">--ms</span></div>
+          </div>
+          <div style="margin-top:10px">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;font-weight:600">CONTEXT</div>
+            <div id="m101SimContext" style="font-size:10px;color:var(--text-secondary);background:var(--bg-card);padding:8px;border-radius:6px;font-family:monospace;word-break:break-all">Waiting...</div>
+          </div>
+        </div>
       </div>
-      <div class="card-body">
-        <div class="table-container">
-          <table id="tradesTable">
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Side</th>
-                <th>Type</th>
-                <th>Market</th>
-                <th>Price</th>
-                <th>Size</th>
-                <th>Cost</th>
-                <th>P&L</th>
-                <th>P&L %</th>
-                <th>BTC Price</th>
-                <th>Lag</th>
-                <th>Conv</th>
-                <th>Reason</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="tradesBody">
-              <tr><td colspan="14" style="text-align:center;color:var(--text-muted);padding:24px">No trades yet. Start the engine to begin scalping.</td></tr>
-            </tbody>
-          </table>
+
+      <!-- Claude Brain Analysis -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🤖 Claude Brain Analysis</span>
+          <span class="card-badge" style="background:var(--blue-bg);color:var(--blue)">AI CORE</span>
+        </div>
+        <div class="card-body">
+          <div style="background:var(--bg-card);border-radius:8px;padding:16px;margin-bottom:12px">
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;font-weight:700">Reasoning Chain</div>
+            <div id="m101ClaudeReasoning" style="font-size:12px;color:var(--text-secondary);line-height:1.8">
+              Waiting for Claude Brain analysis...
+            </div>
+          </div>
+          <div style="background:var(--bg-card);border-radius:8px;padding:16px;margin-bottom:12px">
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;font-weight:700">Trade Parameters</div>
+            <div class="m101-data-row"><span class="label">Position Size</span><span class="value" id="m101PosSize">$---</span></div>
+            <div class="m101-data-row"><span class="label">Entry Price</span><span class="value" id="m101EntryPrice">---</span></div>
+            <div class="m101-data-row"><span class="label">Stop Loss</span><span class="value" style="color:var(--red)" id="m101StopLoss">---</span></div>
+            <div class="m101-data-row"><span class="label">Take Profit</span><span class="value" style="color:var(--green)" id="m101TakeProfit">---</span></div>
+            <div class="m101-data-row"><span class="label">Risk/Reward</span><span class="value" id="m101RR">---</span></div>
+            <div class="m101-data-row"><span class="label">Expected Value</span><span class="value" id="m101EV">$---</span></div>
+          </div>
+          <div style="background:var(--bg-card);border-radius:8px;padding:16px">
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;font-weight:700">Strategy Profile</div>
+            <div style="font-size:11px;color:var(--text-secondary);line-height:1.8">
+              Based on Marketing101 case study: Hong Kong marketer who made $374K/month on Polymarket using Claude as algorithmic brain + MiroFish simulation engine. This module runs 10,000 simulation loops before each entry, cross-referencing closed order book data, private OTC desk data, and high-precision BTC price paths.
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -431,10 +721,18 @@
 // ===== State =====
 let engineRunning = false;
 let engineMode = 'idle';
-let pnlData = [];
-let pnlLabels = [];
 let pnlChart = null;
 let refreshTimer = null;
+let currentTab = 'scalper';
+
+// ===== Tab Switching =====
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabScalper').className = 'module-tab' + (tab === 'scalper' ? ' active' : '');
+  document.getElementById('tabM101').className = 'module-tab' + (tab === 'm101' ? ' active' : '');
+  document.getElementById('panelScalper').className = 'module-panel' + (tab === 'scalper' ? ' active' : '');
+  document.getElementById('panelM101').className = 'module-panel' + (tab === 'm101' ? ' active' : '');
+}
 
 // ===== Initialize Chart =====
 function initChart() {
@@ -468,17 +766,8 @@ function initChart() {
         }
       },
       scales: {
-        x: {
-          display: true,
-          grid: { color: 'rgba(45, 58, 77, 0.5)' },
-          ticks: { color: '#64748b', maxTicksLimit: 10, font: { size: 10 } },
-        },
-        y: {
-          display: true,
-          grid: { color: 'rgba(45, 58, 77, 0.5)' },
-          ticks: { color: '#64748b', font: { size: 10 },
-            callback: v => '$' + v.toFixed(2) },
-        }
+        x: { display: true, grid: { color: 'rgba(45,58,77,0.5)' }, ticks: { color: '#64748b', maxTicksLimit: 10, font: { size: 10 } } },
+        y: { display: true, grid: { color: 'rgba(45,58,77,0.5)' }, ticks: { color: '#64748b', font: { size: 10 }, callback: v => '$' + v.toFixed(2) } }
       },
       interaction: { intersect: false, mode: 'index' },
     }
@@ -491,9 +780,7 @@ async function fetchState() {
     const resp = await fetch('/api/state');
     const data = await resp.json();
     updateUI(data);
-  } catch (e) {
-    console.error('Fetch error:', e);
-  }
+  } catch (e) { console.error('Fetch error:', e); }
 }
 
 async function startEngine() {
@@ -508,9 +795,7 @@ async function startEngine() {
       document.getElementById('btnStart').disabled = true;
       document.getElementById('btnStop').disabled = false;
     }
-  } catch (e) {
-    console.error('Start error:', e);
-  }
+  } catch (e) { console.error('Start error:', e); }
 }
 
 async function stopEngine() {
@@ -521,21 +806,17 @@ async function stopEngine() {
       document.getElementById('btnStart').disabled = false;
       document.getElementById('btnStop').disabled = true;
     }
-  } catch (e) {
-    console.error('Stop error:', e);
-  }
+  } catch (e) { console.error('Stop error:', e); }
 }
 
-function exportData() {
-  window.open('/api/export', '_blank');
-}
+function exportData() { window.open('/api/export', '_blank'); }
 
 // ===== Update UI =====
 function updateUI(state) {
-  // Header
   engineRunning = state.running;
   engineMode = state.mode;
 
+  // Header
   const dot = document.getElementById('statusDot');
   const text = document.getElementById('statusText');
   const modeBadge = document.getElementById('modeBadge');
@@ -554,27 +835,17 @@ function updateUI(state) {
     document.getElementById('btnStop').disabled = true;
   }
 
-  if (state.mode === 'paper') {
-    modeBadge.className = 'mode-badge paper';
-    modeBadge.textContent = 'PAPER';
-  } else if (state.mode === 'live') {
-    modeBadge.className = 'mode-badge live';
-    modeBadge.textContent = 'LIVE';
-  } else {
-    modeBadge.className = 'mode-badge paper';
-    modeBadge.textContent = 'IDLE';
-  }
+  modeBadge.className = 'mode-badge ' + (state.mode === 'live' ? 'live' : 'paper');
+  modeBadge.textContent = state.mode === 'live' ? 'LIVE' : state.mode === 'paper' ? 'PAPER' : 'IDLE';
 
   // BTC Ticker
   if (state.btcPrice > 0) {
     document.getElementById('btcPrice').textContent = '$' + state.btcPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
   }
-
   const changeEl = document.getElementById('btcChange');
   const change5m = state.btcPriceChange5m || 0;
   changeEl.textContent = (change5m >= 0 ? '+' : '') + change5m.toFixed(3) + '%';
   changeEl.className = 'btc-change ' + (change5m >= 0 ? 'up' : 'down');
-
   document.getElementById('btcVolume').textContent = '$' + ((state.btcVolume5m || 0) / 1e6).toFixed(1) + 'M';
 
   const binanceDot = document.getElementById('binanceDot');
@@ -589,7 +860,7 @@ function updateUI(state) {
     binanceText.style.color = '#64748b';
   }
 
-  // KPIs
+  // Scalper KPIs
   const totalPnlEl = document.getElementById('totalPnl');
   totalPnlEl.textContent = '$' + (state.totalPnl || 0).toFixed(2);
   totalPnlEl.className = 'kpi-value ' + ((state.totalPnl || 0) >= 0 ? 'positive' : 'negative');
@@ -602,7 +873,6 @@ function updateUI(state) {
 
   document.getElementById('winRate').textContent = (state.winRate || 0).toFixed(0) + '%';
   document.getElementById('winLossSub').textContent = (state.winningTrades || 0) + 'W / ' + (state.losingTrades || 0) + 'L';
-
   document.getElementById('activePositions').textContent = (state.positions || []).length;
   document.getElementById('scanCount').textContent = (state.scanCount || 0).toLocaleString();
   document.getElementById('skipSub').textContent = (state.skipCount || 0) + ' skipped';
@@ -615,131 +885,83 @@ function updateUI(state) {
   }
 
   const hardStopEl = document.getElementById('hardStopSub');
-  if (state.hardStopTriggered) {
-    hardStopEl.textContent = 'Hard Stop: TRIGGERED';
-    hardStopEl.style.color = '#ef4444';
-  } else {
-    hardStopEl.textContent = 'Hard Stop: OK';
-    hardStopEl.style.color = '';
-  }
+  hardStopEl.textContent = state.hardStopTriggered ? 'Hard Stop: TRIGGERED' : 'Hard Stop: OK';
+  hardStopEl.style.color = state.hardStopTriggered ? '#ef4444' : '';
 
-  // Signals
+  // Scalper Signals
   updateSignals(state.signals || [], state.activeConvergence);
-
-  // MiroFish Simulation
   updateMiroFish(state.lastSimulation, state.simulationCount || 0, state.calibrationAccuracy || 0);
-
-  // Positions
   updatePositions(state.positions || []);
-
-  // Trades
   updateTrades(state.trades || []);
-
-  // PnL Chart
   updatePnlChart(state.trades || []);
+
+  // Marketing101
+  updateM101(state.m101);
 }
 
 function updateSignals(signals, convergence) {
   const grid = document.getElementById('signalGrid');
   grid.innerHTML = '';
-
   for (const sig of signals) {
     const dirClass = sig.direction === 'BULL' ? 'bull' : sig.direction === 'BEAR' ? 'bear' : 'neutral';
     const barWidth = Math.max(5, sig.strength * 100);
-
     grid.innerHTML += `
       <div class="signal-row">
         <span class="signal-name">${sig.name}</span>
-        <div class="signal-bar-bg">
-          <div class="signal-bar ${dirClass}" style="width:${barWidth}%"></div>
-        </div>
+        <div class="signal-bar-bg"><div class="signal-bar ${dirClass}" style="width:${barWidth}%"></div></div>
         <span class="signal-dir ${dirClass}">${sig.direction}</span>
         <span class="signal-details">${sig.details || ''}</span>
-      </div>
-    `;
+      </div>`;
   }
-
   if (signals.length === 0) {
     grid.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-muted)">Waiting for Binance data...</div>';
   }
-
-  // Convergence
   const convValue = document.getElementById('convergenceValue');
   const convDir = document.getElementById('convergenceDir');
   const convBadge = document.getElementById('convergenceBadge');
-
   if (convergence) {
     const dirClass = convergence.direction === 'BULL' ? 'bull' : convergence.direction === 'BEAR' ? 'bear' : 'neutral';
     convValue.className = 'convergence-value ' + dirClass;
     convValue.textContent = convergence.confidence.toFixed(0) + '%';
     convDir.textContent = convergence.details || convergence.direction;
-    convDir.className = 'convergence-dir';
-
-    const badgeBg = convergence.shouldTrade
-      ? (convergence.direction === 'BULL' ? 'background:var(--green-bg);color:var(--green)' : 'background:var(--red-bg);color:var(--red)')
-      : 'background:var(--bg-card);color:var(--text-muted)';
+    const badgeBg = convergence.shouldTrade ? (convergence.direction === 'BULL' ? 'background:var(--green-bg);color:var(--green)' : 'background:var(--red-bg);color:var(--red)') : 'background:var(--bg-card);color:var(--text-muted)';
     convBadge.style = badgeBg;
     convBadge.textContent = convergence.shouldTrade ? (convergence.tradeSide || convergence.direction) : convergence.confidence.toFixed(0) + '%';
   }
 }
 
 function updatePositions(positions) {
-  const container = document.getElementById('positionsContainer');
   const table = document.getElementById('positionsTable');
   const noPos = document.getElementById('noPositions');
   const badge = document.getElementById('positionsBadge');
-
   badge.textContent = positions.length;
-
-  if (positions.length === 0) {
-    table.style.display = 'none';
-    noPos.style.display = 'block';
-    return;
-  }
-
-  table.style.display = 'table';
-  noPos.style.display = 'none';
-
+  if (positions.length === 0) { table.style.display = 'none'; noPos.style.display = 'block'; return; }
+  table.style.display = 'table'; noPos.style.display = 'none';
   const tbody = document.getElementById('positionsBody');
   tbody.innerHTML = '';
-
   for (const pos of positions) {
     const age = Date.now() - pos.entryTime;
-    const ageMin = Math.floor(age / 60000);
-    const ageSec = Math.floor((age % 60000) / 1000);
-
     const pnlClass = pos.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
     const typeClass = pos.tradeType === 'UP' ? 'type-up' : 'type-down';
-
-    tbody.innerHTML += `
-      <tr>
-        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pos.marketQuestion || pos.conditionId}</td>
-        <td class="${typeClass}" style="font-weight:700">${pos.tradeType}</td>
-        <td>${pos.entryPrice.toFixed(4)}</td>
-        <td>${pos.currentPrice.toFixed(4)}</td>
-        <td>${pos.size}</td>
-        <td>$${pos.cost.toFixed(2)}</td>
-        <td class="${pnlClass}">$${pos.pnl.toFixed(4)}</td>
-        <td class="${pnlClass}">${pos.pnlPercent.toFixed(2)}%</td>
-        <td>$${(pos.btcEntryPrice || 0).toFixed(0)}</td>
-        <td>${pos.polymarketLag.toFixed(2)}%</td>
-        <td>${ageMin}m ${ageSec}s</td>
-      </tr>
-    `;
+    tbody.innerHTML += `<tr>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pos.marketQuestion || pos.conditionId}</td>
+      <td class="${typeClass}" style="font-weight:700">${pos.tradeType}</td>
+      <td>${pos.entryPrice.toFixed(4)}</td><td>${pos.currentPrice.toFixed(4)}</td>
+      <td>${pos.size}</td><td>$${pos.cost.toFixed(2)}</td>
+      <td class="${pnlClass}">$${pos.pnl.toFixed(4)}</td><td class="${pnlClass}">${pos.pnlPercent.toFixed(2)}%</td>
+      <td>$${(pos.btcEntryPrice || 0).toFixed(0)}</td><td>${pos.polymarketLag.toFixed(2)}%</td>
+      <td>${Math.floor(age/60000)}m ${Math.floor((age%60000)/1000)}s</td></tr>`;
   }
 }
 
 function updateTrades(trades) {
   const tbody = document.getElementById('tradesBody');
   const badge = document.getElementById('tradesBadge');
-
   badge.textContent = trades.length + ' trades';
-
   if (trades.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:var(--text-muted);padding:24px">No trades yet. Start the engine to begin scalping.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:var(--text-muted);padding:24px">No trades yet.</td></tr>';
     return;
   }
-
   tbody.innerHTML = '';
   for (const t of trades) {
     const time = new Date(t.timestamp).toLocaleTimeString('en-US', {hour12: false});
@@ -748,159 +970,230 @@ function updateTrades(trades) {
     const typeClass = t.tradeType === 'UP' ? 'type-up' : 'type-down';
     const statusClass = t.status === 'open' ? 'status-open' : 'status-closed';
     const paperBadge = t.isPaper ? '<span class="paper-badge">PAPER</span> ' : '';
-
-    tbody.innerHTML += `
-      <tr>
-        <td>${time}</td>
-        <td class="${sideClass}">${paperBadge}${t.side}</td>
-        <td class="${typeClass}" style="font-weight:600">${t.tradeType}</td>
-        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.marketQuestion || t.conditionId}</td>
-        <td>${t.price.toFixed(4)}</td>
-        <td>${t.size}</td>
-        <td>$${t.cost.toFixed(2)}</td>
-        <td class="${pnlClass}">$${t.pnl.toFixed(4)}</td>
-        <td class="${pnlClass}">${t.pnlPercent.toFixed(2)}%</td>
-        <td>$${(t.btcPrice || 0).toFixed(0)}</td>
-        <td>${t.polymarketLag.toFixed(2)}%</td>
-        <td>${t.convergence.toFixed(0)}%</td>
-        <td class="trade-reason">${t.reason || ''}</td>
-        <td class="${statusClass}">${t.status}</td>
-      </tr>
-    `;
+    tbody.innerHTML += `<tr>
+      <td>${time}</td><td class="${sideClass}">${paperBadge}${t.side}</td>
+      <td class="${typeClass}" style="font-weight:600">${t.tradeType}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.marketQuestion || t.conditionId}</td>
+      <td>${t.price.toFixed(4)}</td><td>${t.size}</td><td>$${t.cost.toFixed(2)}</td>
+      <td class="${pnlClass}">$${t.pnl.toFixed(4)}</td><td class="${pnlClass}">${t.pnlPercent.toFixed(2)}%</td>
+      <td>$${(t.btcPrice || 0).toFixed(0)}</td><td>${t.polymarketLag.toFixed(2)}%</td>
+      <td>${t.convergence.toFixed(0)}%</td><td class="trade-reason">${t.reason || ''}</td>
+      <td class="${statusClass}">${t.status}</td></tr>`;
   }
 }
 
 function updatePnlChart(trades) {
-  // Build cumulative P&L from closed SELL trades
   const closedTrades = trades.filter(t => t.side === 'SELL' && t.status === 'closed');
-
   if (closedTrades.length === 0) {
-    // Add a zero point
-    if (pnlChart.data.labels.length === 0) {
-      pnlChart.data.labels = ['Start'];
-      pnlChart.data.datasets[0].data = [0];
-      pnlChart.update('none');
-    }
+    if (pnlChart.data.labels.length === 0) { pnlChart.data.labels = ['Start']; pnlChart.data.datasets[0].data = [0]; pnlChart.update('none'); }
     return;
   }
-
-  // Sort by timestamp
   closedTrades.sort((a, b) => a.timestamp - b.timestamp);
-
   let cumPnl = 0;
-  const labels = ['Start'];
-  const data = [0];
-
-  for (const t of closedTrades) {
-    cumPnl += t.pnl;
-    labels.push(new Date(t.timestamp).toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute: '2-digit'}));
-    data.push(cumPnl);
-  }
-
-  pnlChart.data.labels = labels;
-  pnlChart.data.datasets[0].data = data;
-
-  // Color based on current P&L
-  const color = cumPnl >= 0 ? '#22c55e' : '#ef4444';
-  pnlChart.data.datasets[0].borderColor = color;
-  pnlChart.data.datasets[0].backgroundColor = cumPnl >= 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)';
-
+  const labels = ['Start']; const data = [0];
+  for (const t of closedTrades) { cumPnl += t.pnl; labels.push(new Date(t.timestamp).toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute: '2-digit'})); data.push(cumPnl); }
+  pnlChart.data.labels = labels; pnlChart.data.datasets[0].data = data;
+  pnlChart.data.datasets[0].borderColor = cumPnl >= 0 ? '#22c55e' : '#ef4444';
+  pnlChart.data.datasets[0].backgroundColor = cumPnl >= 0 ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)';
   pnlChart.update('none');
 }
 
 function updateMiroFish(sim, simCount, calibration) {
   if (!sim) {
-    document.getElementById('simDirection').textContent = '---';
-    document.getElementById('simDirection').style.color = 'var(--text-muted)';
+    document.getElementById('simDirection').textContent = '---'; document.getElementById('simDirection').style.color = 'var(--text-muted)';
     document.getElementById('simProb').textContent = 'UP: --% | DOWN: --%';
     document.getElementById('simConfidence').textContent = '--%';
     document.getElementById('simShouldTrade').textContent = '---';
-    document.getElementById('simKelly').textContent = '--%';
-    document.getElementById('simSharpe').textContent = 'Sharpe: --';
-    document.getElementById('simPnlDist').innerHTML = '<span style="color:var(--text-muted)">No simulation yet</span>';
-    document.getElementById('simAgents').innerHTML = '<span style="font-size:11px;color:var(--text-muted)">Waiting for simulation...</span>';
-    document.getElementById('simContext').textContent = 'Waiting for data...';
+    document.getElementById('simKelly').textContent = '--%'; document.getElementById('simSharpe').textContent = '--';
     document.getElementById('simTotalCount').textContent = simCount;
-    document.getElementById('simCalibration').textContent = '--%';
-    document.getElementById('simLatency').textContent = '--ms';
+    document.getElementById('simCalibration').textContent = '--%'; document.getElementById('simLatency').textContent = '--ms';
+    document.getElementById('simContext').textContent = 'Waiting for data...';
     return;
   }
-
-  // Direction
   const dirEl = document.getElementById('simDirection');
   dirEl.textContent = sim.direction;
   dirEl.style.color = sim.direction === 'UP' ? 'var(--green)' : 'var(--red)';
-
-  // Probabilities
-  document.getElementById('simProb').innerHTML =
-    `UP: <span style="color:${sim.upProbability > sim.downProbability ? 'var(--green)' : 'var(--text-secondary)'}">${(sim.upProbability * 100).toFixed(1)}%</span> | DOWN: <span style="color:${sim.downProbability > sim.upProbability ? 'var(--red)' : 'var(--text-secondary)'}">${(sim.downProbability * 100).toFixed(1)}%</span>`;
-
-  // Confidence
+  document.getElementById('simProb').innerHTML = `UP: <span style="color:${sim.upProbability > sim.downProbability ? 'var(--green)' : 'var(--text-secondary)'}">${(sim.upProbability*100).toFixed(1)}%</span> | DOWN: <span style="color:${sim.downProbability > sim.upProbability ? 'var(--red)' : 'var(--text-secondary)'}">${(sim.downProbability*100).toFixed(1)}%</span>`;
   const confEl = document.getElementById('simConfidence');
   confEl.textContent = sim.confidence.toFixed(1) + '%';
   confEl.style.color = sim.confidence >= 15 ? 'var(--green)' : 'var(--text-muted)';
-
-  // Should trade
   const shouldTradeEl = document.getElementById('simShouldTrade');
-  if (sim.shouldTrade) {
-    shouldTradeEl.textContent = '✓ TRADE SIGNAL';
-    shouldTradeEl.style.color = 'var(--green)';
-  } else {
-    shouldTradeEl.textContent = '✗ SKIP';
-    shouldTradeEl.style.color = 'var(--text-muted)';
-  }
-
-  // Kelly
-  const kellyEl = document.getElementById('simKelly');
-  kellyEl.textContent = (sim.kellyFraction * 100).toFixed(2) + '%';
-  kellyEl.style.color = sim.kellyFraction > 0 ? 'var(--green)' : 'var(--red)';
-
-  // Sharpe
-  document.getElementById('simSharpe').textContent = 'Sharpe: ' + sim.sharpe.toFixed(3);
-
-  // PnL Distribution
-  const dist = sim.pnlDistribution;
-  document.getElementById('simPnlDist').innerHTML =
-    `<div>P5: <span style="color:${dist.p5 >= 0 ? 'var(--green)' : 'var(--red)'}">$${dist.p5.toFixed(4)}</span></div>` +
-    `<div>P25: <span style="color:${dist.p25 >= 0 ? 'var(--green)' : 'var(--red)'}">$${dist.p25.toFixed(4)}</span></div>` +
-    `<div><b>P50: <span style="color:${dist.p50 >= 0 ? 'var(--green)' : 'var(--red)'}">$${dist.p50.toFixed(4)}</span></b></div>` +
-    `<div>P75: <span style="color:var(--green)">$${dist.p75.toFixed(4)}</span></div>` +
-    `<div>P95: <span style="color:var(--green)">$${dist.p95.toFixed(4)}</span></div>`;
-
-  // Agents
-  const agentTypes = [
-    { type: 'momentum_trader', count: 3, icon: '📈' },
-    { type: 'market_maker', count: 2, icon: '🏦' },
-    { type: 'contrarian', count: 2, icon: '🔄' },
-    { type: 'otc_desk', count: 1, icon: '🏛️' },
-    { type: 'institutional', count: 1, icon: '🏢' },
-    { type: 'retail_fomo', count: 1, icon: '🏃' },
-    { type: 'retail_panic', count: 1, icon: '😱' },
-    { type: 'whale', count: 1, icon: '🐋' },
-  ];
-  let agentsHtml = '';
-  for (const a of agentTypes) {
-    agentsHtml += `<span style="font-size:11px;background:var(--bg-primary);padding:3px 8px;border-radius:4px;border:1px solid var(--border)">${a.icon} ${a.type.replace(/_/g,' ')} ×${a.count}</span>`;
-  }
-  document.getElementById('simAgents').innerHTML = agentsHtml;
-
-  // Context
-  document.getElementById('simContext').textContent = sim.marketContext || 'N/A';
-
-  // Stats
+  shouldTradeEl.textContent = sim.shouldTrade ? '✓ TRADE' : '✗ SKIP';
+  shouldTradeEl.style.color = sim.shouldTrade ? 'var(--green)' : 'var(--text-muted)';
+  document.getElementById('simKelly').textContent = (sim.kellyFraction * 100).toFixed(2) + '%';
+  document.getElementById('simSharpe').textContent = sim.sharpe.toFixed(3);
   document.getElementById('simTotalCount').textContent = simCount;
   document.getElementById('simCalibration').textContent = calibration.toFixed(1) + '%';
   document.getElementById('simLatency').textContent = sim.elapsedMs + 'ms';
+  document.getElementById('simContext').textContent = sim.marketContext || 'N/A';
+}
+
+// ===== Marketing101 UI =====
+function updateM101(m101) {
+  if (!m101) return;
+
+  // KPIs
+  const totalPnlEl = document.getElementById('m101TotalPnl');
+  totalPnlEl.textContent = '$' + (m101.totalPnl || 0).toFixed(2);
+  totalPnlEl.className = 'kpi-value ' + ((m101.totalPnl || 0) >= 0 ? 'positive' : 'negative');
+  document.getElementById('m101TradeCount').textContent = (m101.tradeCount || 0) + ' trades';
+
+  const dailyPnlEl = document.getElementById('m101DailyPnl');
+  dailyPnlEl.textContent = '$' + (m101.dailyPnl || 0).toFixed(2);
+  dailyPnlEl.className = 'kpi-value ' + ((m101.dailyPnl || 0) >= 0 ? 'positive' : 'negative');
+
+  document.getElementById('m101WinRate').textContent = (m101.winRate || 0).toFixed(0) + '%';
+  document.getElementById('m101SimRuns').textContent = (m101.simulationRuns || 0).toLocaleString();
+  document.getElementById('m101ScanSkip').textContent = (m101.scanCount || 0) + ' scans / ' + (m101.skipCount || 0) + ' skips';
+  document.getElementById('m101AvgSize').textContent = '$' + (m101.avgTradeSize || 0).toFixed(0);
+
+  if (m101.startTime > 0) {
+    const up = Date.now() - m101.startTime;
+    document.getElementById('m101Uptime').textContent = Math.floor(up/3600000) + ':' + String(Math.floor((up%3600000)/60000)).padStart(2,'0');
+  }
+
+  // 5-Source Signal Cards
+  const signals = m101.lastSignals || [];
+  const sourceWeights = {'claude_brain': '30%', 'mirofish': '25%', 'btc_sim': '20%', 'otc': '15%', 'closed_book': '10%'};
+  const sourceIcons = {'claude_brain': '🤖', 'mirofish': '🧬', 'btc_sim': '📊', 'otc': '🏛️', 'closed_book': '📋'};
+  const sourceNames = {'claude_brain': 'Claude Brain', 'mirofish': 'MiroFish 10K', 'btc_sim': 'BTC Simulator', 'otc': 'OTC Desk', 'closed_book': 'Closed Book'};
+  const sourceOrder = ['claude_brain', 'mirofish', 'btc_sim', 'otc', 'closed_book'];
+
+  const grid = document.getElementById('m101SourceGrid');
+  grid.innerHTML = '';
+  let upCount = 0, downCount = 0;
+  const dominantDir = m101.lastDecision?.direction || 'NEUTRAL';
+
+  for (const src of sourceOrder) {
+    const sig = signals.find(s => s.source === src);
+    const dir = sig?.direction || 'NEUTRAL';
+    const strength = sig?.strength || 0;
+    const confidence = sig?.confidence || 0;
+    const cardClass = dir === 'UP' ? 'up' : dir === 'DOWN' ? 'down' : 'neutral';
+    if (dir === 'UP') upCount++;
+    if (dir === 'DOWN') downCount++;
+
+    grid.innerHTML += `
+      <div class="m101-source-card ${cardClass}">
+        <div class="source-weight">${sourceWeights[src]}</div>
+        <div class="source-icon">${sourceIcons[src]}</div>
+        <div class="source-name">${sourceNames[src]}</div>
+        <div class="source-dir" style="color:${dir === 'UP' ? 'var(--green)' : dir === 'DOWN' ? 'var(--red)' : 'var(--text-muted)'}">${dir}</div>
+        <div class="source-strength">${(strength * 100).toFixed(0)}% | Conf: ${(confidence * 100).toFixed(0)}%</div>
+      </div>`;
+  }
+
+  // Consensus bar
+  const total = signals.length || 1;
+  const neutralCount = total - upCount - downCount;
+  const bar = document.getElementById('m101ConsensusBar');
+  bar.innerHTML = `<div class="up-segment" style="width:${(upCount/total)*100}%"></div>
+    <div class="neutral-segment" style="width:${(neutralCount/total)*100}%"></div>
+    <div class="down-segment" style="width:${(downCount/total)*100}%"></div>`;
+
+  const agreeing = signals.filter(s => s.direction === dominantDir).length;
+  document.getElementById('m101ConsensusText').textContent = `${agreeing} / ${signals.length} sources agree (${dominantDir})`;
+
+  // Decision box
+  const decision = m101.lastDecision;
+  const decBox = document.getElementById('m101DecisionBox');
+  const decValue = document.getElementById('m101DecisionValue');
+  const decReason = document.getElementById('m101DecisionReason');
+
+  if (decision) {
+    decBox.className = 'm101-decision-box ' + (decision.shouldTrade ? 'trade' : 'skip');
+    if (decision.shouldTrade) {
+      decValue.textContent = decision.direction + ' SIGNAL';
+      decValue.className = 'm101-decision-value ' + (decision.direction === 'UP' ? 'up' : 'down');
+    } else {
+      decValue.textContent = 'SKIP';
+      decValue.className = 'm101-decision-value skip';
+    }
+    decReason.textContent = decision.reasoning || '';
+  }
+
+  // BTC Simulator
+  const btcSim = m101.lastBtcSim;
+  if (btcSim) {
+    document.getElementById('m101BtcCurrent').textContent = '$' + (btcSim.currentPrice || 0).toLocaleString('en-US', {maximumFractionDigits: 0});
+    document.getElementById('m101BtcUp').textContent = (btcSim.upCount || 0).toLocaleString();
+    document.getElementById('m101BtcDown').textContent = (btcSim.downCount || 0).toLocaleString();
+    document.getElementById('m101BtcAvg').textContent = '$' + (btcSim.avgFinalPrice || 0).toLocaleString('en-US', {maximumFractionDigits: 0});
+    document.getElementById('m101BtcP5').textContent = '$' + (btcSim.p5 || 0).toLocaleString('en-US', {maximumFractionDigits: 0});
+    document.getElementById('m101BtcP50').textContent = '$' + (btcSim.p50 || 0).toLocaleString('en-US', {maximumFractionDigits: 0});
+    document.getElementById('m101BtcP95').textContent = '$' + (btcSim.p95 || 0).toLocaleString('en-US', {maximumFractionDigits: 0});
+    document.getElementById('m101BtcJumps').textContent = (btcSim.avgJumpCount || 0).toFixed(2);
+  }
+
+  // OTC Data
+  const otc = m101.lastOtcSnapshot;
+  if (otc) {
+    document.getElementById('m101OtcBuy').textContent = (otc.buyFlow || 0).toFixed(1) + ' BTC';
+    document.getElementById('m101OtcSell').textContent = (otc.sellFlow || 0).toFixed(1) + ' BTC';
+    document.getElementById('m101OtcNet').textContent = (otc.netFlow || 0).toFixed(1) + ' BTC';
+    document.getElementById('m101OtcNet').style.color = otc.netFlow > 0 ? 'var(--green)' : 'var(--red)';
+    document.getElementById('m101OtcAvgBuy').textContent = (otc.avgBuySize || 0).toFixed(1) + ' BTC';
+    document.getElementById('m101OtcAvgSell').textContent = (otc.avgSellSize || 0).toFixed(1) + ' BTC';
+    const otcSigEl = document.getElementById('m101OtcSignal');
+    otcSigEl.textContent = otc.signal || 'NEUTRAL';
+    otcSigEl.style.color = otc.signal === 'BULL' ? 'var(--green)' : otc.signal === 'BEAR' ? 'var(--red)' : 'var(--text-muted)';
+    document.getElementById('m101OtcConf').textContent = ((otc.confidence || 0) * 100).toFixed(0) + '%';
+    document.getElementById('m101OtcBlocks').textContent = (otc.largeBlocks || []).length;
+  }
+
+  // Closed Book
+  const cb = m101.lastClosedBook;
+  if (cb) {
+    const biasEl = document.getElementById('m101CbBias');
+    biasEl.textContent = cb.makerBias || 'NEUTRAL';
+    biasEl.style.color = cb.makerBias === 'YES' ? 'var(--green)' : cb.makerBias === 'NO' ? 'var(--red)' : 'var(--text-muted)';
+    document.getElementById('m101CbMispricing').textContent = (cb.mispricing || 0).toFixed(3) + '%';
+    document.getElementById('m101CbWhaleBids').textContent = cb.whaleBidCount || 0;
+    document.getElementById('m101CbWhaleAsks').textContent = cb.whaleAskCount || 0;
+    document.getElementById('m101CbHidden').textContent = (cb.hiddenLiquidity || 0).toFixed(1);
+    document.getElementById('m101CbEfficiency').textContent = ((cb.priceEfficiency || 0) * 100).toFixed(1) + '%';
+    document.getElementById('m101CbBidLiq').textContent = (cb.totalBidLiquidity || 0).toFixed(1);
+    document.getElementById('m101CbAskLiq').textContent = (cb.totalAskLiquidity || 0).toFixed(1);
+  }
+
+  // MiroFish Sim
+  const sim = m101.lastSimResult;
+  if (sim) {
+    const dirEl = document.getElementById('m101SimDirection');
+    dirEl.textContent = sim.direction;
+    dirEl.style.color = sim.direction === 'UP' ? 'var(--green)' : 'var(--red)';
+    document.getElementById('m101SimProb').innerHTML = `UP: ${(sim.upProbability*100).toFixed(1)}% | DOWN: ${(sim.downProbability*100).toFixed(1)}%`;
+    const confEl = document.getElementById('m101SimConfidence');
+    confEl.textContent = sim.confidence.toFixed(1) + '%';
+    confEl.style.color = sim.confidence >= 15 ? 'var(--green)' : 'var(--text-muted)';
+    document.getElementById('m101SimTrade').textContent = sim.shouldTrade ? '✓ TRADE' : '✗ SKIP';
+    document.getElementById('m101SimTrade').style.color = sim.shouldTrade ? 'var(--green)' : 'var(--text-muted)';
+    document.getElementById('m101SimKelly').textContent = (sim.kellyFraction * 100).toFixed(2) + '%';
+    document.getElementById('m101SimSharpe').textContent = sim.sharpe.toFixed(3);
+    document.getElementById('m101SimExpPnl').textContent = '$' + sim.expectedPnl.toFixed(4);
+    document.getElementById('m101SimStd').textContent = '$' + sim.pnlStdDev.toFixed(4);
+    document.getElementById('m101SimP50').textContent = '$' + (sim.pnlDistribution?.p50 || 0).toFixed(4);
+    document.getElementById('m101SimLatency').textContent = sim.elapsedMs + 'ms';
+    document.getElementById('m101SimContext').textContent = sim.marketContext || 'N/A';
+  }
+
+  // Claude Brain / Trade params
+  if (decision) {
+    document.getElementById('m101ClaudeReasoning').innerHTML =
+      (decision.signals || []).map(s => `<div style="margin-bottom:4px"><b style="color:${s.direction==='UP'?'var(--green)':s.direction==='DOWN'?'var(--red)':'var(--text-muted)'}">${s.source}</b>: ${s.details}</div>`).join('');
+    document.getElementById('m101PosSize').textContent = '$' + (decision.positionSize || 0).toFixed(2);
+    document.getElementById('m101EntryPrice').textContent = (decision.entryPrice || 0).toFixed(6);
+    document.getElementById('m101StopLoss').textContent = (decision.stopLoss || 0).toFixed(6);
+    document.getElementById('m101TakeProfit').textContent = (decision.takeProfit || 0).toFixed(6);
+    document.getElementById('m101RR').textContent = (decision.riskReward || 0).toFixed(2);
+    document.getElementById('m101EV').textContent = '$' + (decision.expectedValue || 0).toFixed(4);
+  }
 }
 
 // ===== Init =====
 document.addEventListener('DOMContentLoaded', () => {
   initChart();
-
-  // Initial fetch
   fetchState();
-
-  // Auto-refresh every 2 seconds
   refreshTimer = setInterval(fetchState, 2000);
 });
 </script>

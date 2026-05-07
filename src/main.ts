@@ -1,13 +1,14 @@
 // ============================================================================
 // Polymarket V13 Strategy Engine - Main Entry Point
 // ============================================================================
-// BTC 5MIN Scalper + V11 Strategy + Visual Dashboard
+// BTC 5MIN Scalper + V11 Strategy + Marketing101 Module + Visual Dashboard
 
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import * as path from 'path';
 import { StrategyConfig, loadConfig } from './core/config';
 import { ScalperEngine } from './core/scalper';
+import { Marketing101Engine } from './core/marketing101-engine';
 import { BinanceFeed } from './feeds/binance-ws';
 import { PolymarketClient } from './services/polymarket-client';
 import { TradeStore } from './storage/trade-store';
@@ -17,14 +18,22 @@ dotenv.config();
 
 const BANNER = `
 ╔══════════════════════════════════════════════════════════════════╗
-║           Polymarket V13 - BTC 5MIN Scalper Engine               ║
+║         Polymarket V13 - BTC Scalper + Marketing101             ║
 ║                                                                   ║
-║  Edge: CLOB Price Lag Exploitation                                ║
-║  - Binance WS → BTC Realtime + 5M Klines                         ║
-║  - Signal Convergence > 70% → Trade                               ║
-║  - Lag > 0.3% → Execute < 5s                                      ║
-║  - TP 0.8% | SL 0.3% | Daily Cap 2% | Hard Stop -0.4%           ║
-║  - Paper Mode by default | Live when API keys set                 ║
+║  Module 1: BTC 5MIN Scalper (CLOB Price Lag Exploitation)       ║
+║  - Binance WS → BTC Realtime + 5M Klines                        ║
+║  - Signal Convergence > 70% → Trade                              ║
+║  - Lag > 0.3% → Execute < 5s                                     ║
+║  - TP 0.8% | SL 0.3% | Daily Cap 2% | Hard Stop -0.4%          ║
+║                                                                   ║
+║  Module 2: Marketing101 Engine (AI + MiroFish 10K Sim)           ║
+║  - Claude Brain + MiroFish Monte Carlo (10K loops)               ║
+║  - BTC Price Simulator (Jump-Diffusion + Mean Reversion)         ║
+║  - OTC Desk Flow Data + Closed Order Book Analysis               ║
+║  - 5-Source Convergence: 4/5 must agree to trade                 ║
+║  - Position: $50-$150 (paper) | Target: $5K-$15K (live)         ║
+║                                                                   ║
+║  Paper Mode by default | Live when API keys set                   ║
 ╚══════════════════════════════════════════════════════════════════╝
 `;
 
@@ -33,6 +42,7 @@ const PORT = config.port;
 
 // Core components
 let scalper: ScalperEngine | null = null;
+let marketing101: Marketing101Engine | null = null;
 let binance: BinanceFeed | null = null;
 let client: PolymarketClient | null = null;
 let store: TradeStore | null = null;
@@ -52,8 +62,9 @@ async function main() {
   app.get('/health', (_req: Request, res: Response) => {
     res.json({
       status: 'ok',
-      version: '13.0.0',
+      version: '13.1.0',
       engine: scalper?.isRunning() ? 'running' : 'idle',
+      marketing101: marketing101?.isRunning() ? 'running' : 'idle',
       mode: scalper?.getMode() || 'idle',
       binance: binance?.isConnected() || false,
       timestamp: Date.now(),
@@ -93,9 +104,49 @@ async function main() {
           binanceConnected: false,
           polymarketConnected: false,
           lastError: null,
+          lastSimulation: null,
+          simulationCount: 0,
+          calibrationAccuracy: 0,
+          // Marketing101 state
+          m101: null,
         });
       }
-      res.json(scalper.getState());
+      const scalperState = scalper.getState();
+      const m101State = marketing101?.getState() || null;
+
+      res.json({
+        ...scalperState,
+        m101: m101State,
+      });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // Marketing101 specific state
+  app.get('/api/m101', (_req: Request, res: Response) => {
+    try {
+      if (!marketing101) {
+        return res.json({ running: false, message: 'Marketing101 engine not initialized' });
+      }
+      res.json(marketing101.getState());
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // Marketing101 signals
+  app.get('/api/m101/signals', (_req: Request, res: Response) => {
+    try {
+      const state = marketing101?.getState();
+      res.json({
+        signals: state?.lastSignals || [],
+        decision: state?.lastDecision || null,
+        otcSnapshot: state?.lastOtcSnapshot || null,
+        closedBook: state?.lastClosedBook || null,
+        btcSim: state?.lastBtcSim || null,
+        simResult: state?.lastSimResult || null,
+      });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
@@ -149,7 +200,7 @@ async function main() {
   // Get config
   app.get('/api/config', (_req: Request, res: Response) => {
     res.json({
-      version: 'V13',
+      version: 'V13.1',
       scalper: {
         enabled: config.scalperEnabled,
         mode: config.scalperMode,
@@ -161,6 +212,14 @@ async function main() {
         maxActivePositions: config.maxActivePositions,
         takeProfitScalp: config.takeProfitScalp + '%',
         stopLossScalp: config.stopLossScalp + '%',
+      },
+      marketing101: {
+        enabled: true,
+        mode: 'paper',
+        sources: ['claude_brain', 'mirofish', 'btc_sim', 'otc', 'closed_book'],
+        consensusRequired: '4/5 (80%)',
+        simulationLoops: 10000,
+        positionSize: '$50-$150 (paper) | $5K-$15K (live)',
       },
       wallets: {
         trading: config.tradingWallet,
@@ -199,7 +258,15 @@ async function main() {
       }
 
       await scalper.start();
-      res.json({ success: true, mode: scalper.getMode() });
+
+      // Start Marketing101 engine
+      if (!marketing101) {
+        marketing101 = new Marketing101Engine(config);
+      }
+      const btcPrice = binance.getPrice() || 80000;
+      await marketing101.start(btcPrice);
+
+      res.json({ success: true, mode: scalper.getMode(), m101: marketing101.isRunning() });
     } catch (e: any) {
       logger.error('Failed to start scalper', { error: e.message });
       res.status(500).json({ success: false, error: e.message });
@@ -213,6 +280,9 @@ async function main() {
         scalper.stop();
         scalper = null;
       }
+      if (marketing101) {
+        marketing101.stop();
+      }
       res.json({ success: true });
     } catch (e: any) {
       res.status(500).json({ success: false, error: e.message });
@@ -223,8 +293,9 @@ async function main() {
   app.get('/api/export', (_req: Request, res: Response) => {
     try {
       const data = store?.exportAll() || { trades: [], positions: [], stats: {} };
+      const m101State = marketing101?.getState() || null;
       res.setHeader('Content-Disposition', 'attachment; filename=polymarket-export.json');
-      res.json(data);
+      res.json({ ...data, marketing101: m101State });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
@@ -241,6 +312,7 @@ async function main() {
     console.log(`[V13 Scalper] API server running on port ${PORT}`);
     console.log(`[V13 Scalper] Dashboard: http://localhost:${PORT}/`);
     console.log(`[V13 Scalper] API: http://localhost:${PORT}/api/`);
+    console.log(`[V13 Scalper] M101 API: http://localhost:${PORT}/api/m101/`);
     console.log(`[V13 Scalper] Mode: ${config.scalperMode}${config.dryRun ? ' (DRY RUN)' : ''}`);
   });
 
@@ -254,7 +326,13 @@ async function main() {
         store = new TradeStore();
         scalper = new ScalperEngine(config, binance, client, store);
         await scalper.start();
-        console.log('[V13 Scalper] Engine started successfully');
+
+        // Start Marketing101 engine
+        marketing101 = new Marketing101Engine(config);
+        const btcPrice = binance.getPrice() || 80000;
+        await marketing101.start(btcPrice);
+
+        console.log('[V13 Scalper] Engine started successfully (Scalper + Marketing101)');
       } catch (e: any) {
         console.error('[V13 Scalper] Auto-start failed:', e.message);
         console.log('[V13 Scalper] Use POST /api/start to start manually');
@@ -262,10 +340,21 @@ async function main() {
     }, 3000);
   }
 
+  // Update Marketing101 with BTC price from Binance feed
+  setInterval(() => {
+    if (binance && marketing101 && scalper?.isRunning()) {
+      const price = binance.getPrice();
+      if (price > 0) {
+        marketing101.updateBtcPrice(price, []);
+      }
+    }
+  }, 5000);
+
   // Graceful shutdown
   const shutdown = () => {
     console.log('[V13 Scalper] Shutting down...');
     if (scalper) scalper.stop();
+    if (marketing101) marketing101.stop();
     if (store) store.save();
     process.exit(0);
   };
