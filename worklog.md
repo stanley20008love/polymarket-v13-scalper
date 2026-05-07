@@ -28,3 +28,25 @@ Stage Summary:
 - Signal convergence: 5 weighted signals analyzing every 5 seconds
 - Risk management: 0.5% per-trade, 2% daily cap, -0.4% hard stop
 - No trades yet (correctly waiting for >70% convergence + >0.3% CLOB lag)
+
+---
+Task ID: 1
+Agent: main
+Task: Deploy Marketing101 module to Zeabur with latest URL
+
+Work Log:
+- Checked all existing source files: marketing101-engine.ts, btc-simulator.ts, mirofish-sim.ts, otc-data.ts, closed-orderbook.ts, types.ts, main.ts, dashboard.html
+- Confirmed all Marketing101 code was already committed in previous session (commit 045f31f)
+- Compiled TypeScript successfully with local tsc (version 6.0.3)
+- Pushed 16 commits to GitHub origin (polymarket-v11-engine repo)
+- Deployed to Zeabur via CLI (`zeabur deploy`) targeting service 69fc834c15a34741e35314a1 in project 69fc8299a96f65f4370ddb77
+- Fixed service port from 8080 to 3000 via GraphQL API mutation updateServicePorts
+- Added domain "polymarketm101.zeabur.app" via GraphQL API mutation addDomain (just subdomain part needed)
+- Restarted service and verified deployment is running
+
+Stage Summary:
+- Marketing101 module fully deployed and running on Zeabur
+- URL: https://polymarketm101.zeabur.app/
+- Health check: {"status":"ok","version":"13.1.0","engine":"running","marketing101":"running","mode":"paper","binance":true}
+- Marketing101 API working: /api/m101 returns 5-source convergence data including Claude Brain, MiroFish 10K, BTC Simulator, OTC Desk, Closed Book
+- Dashboard accessible at root URL with Marketing101 tab
