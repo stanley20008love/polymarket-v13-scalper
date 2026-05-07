@@ -74,3 +74,4 @@ npm run monitor
 | POST | /api/scan | Trigger scan |
 | POST | /api/start | Start engine |
 | POST | /api/stop | Stop engine |
+# Auto-deploy trigger - V13.1 50U Mode

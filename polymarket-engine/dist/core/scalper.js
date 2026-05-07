@@ -43,7 +43,7 @@ class ScalperEngine {
     lastSimulation = null;
     simulationCount = 0;
     // Simulated balance for paper trading
-    paperBalance = 100; // Start with $100
+    paperBalance = 50; // Start with $50 (50U)
     constructor(config, binance, client, store) {
         this.config = config;
         this.binance = binance;

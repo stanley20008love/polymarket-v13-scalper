@@ -64,7 +64,7 @@ export class ScalperEngine {
   private simulationCount: number = 0;
 
   // Simulated balance for paper trading
-  private paperBalance: number = 100; // Start with $100
+  private paperBalance: number = 50; // Start with $50 (50U)
 
   constructor(config: StrategyConfig, binance: BinanceFeed, client: PolymarketClient, store: TradeStore) {
     this.config = config;
