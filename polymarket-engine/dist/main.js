@@ -1,9 +1,13 @@
 "use strict";
 // ============================================================================
-// Polymarket V13 策略引擎 - 主入口
+// Polymarket V16 - 五引擎50U模拟盘
 // ============================================================================
-// BTC 5分钟剥头皮 + Marketing101 模块 + 可视化面板
-// 两个策略各用 50U 独立模拟盘
+// 5策略独立运行，各50U模拟盘:
+// 1. BTC 5分钟剥头皮 (ScalperEngine)
+// 2. Marketing101 5源信号 (Marketing101Engine)
+// 3. 跟单交易 (CopyTradingEngine)
+// 4. 债券策略 (BondEngine)
+// 5. Kelly均值回归 (KellyEngine)
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -47,31 +51,26 @@ const path = __importStar(require("path"));
 const config_1 = require("./core/config");
 const scalper_1 = require("./core/scalper");
 const marketing101_engine_1 = require("./core/marketing101-engine");
+const copy_trading_engine_1 = require("./core/copy-trading-engine");
+const bond_engine_1 = require("./core/bond-engine");
+const kelly_engine_1 = require("./core/kelly-engine");
 const binance_ws_1 = require("./feeds/binance-ws");
 const polymarket_client_1 = require("./services/polymarket-client");
 const trade_store_1 = require("./storage/trade-store");
 const logger_1 = require("./utils/logger");
 dotenv_1.default.config();
+const VERSION = '16.0.0';
 const BANNER = `
 ╔══════════════════════════════════════════════════════════════════╗
-║         Polymarket V13 - 双引擎50U模拟盘                         ║
+║         Polymarket V16 - 五引擎50U模拟盘                         ║
 ║                                                                   ║
-║  策略1: BTC 5分钟剥头皮 (CLOB价格滞后套利)                       ║
-║  - Binance WS → BTC实时价格 + 5分钟K线                           ║
-║  - 信号汇聚 > 70% → 交易                                        ║
-║  - 滞后 > 0.3% → 5秒内执行                                      ║
-║  - 止盈 0.8% | 止损 0.3% | 日亏帽 2% | 硬止损 -0.4%             ║
-║  - 独立资金: 50U (模拟盘)                                        ║
+║  策略1: ⚡ BTC 5分钟剥头皮 (CLOB价格滞后套利)                    ║
+║  策略2: 🧠 Marketing101 (5源信号: Claude+MiroFish+BTC+OTC+订单簿)║
+║  策略3: 📋 跟单交易 (>90%胜率钱包自动跟单)                       ║
+║  策略4: 🏦 债券策略 (>90%概率市场稳健收益)                       ║
+║  策略5: 🎯 Kelly均值回归 (EMA12+1/4Kelly+5源融合)                ║
 ║                                                                   ║
-║  策略2: Marketing101 引擎 (AI + MiroFish 10K模拟)                ║
-║  - Claude大脑 + MiroFish蒙特卡洛 (10K循环)                       ║
-║  - BTC价格模拟器 (跳跃扩散 + 均值回归)                           ║
-║  - OTC柜台数据流 + 封闭订单簿分析                                ║
-║  - 5源信号汇聚: 3/5同意即交易 (模拟盘)                           ║
-║  - 仓位: $2-$10 (模拟50U) | 目标: $5K-$15K (实盘)              ║
-║  - 独立资金: 50U (模拟盘)                                        ║
-║                                                                   ║
-║  模拟盘模式 | 设置API密钥后切换实盘                               ║
+║  各策略独立50U模拟盘 | 日PnL自动重置 | 余额保护                   ║
 ╚══════════════════════════════════════════════════════════════════╝
 `;
 const config = (0, config_1.loadConfig)();
@@ -79,6 +78,9 @@ const PORT = config.port;
 // 核心组件
 let scalper = null;
 let marketing101 = null;
+let copyTrading = null;
+let bondEngine = null;
+let kellyEngine = null;
 let binance = null;
 let client = null;
 let store = null;
@@ -86,217 +88,179 @@ async function main() {
     console.log(BANNER);
     const app = (0, express_1.default)();
     app.use(express_1.default.json());
-    // 静态文件
     app.use(express_1.default.static(path.join(__dirname, '..', 'public')));
-    // ---- API路由 ----
-    // 健康检查
+    // ---- Health Check ----
     app.get('/health', (_req, res) => {
         res.json({
             status: 'ok',
-            version: '13.2.0',
-            引擎: scalper?.isRunning() ? '运行中' : '空闲',
-            marketing101: marketing101?.isRunning() ? '运行中' : '空闲',
-            模式: scalper?.getMode() || '空闲',
+            version: VERSION,
+            engines: {
+                scalper: scalper?.isRunning() ? 'running' : 'idle',
+                marketing101: marketing101?.isRunning() ? 'running' : 'idle',
+                copyTrading: copyTrading?.isRunning() ? 'running' : 'idle',
+                bond: bondEngine?.isRunning() ? 'running' : 'idle',
+                kelly: kellyEngine?.isRunning() ? 'running' : 'idle',
+            },
             binance: binance?.isConnected() || false,
-            时间戳: Date.now(),
+            timestamp: Date.now(),
         });
     });
-    // 完整引擎状态 (给面板用)
+    // ---- Engine State (for Dashboard) ----
     app.get('/api/state', (_req, res) => {
         try {
-            if (!scalper) {
-                return res.json({
-                    running: false,
-                    mode: 'idle',
-                    btcPrice: 0,
-                    btcPrice5mAgo: 0,
-                    btcPriceChange5m: 0,
-                    activeConvergence: null,
-                    positions: [],
-                    trades: [],
-                    totalPnl: 0,
-                    dailyPnl: 0,
-                    winRate: 0,
-                    totalTrades: 0,
-                    winningTrades: 0,
-                    losingTrades: 0,
-                    signals: [],
-                    lastSignalTime: 0,
-                    scanCount: 0,
-                    tradeCount: 0,
-                    skipCount: 0,
-                    startTime: 0,
-                    dailyCapUsed: 0,
-                    dailyCapLimit: config.dailyCapPercent,
-                    hardStopTriggered: false,
-                    klines5m: [],
-                    btcVolume5m: 0,
-                    binanceConnected: false,
-                    polymarketConnected: false,
-                    lastError: null,
-                    lastSimulation: null,
-                    simulationCount: 0,
-                    calibrationAccuracy: 0,
-                    m101: null,
-                });
-            }
-            const scalperState = scalper.getState();
-            const m101State = marketing101?.getState() || null;
             res.json({
-                ...scalperState,
-                scalperPaperBalance: scalper.getPaperBalance(),
-                m101: m101State,
+                version: VERSION,
+                running: scalper?.isRunning() || marketing101?.isRunning() || copyTrading?.isRunning() || bondEngine?.isRunning() || kellyEngine?.isRunning() || false,
+                scalper: scalper?.getState() || null,
+                marketing101: marketing101?.getState() || null,
+                copyTrading: copyTrading?.getState() || null,
+                bond: bondEngine?.getState() || null,
+                kelly: kellyEngine?.getState() || null,
+                binance: {
+                    connected: binance?.isConnected() || false,
+                    btcPrice: binance?.getPrice() || 0,
+                    btcChange5m: binance?.getChange5m() || 0,
+                    btcVolume5m: binance?.getVolume5m() || 0,
+                },
             });
         }
         catch (e) {
             res.status(500).json({ error: e.message });
         }
     });
-    // Marketing101 状态
+    // ---- Per-Engine API Endpoints ----
+    // Scalper
+    app.get('/api/scalper', (_req, res) => {
+        res.json(scalper?.getState() || { running: false });
+    });
+    // Marketing101
     app.get('/api/m101', (_req, res) => {
-        try {
-            if (!marketing101) {
-                return res.json({ running: false, message: 'Marketing101引擎未初始化' });
-            }
-            res.json(marketing101.getState());
-        }
-        catch (e) {
-            res.status(500).json({ error: e.message });
-        }
+        res.json(marketing101?.getState() || { running: false });
     });
-    // Marketing101 信号
     app.get('/api/m101/signals', (_req, res) => {
-        try {
-            const state = marketing101?.getState();
-            res.json({
-                signals: state?.lastSignals || [],
-                decision: state?.lastDecision || null,
-                otcSnapshot: state?.lastOtcSnapshot || null,
-                closedBook: state?.lastClosedBook || null,
-                btcSim: state?.lastBtcSim || null,
-                simResult: state?.lastSimResult || null,
-            });
-        }
-        catch (e) {
-            res.status(500).json({ error: e.message });
-        }
+        const state = marketing101?.getState();
+        res.json({
+            signals: state?.lastSignals || [],
+            decision: state?.lastDecision || null,
+            otcSnapshot: state?.lastOtcSnapshot || null,
+            closedBook: state?.lastClosedBook || null,
+            btcSim: state?.lastBtcSim || null,
+        });
     });
-    // Marketing101 交易记录
     app.get('/api/m101/trades', (_req, res) => {
-        try {
-            if (!marketing101) {
-                return res.json({ open: [], closed: [] });
-            }
-            res.json({
-                open: marketing101.getOpenPositions(),
-                closed: marketing101.getClosedTrades(),
-            });
-        }
-        catch (e) {
-            res.status(500).json({ error: e.message });
-        }
+        res.json({
+            open: marketing101?.getOpenPositions() || [],
+            closed: marketing101?.getClosedTrades() || [],
+        });
     });
-    // 所有交易
+    // Copy Trading
+    app.get('/api/copy', (_req, res) => {
+        res.json(copyTrading?.getState() || { running: false });
+    });
+    app.get('/api/copy/trades', (_req, res) => {
+        res.json({
+            open: copyTrading?.getOpenPositions() || [],
+            closed: copyTrading?.getClosedTrades() || [],
+        });
+    });
+    // Bond
+    app.get('/api/bond', (_req, res) => {
+        res.json(bondEngine?.getState() || { running: false });
+    });
+    app.get('/api/bond/trades', (_req, res) => {
+        res.json({
+            open: bondEngine?.getOpenPositions() || [],
+            closed: bondEngine?.getClosedTrades() || [],
+        });
+    });
+    // Kelly
+    app.get('/api/kelly', (_req, res) => {
+        res.json(kellyEngine?.getState() || { running: false });
+    });
+    app.get('/api/kelly/trades', (_req, res) => {
+        res.json({
+            open: kellyEngine?.getOpenPositions() || [],
+            closed: kellyEngine?.getClosedTrades() || [],
+        });
+    });
+    // ---- Shared API ----
     app.get('/api/trades', (_req, res) => {
-        try {
-            const trades = store?.getTrades() || [];
-            res.json(trades);
-        }
-        catch (e) {
-            res.status(500).json({ error: e.message });
-        }
+        res.json(store?.getTrades() || []);
     });
-    // 持仓
     app.get('/api/positions', (_req, res) => {
-        try {
-            const positions = store?.getOpenPositions() || [];
-            res.json(positions);
-        }
-        catch (e) {
-            res.status(500).json({ error: e.message });
-        }
+        res.json(store?.getOpenPositions() || []);
     });
-    // 已平仓位
-    app.get('/api/positions/closed', (_req, res) => {
+    app.get('/api/export', (_req, res) => {
         try {
-            const trades = store?.getTrades() || [];
-            const closedTrades = trades.filter(t => t.status === 'closed' && t.side === 'SELL');
-            res.json(closedTrades);
-        }
-        catch (e) {
-            res.status(500).json({ error: e.message });
-        }
-    });
-    // 信号
-    app.get('/api/signals', (_req, res) => {
-        try {
-            const state = scalper?.getState();
+            const data = store?.exportAll() || { trades: [], positions: [], stats: {} };
+            res.setHeader('Content-Disposition', `attachment; filename=polymarket-v${VERSION}-export.json`);
             res.json({
-                signals: state?.signals || [],
-                convergence: state?.activeConvergence || null,
-                lastSignalTime: state?.lastSignalTime || 0,
+                ...data,
+                marketing101: marketing101?.getState() || null,
+                copyTrading: copyTrading?.getState() || null,
+                bond: bondEngine?.getState() || null,
+                kelly: kellyEngine?.getState() || null,
             });
         }
         catch (e) {
             res.status(500).json({ error: e.message });
         }
     });
-    // 配置
     app.get('/api/config', (_req, res) => {
         res.json({
-            版本: 'V13.2',
-            剥头皮策略: {
-                启用: config.scalperEnabled,
-                模式: config.scalperMode === 'paper' ? '模拟盘' : '实盘',
-                滞后阈值: config.lagThreshold + '%',
-                每笔风险: config.perTradeRiskPercent + '%',
-                日亏帽: config.dailyCapPercent + '%',
-                硬止损: config.hardStopPercent + '%',
-                最低汇聚: config.minConvergence + '%',
-                最大持仓: config.maxActivePositions,
-                止盈: config.takeProfitScalp + '%',
-                止损: config.stopLossScalp + '%',
-                独立资金: '50U (模拟盘)',
-            },
-            marketing101策略: {
-                启用: true,
-                模式: '模拟盘',
-                信号源: ['Claude大脑', 'MiroFish', 'BTC模拟器', 'OTC柜台', '封闭订单簿'],
-                共识要求: '3/5 (60%)',
-                模拟循环: 10000,
-                仓位范围: '$2-$10 (模拟50U) | $5K-$15K (实盘)',
-                独立资金: '50U (模拟盘)',
+            版本: `V${VERSION}`,
+            模式: '模拟盘 (5策略独立50U)',
+            策略: {
+                剥头皮: { 启用: true, 滞后阈值: config.lagThreshold + '%', 止盈: config.takeProfitScalp + '%', 止损: config.stopLossScalp + '%' },
+                Marketing101: { 启用: true, 信号源: ['Claude', 'MiroFish', 'BTC模拟', 'OTC', '订单簿'], 共识: '3/5 (60%)' },
+                跟单: { 启用: true, 最低胜率: '90%', 最低盈利: '$100K' },
+                债券: { 启用: true, 最低概率: '90%', 最低年化: '15%' },
+                Kelly: { 启用: true, Kelly比例: '1/4', EMA周期: 12, 偏离阈值: '5%' },
             },
         });
     });
-    // 启动引擎
+    // ---- Start/Stop ----
     app.post('/api/start', async (req, res) => {
         try {
-            const mode = req.body.mode || config.scalperMode;
             if (scalper?.isRunning()) {
                 return res.json({ success: false, error: '引擎已在运行' });
             }
+            // Initialize shared components
             if (!binance)
                 binance = new binance_ws_1.BinanceFeed(config);
             if (!client)
                 client = new polymarket_client_1.PolymarketClient(config);
             if (!store)
                 store = new trade_store_1.TradeStore();
+            // 1. Scalper Engine
             scalper = new scalper_1.ScalperEngine(config, binance, client, store);
-            if (mode === 'live' && !config.polymarketApiKey) {
-                logger_1.logger.warn('未设置API密钥，回退到模拟盘');
-            }
             await scalper.start();
-            // 启动Marketing101引擎
-            if (!marketing101) {
+            // 2. Marketing101 Engine
+            if (!marketing101)
                 marketing101 = new marketing101_engine_1.Marketing101Engine(config);
-            }
             const btcPrice = binance.getPrice() || 80000;
             await marketing101.start(btcPrice);
+            // 3. Copy Trading Engine
+            if (!copyTrading)
+                copyTrading = new copy_trading_engine_1.CopyTradingEngine(config);
+            await copyTrading.start();
+            // 4. Bond Engine
+            if (!bondEngine)
+                bondEngine = new bond_engine_1.BondEngine(config);
+            await bondEngine.start();
+            // 5. Kelly Engine
+            if (!kellyEngine)
+                kellyEngine = new kelly_engine_1.KellyEngine(config);
+            await kellyEngine.start(btcPrice);
             res.json({
                 success: true,
-                剥头皮: scalper.getMode(),
-                marketing101: marketing101.isRunning() ? '运行中' : '空闲',
+                engines: {
+                    scalper: scalper.getMode(),
+                    marketing101: marketing101.isRunning() ? '运行中' : '空闲',
+                    copyTrading: copyTrading.isRunning() ? '运行中' : '空闲',
+                    bond: bondEngine.isRunning() ? '运行中' : '空闲',
+                    kelly: kellyEngine.isRunning() ? '运行中' : '空闲',
+                },
             });
         }
         catch (e) {
@@ -304,7 +268,6 @@ async function main() {
             res.status(500).json({ success: false, error: e.message });
         }
     });
-    // 停止引擎
     app.post('/api/stop', (_req, res) => {
         try {
             if (scalper) {
@@ -314,73 +277,89 @@ async function main() {
             if (marketing101) {
                 marketing101.stop();
             }
-            res.json({ success: true, 消息: '引擎已停止' });
+            if (copyTrading) {
+                copyTrading.stop();
+            }
+            if (bondEngine) {
+                bondEngine.stop();
+            }
+            if (kellyEngine) {
+                kellyEngine.stop();
+            }
+            res.json({ success: true, 消息: '五引擎已停止' });
         }
         catch (e) {
             res.status(500).json({ success: false, error: e.message });
         }
     });
-    // 导出数据
-    app.get('/api/export', (_req, res) => {
-        try {
-            const data = store?.exportAll() || { trades: [], positions: [], stats: {} };
-            const m101State = marketing101?.getState() || null;
-            res.setHeader('Content-Disposition', 'attachment; filename=polymarket-export.json');
-            res.json({ ...data, marketing101: m101State });
-        }
-        catch (e) {
-            res.status(500).json({ error: e.message });
-        }
-    });
-    // 面板路由
+    // Dashboard route
     app.get('/', (_req, res) => {
         res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html'));
     });
-    // ---- 启动服务器 ----
+    // ---- Start Server ----
     app.listen(PORT, () => {
-        console.log(`[V13引擎] API服务器运行于端口 ${PORT}`);
-        console.log(`[V13引擎] 面板: http://localhost:${PORT}/`);
-        console.log(`[V13引擎] API: http://localhost:${PORT}/api/`);
-        console.log(`[V13引擎] M101 API: http://localhost:${PORT}/api/m101/`);
-        console.log(`[V13引擎] 模式: ${config.scalperMode}${config.dryRun ? ' (模拟)' : ''}`);
+        console.log(`[V${VERSION}] API服务器运行于端口 ${PORT}`);
+        console.log(`[V${VERSION}] 面板: http://localhost:${PORT}/`);
     });
-    // 自动启动
+    // Auto-start
     if (config.scalperEnabled) {
         setTimeout(async () => {
             try {
-                console.log('[V13引擎] 自动启动...');
+                console.log('[V16] 自动启动五引擎...');
                 binance = new binance_ws_1.BinanceFeed(config);
                 client = new polymarket_client_1.PolymarketClient(config);
                 store = new trade_store_1.TradeStore();
+                // 1. Scalper
                 scalper = new scalper_1.ScalperEngine(config, binance, client, store);
                 await scalper.start();
-                marketing101 = new marketing101_engine_1.Marketing101Engine(config);
                 const btcPrice = binance.getPrice() || 80000;
+                // 2. Marketing101
+                marketing101 = new marketing101_engine_1.Marketing101Engine(config);
                 await marketing101.start(btcPrice);
-                console.log('[V13引擎] 双引擎启动成功 (剥头皮50U + M101 50U)');
+                // 3. Copy Trading
+                copyTrading = new copy_trading_engine_1.CopyTradingEngine(config);
+                await copyTrading.start();
+                // 4. Bond
+                bondEngine = new bond_engine_1.BondEngine(config);
+                await bondEngine.start();
+                // 5. Kelly
+                kellyEngine = new kelly_engine_1.KellyEngine(config);
+                await kellyEngine.start(btcPrice);
+                console.log('[V16] 五引擎启动成功 (5×50U模拟盘)');
             }
             catch (e) {
-                console.error('[V13引擎] 自动启动失败:', e.message);
-                console.log('[V13引擎] 请使用 POST /api/start 手动启动');
+                console.error('[V16] 自动启动失败:', e.message);
+                console.log('[V16] 请使用 POST /api/start 手动启动');
             }
         }, 3000);
     }
-    // 更新Marketing101的BTC价格
+    // Update BTC price for all engines
     setInterval(() => {
-        if (binance && marketing101 && scalper?.isRunning()) {
-            const price = binance.getPrice();
-            if (price > 0) {
-                marketing101.updateBtcPrice(price, []);
-            }
+        if (!binance)
+            return;
+        const price = binance.getPrice();
+        if (price <= 0)
+            return;
+        if (marketing101 && marketing101.isRunning()) {
+            marketing101.updateBtcPrice(price, []);
+        }
+        if (kellyEngine && kellyEngine.isRunning()) {
+            kellyEngine.updateBtcPrice(price);
         }
     }, 5000);
-    // 优雅关机
+    // Graceful shutdown
     const shutdown = () => {
-        console.log('[V13引擎] 关机中...');
+        console.log('[V16] 关机中...');
         if (scalper)
             scalper.stop();
         if (marketing101)
             marketing101.stop();
+        if (copyTrading)
+            copyTrading.stop();
+        if (bondEngine)
+            bondEngine.stop();
+        if (kellyEngine)
+            kellyEngine.stop();
         if (store)
             store.save();
         process.exit(0);

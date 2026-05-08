@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Polymarket V13 - BTC 剥头皮 + Marketing101</title>
+  <title>PolyScalper V16 - 多策略交易仪表盘</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -17,19 +17,19 @@
       --text-secondary: #94a3b8;
       --text-muted: #64748b;
       --green: #22c55e;
-      --green-bg: rgba(34, 197, 94, 0.1);
+      --green-bg: rgba(34,197,94,0.1);
       --red: #ef4444;
-      --red-bg: rgba(239, 68, 68, 0.1);
+      --red-bg: rgba(239,68,68,0.1);
       --blue: #3b82f6;
-      --blue-bg: rgba(59, 130, 246, 0.1);
+      --blue-bg: rgba(59,130,246,0.1);
       --yellow: #eab308;
-      --yellow-bg: rgba(234, 179, 8, 0.1);
+      --yellow-bg: rgba(234,179,8,0.1);
       --purple: #a855f7;
-      --purple-bg: rgba(168, 85, 247, 0.1);
+      --purple-bg: rgba(168,85,247,0.1);
       --cyan: #06b6d4;
-      --cyan-bg: rgba(6, 182, 212, 0.1);
+      --cyan-bg: rgba(6,182,212,0.1);
       --orange: #f97316;
-      --orange-bg: rgba(249, 115, 22, 0.1);
+      --orange-bg: rgba(249,115,22,0.1);
     }
     body {
       background: var(--bg-primary);
@@ -38,24 +38,23 @@
       line-height: 1.5;
       overflow-x: hidden;
     }
-    .app { max-width: 1800px; margin: 0 auto; padding: 16px; }
+    .app { max-width: 1900px; margin: 0 auto; padding: 16px; }
 
-    /* Header */
+    /* ===== Header ===== */
     .header {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 16px 24px; background: var(--bg-secondary);
-      border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px;
+      padding: 14px 24px; background: var(--bg-secondary);
+      border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px;
     }
-    .header-left { display: flex; align-items: center; gap: 16px; }
-    .logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
     .logo span { color: var(--blue); }
     .version { font-size: 11px; background: var(--blue-bg); color: var(--blue);
-      padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+      padding: 2px 10px; border-radius: 4px; font-weight: 700; }
     .engine-status { display: flex; align-items: center; gap: 8px; }
     .status-dot { width: 10px; height: 10px; border-radius: 50%; }
     .status-dot.running { background: var(--green); box-shadow: 0 0 8px var(--green); }
     .status-dot.idle { background: var(--text-muted); }
-    .status-dot.error { background: var(--red); }
     .status-text { font-size: 13px; font-weight: 600; }
     .mode-badge { font-size: 11px; padding: 2px 10px; border-radius: 4px; font-weight: 700; }
     .mode-badge.paper { background: var(--yellow-bg); color: var(--yellow); }
@@ -63,237 +62,215 @@
     .header-actions { display: flex; gap: 8px; }
     .btn { padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px;
       font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-start { background: var(--green); color: #000; }
-    .btn-start:hover { filter: brightness(1.1); }
+    .btn-start:hover:not(:disabled) { filter: brightness(1.1); }
     .btn-stop { background: var(--red); color: #fff; }
-    .btn-stop:hover { filter: brightness(1.1); }
+    .btn-stop:hover:not(:disabled) { filter: brightness(1.1); }
     .btn-export { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); }
     .btn-export:hover { background: var(--bg-hover); }
 
-    /* Module Tabs */
-    .module-tabs {
-      display: flex; gap: 0; margin-bottom: 16px;
+    /* ===== Tabs ===== */
+    .tab-bar {
+      display: flex; gap: 0; margin-bottom: 12px;
       background: var(--bg-secondary); border: 1px solid var(--border);
       border-radius: 10px; overflow: hidden;
     }
-    .module-tab {
-      flex: 1; padding: 12px 20px; text-align: center; cursor: pointer;
+    .tab-item {
+      flex: 1; padding: 12px 16px; text-align: center; cursor: pointer;
       font-size: 13px; font-weight: 700; transition: all 0.2s;
-      border-bottom: 3px solid transparent;
+      border-bottom: 3px solid transparent; white-space: nowrap;
     }
-    .module-tab:hover { background: var(--bg-hover); }
-    .module-tab.active { background: var(--bg-card); border-bottom-color: var(--blue); color: var(--blue); }
-    .module-tab .tab-icon { margin-right: 6px; }
+    .tab-item:hover { background: var(--bg-hover); }
+    .tab-item.active { background: var(--bg-card); border-bottom-color: var(--blue); color: var(--blue); }
+    .tab-icon { margin-right: 6px; }
 
-    /* BTC Ticker */
+    /* ===== BTC Ticker ===== */
     .btc-ticker {
-      display: flex; align-items: center; gap: 24px; padding: 12px 24px;
+      display: flex; align-items: center; gap: 24px; padding: 10px 24px;
       background: var(--bg-secondary); border: 1px solid var(--border);
-      border-radius: 10px; margin-bottom: 16px;
+      border-radius: 10px; margin-bottom: 12px; flex-wrap: wrap;
     }
-    .btc-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
-    .btc-price { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
-    .btc-change { font-size: 16px; font-weight: 700; }
-    .btc-change.up { color: var(--green); }
-    .btc-change.down { color: var(--red); }
-    .btc-detail { font-size: 12px; color: var(--text-secondary); }
+    .ticker-item { display: flex; flex-direction: column; gap: 1px; }
+    .ticker-label { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+    .ticker-value { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .ticker-value.price { font-size: 22px; font-weight: 800; }
+    .ticker-value.up { color: var(--green); }
+    .ticker-value.down { color: var(--red); }
     .binance-status { margin-left: auto; font-size: 11px; display: flex; align-items: center; gap: 6px; }
 
-    /* KPI Cards */
-    .kpi-grid {
-      display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 16px;
-    }
+    /* ===== KPI Grid ===== */
+    .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 14px; }
     .kpi-card {
       background: var(--bg-secondary); border: 1px solid var(--border);
-      border-radius: 10px; padding: 16px;
+      border-radius: 10px; padding: 14px 16px;
     }
-    .kpi-label { font-size: 11px; color: var(--text-muted); font-weight: 600;
+    .kpi-label { font-size: 10px; color: var(--text-muted); font-weight: 700;
       text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-    .kpi-value { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .kpi-value { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
     .kpi-value.positive { color: var(--green); }
     .kpi-value.negative { color: var(--red); }
-    .kpi-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+    .kpi-sub { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
 
-    /* Main Grid */
-    .main-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;
-    }
-
-    /* Cards */
+    /* ===== Card ===== */
     .card {
       background: var(--bg-secondary); border: 1px solid var(--border);
       border-radius: 12px; overflow: hidden;
     }
     .card-header {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 14px 20px; border-bottom: 1px solid var(--border);
+      padding: 12px 18px; border-bottom: 1px solid var(--border);
     }
-    .card-title { font-size: 14px; font-weight: 700; }
-    .card-badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
-    .card-body { padding: 16px 20px; }
+    .card-title { font-size: 13px; font-weight: 700; }
+    .card-badge { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+    .card-body { padding: 14px 18px; }
 
-    /* PnL Chart */
-    .chart-container { position: relative; height: 250px; }
+    /* ===== Main Grid ===== */
+    .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .full-width { grid-column: 1 / -1; }
 
-    /* Signal Nodes */
-    .signal-grid { display: flex; flex-direction: column; gap: 8px; }
+    /* ===== Chart ===== */
+    .chart-container { position: relative; height: 240px; }
+
+    /* ===== Signal Grid (Scalper) ===== */
+    .signal-grid { display: flex; flex-direction: column; gap: 6px; }
     .signal-row {
-      display: flex; align-items: center; gap: 12px; padding: 8px 12px;
-      background: var(--bg-card); border-radius: 8px;
+      display: flex; align-items: center; gap: 10px; padding: 7px 10px;
+      background: var(--bg-card); border-radius: 6px;
     }
-    .signal-name { font-size: 12px; font-weight: 600; min-width: 120px; }
+    .signal-name { font-size: 11px; font-weight: 600; min-width: 110px; }
     .signal-bar-bg { flex: 1; height: 6px; background: var(--bg-primary);
       border-radius: 3px; overflow: hidden; }
     .signal-bar { height: 100%; border-radius: 3px; transition: width 0.5s; }
     .signal-bar.bull { background: var(--green); }
     .signal-bar.bear { background: var(--red); }
     .signal-bar.neutral { background: var(--text-muted); }
-    .signal-dir { font-size: 11px; font-weight: 700; min-width: 50px; text-align: right; }
+    .signal-dir { font-size: 10px; font-weight: 700; min-width: 44px; text-align: right; }
     .signal-dir.bull { color: var(--green); }
     .signal-dir.bear { color: var(--red); }
     .signal-dir.neutral { color: var(--text-muted); }
-    .signal-details { font-size: 10px; color: var(--text-secondary); min-width: 150px; text-align: right; }
 
     .convergence-display {
-      margin-top: 12px; padding: 12px; background: var(--bg-card);
+      margin-top: 10px; padding: 12px; background: var(--bg-card);
       border-radius: 8px; text-align: center;
     }
-    .convergence-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
-    .convergence-value { font-size: 32px; font-weight: 800; }
+    .convergence-label { font-size: 10px; color: var(--text-muted); margin-bottom: 2px; }
+    .convergence-value { font-size: 28px; font-weight: 800; }
     .convergence-value.bull { color: var(--green); }
     .convergence-value.bear { color: var(--red); }
     .convergence-value.neutral { color: var(--text-muted); }
-    .convergence-dir { font-size: 14px; font-weight: 700; margin-top: 2px; }
+    .convergence-dir { font-size: 12px; font-weight: 700; margin-top: 2px; }
 
-    /* Tables */
-    .table-container { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    th { text-align: left; padding: 10px 12px; font-size: 11px; color: var(--text-muted);
-      font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
-      border-bottom: 1px solid var(--border); }
-    td { padding: 10px 12px; border-bottom: 1px solid var(--border);
-      font-variant-numeric: tabular-nums; }
-    tr:hover { background: var(--bg-hover); }
-    .side-buy { color: var(--green); font-weight: 700; }
-    .side-sell { color: var(--red); font-weight: 700; }
-    .pnl-positive { color: var(--green); font-weight: 600; }
-    .pnl-negative { color: var(--red); font-weight: 600; }
-    .type-up { color: var(--green); }
-    .type-down { color: var(--red); }
-    .paper-badge { font-size: 9px; background: var(--yellow-bg); color: var(--yellow);
-      padding: 1px 5px; border-radius: 3px; font-weight: 700; }
-    .status-open { color: var(--blue); }
-    .status-closed { color: var(--text-secondary); }
-
-    /* Full Width Section */
-    .full-width { grid-column: 1 / -1; }
-
-    /* Positions */
-    .positions-empty { text-align: center; padding: 32px; color: var(--text-muted); font-size: 14px; }
-
-    /* Module panels */
-    .module-panel { display: none; }
-    .module-panel.active { display: block; }
-
-    /* Marketing101 Specific */
-    .m101-source-grid {
-      display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 16px;
-    }
-    .m101-source-card {
+    /* ===== 5-Source Cards (M101 / Kelly) ===== */
+    .source-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; margin-bottom: 14px; }
+    .source-card {
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: 10px; padding: 14px; text-align: center; position: relative;
     }
-    .m101-source-card .source-icon { font-size: 24px; margin-bottom: 6px; }
-    .m101-source-card .source-name { font-size: 11px; color: var(--text-muted);
-      text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 6px; }
-    .m101-source-card .source-dir { font-size: 18px; font-weight: 800; margin-bottom: 2px; }
-    .m101-source-card .source-strength { font-size: 11px; color: var(--text-secondary); }
-    .m101-source-card .source-weight { font-size: 10px; color: var(--text-muted);
-      position: absolute; top: 8px; right: 10px; background: var(--bg-primary);
-      padding: 2px 6px; border-radius: 3px; }
-    .m101-source-card.up { border-top: 3px solid var(--green); }
-    .m101-source-card.down { border-top: 3px solid var(--red); }
-    .m101-source-card.neutral { border-top: 3px solid var(--text-muted); }
+    .source-card .s-icon { font-size: 22px; margin-bottom: 4px; }
+    .source-card .s-name { font-size: 10px; color: var(--text-muted);
+      text-transform: uppercase; font-weight: 700; letter-spacing: 0.4px; margin-bottom: 6px; }
+    .source-card .s-dir { font-size: 16px; font-weight: 800; margin-bottom: 2px; }
+    .source-card .s-strength { font-size: 10px; color: var(--text-secondary); }
+    .source-card .s-weight { font-size: 9px; color: var(--text-muted);
+      position: absolute; top: 6px; right: 8px; background: var(--bg-primary);
+      padding: 1px 5px; border-radius: 3px; }
+    .source-card.up { border-top: 3px solid var(--green); }
+    .source-card.down { border-top: 3px solid var(--red); }
+    .source-card.neutral { border-top: 3px solid var(--text-muted); }
 
-    .m101-decision-box {
+    /* ===== Decision Box ===== */
+    .decision-box {
       background: var(--bg-card); border: 2px solid var(--border);
-      border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 16px;
+      border-radius: 12px; padding: 18px; text-align: center; margin-bottom: 14px;
     }
-    .m101-decision-box.trade { border-color: var(--green); box-shadow: 0 0 20px rgba(34, 197, 94, 0.1); }
-    .m101-decision-box.skip { border-color: var(--text-muted); }
-    .m101-decision-label { font-size: 11px; color: var(--text-muted);
-      text-transform: uppercase; font-weight: 700; margin-bottom: 8px; }
-    .m101-decision-value { font-size: 36px; font-weight: 800; }
-    .m101-decision-value.up { color: var(--green); }
-    .m101-decision-value.down { color: var(--red); }
-    .m101-decision-value.skip { color: var(--text-muted); }
-    .m101-decision-reason { font-size: 12px; color: var(--text-secondary);
-      margin-top: 8px; line-height: 1.6; }
+    .decision-box.trade { border-color: var(--green); box-shadow: 0 0 20px rgba(34,197,94,0.1); }
+    .decision-box.skip { border-color: var(--text-muted); }
+    .decision-label { font-size: 10px; color: var(--text-muted);
+      text-transform: uppercase; font-weight: 700; margin-bottom: 6px; }
+    .decision-value { font-size: 32px; font-weight: 800; }
+    .decision-value.up { color: var(--green); }
+    .decision-value.down { color: var(--red); }
+    .decision-value.skip { color: var(--text-muted); }
+    .decision-reason { font-size: 11px; color: var(--text-secondary);
+      margin-top: 6px; line-height: 1.6; }
 
-    .m101-data-grid {
-      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;
-    }
-    .m101-data-card {
-      background: var(--bg-card); border-radius: 10px; padding: 14px;
-    }
-    .m101-data-title { font-size: 11px; color: var(--text-muted); font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+    /* ===== Data Grid ===== */
+    .data-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .data-card { background: var(--bg-card); border-radius: 10px; padding: 14px; }
+    .data-title { font-size: 10px; color: var(--text-muted); font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px;
       display: flex; align-items: center; gap: 6px; }
-    .m101-data-row { display: flex; justify-content: space-between;
-      padding: 3px 0; font-size: 12px; }
-    .m101-data-row .label { color: var(--text-secondary); }
-    .m101-data-row .value { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .data-row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; }
+    .data-row .label { color: var(--text-secondary); }
+    .data-row .value { font-weight: 600; font-variant-numeric: tabular-nums; }
 
-    .otc-flow-item {
-      display: flex; align-items: center; gap: 8px; padding: 4px 0;
-      font-size: 11px; border-bottom: 1px solid var(--border);
-    }
-    .otc-flow-item:last-child { border-bottom: none; }
-
+    /* ===== Consensus Bar ===== */
     .consensus-bar {
       display: flex; height: 8px; border-radius: 4px; overflow: hidden;
-      background: var(--bg-primary); margin-top: 8px;
+      background: var(--bg-primary); margin-top: 6px;
     }
-    .consensus-bar .up-segment { background: var(--green); transition: width 0.5s; }
-    .consensus-bar .down-segment { background: var(--red); transition: width 0.5s; }
-    .consensus-bar .neutral-segment { background: var(--text-muted); transition: width 0.5s; }
+    .consensus-bar .up-seg { background: var(--green); transition: width 0.5s; }
+    .consensus-bar .down-seg { background: var(--red); transition: width 0.5s; }
+    .consensus-bar .neutral-seg { background: var(--text-muted); transition: width 0.5s; }
 
-    /* Scrollbar */
+    /* ===== Tables ===== */
+    .table-container { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    th { text-align: left; padding: 8px 10px; font-size: 10px; color: var(--text-muted);
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+      border-bottom: 1px solid var(--border); }
+    td { padding: 8px 10px; border-bottom: 1px solid var(--border);
+      font-variant-numeric: tabular-nums; }
+    tr:hover { background: var(--bg-hover); }
+    .side-yes { color: var(--green); font-weight: 700; }
+    .side-no { color: var(--red); font-weight: 700; }
+    .pnl-pos { color: var(--green); font-weight: 600; }
+    .pnl-neg { color: var(--red); font-weight: 600; }
+    .status-open { color: var(--blue); }
+    .empty-row td { text-align: center; color: var(--text-muted); padding: 24px; }
+
+    /* ===== Panel visibility ===== */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ===== Pulse ===== */
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .pulse { animation: pulse 2s infinite; }
+
+    /* ===== Scrollbar ===== */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: var(--bg-primary); }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-    /* Responsive */
+    /* ===== Responsive ===== */
+    @media (max-width: 1400px) {
+      .source-grid { grid-template-columns: repeat(3,1fr); }
+    }
     @media (max-width: 1200px) {
-      .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+      .kpi-grid { grid-template-columns: repeat(3,1fr); }
       .main-grid { grid-template-columns: 1fr; }
-      .m101-source-grid { grid-template-columns: repeat(3, 1fr); }
-      .m101-data-grid { grid-template-columns: 1fr 1fr; }
+      .data-grid { grid-template-columns: 1fr 1fr; }
+      .source-grid { grid-template-columns: repeat(3,1fr); }
     }
     @media (max-width: 768px) {
-      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-      .header { flex-direction: column; gap: 12px; }
-      .btc-ticker { flex-wrap: wrap; }
-      .m101-source-grid { grid-template-columns: repeat(2, 1fr); }
-      .m101-data-grid { grid-template-columns: 1fr; }
+      .kpi-grid { grid-template-columns: repeat(2,1fr); }
+      .header { flex-direction: column; gap: 10px; }
+      .btc-ticker { gap: 14px; }
+      .source-grid { grid-template-columns: repeat(2,1fr); }
+      .data-grid { grid-template-columns: 1fr; }
+      .tab-item { font-size: 11px; padding: 10px 8px; }
     }
-
-    /* Pulse animation */
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-    .pulse { animation: pulse 2s infinite; }
-
-    /* Trade detail row expand */
-    .trade-reason { font-size: 10px; color: var(--text-secondary); max-width: 200px;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   </style>
 </head>
 <body>
 <div class="app">
-  <!-- Header -->
+
+  <!-- ===== HEADER ===== -->
   <div class="header">
     <div class="header-left">
       <div class="logo">Poly<span>Scalper</span></div>
-      <span class="version">V13.2</span>
+      <span class="version" id="versionBadge">V16</span>
       <div class="engine-status">
         <div class="status-dot idle" id="statusDot"></div>
         <span class="status-text" id="statusText">空闲</span>
@@ -307,41 +284,48 @@
     </div>
   </div>
 
-  <!-- Module Tabs -->
-  <div class="module-tabs">
-    <div class="module-tab active" onclick="switchTab('scalper')" id="tabScalper">
-      <span class="tab-icon">⚡</span> BTC 5分钟剥头皮
-    </div>
-    <div class="module-tab" onclick="switchTab('m101')" id="tabM101">
-      <span class="tab-icon">🧠</span> Marketing101 引擎
-    </div>
+  <!-- ===== TAB BAR ===== -->
+  <div class="tab-bar">
+    <div class="tab-item active" onclick="switchTab('scalper')" id="tabScalper"><span class="tab-icon">⚡</span>剥头皮</div>
+    <div class="tab-item" onclick="switchTab('m101')" id="tabM101"><span class="tab-icon">🧠</span>5源信号</div>
+    <div class="tab-item" onclick="switchTab('copy')" id="tabCopy"><span class="tab-icon">📋</span>跟单</div>
+    <div class="tab-item" onclick="switchTab('bond')" id="tabBond"><span class="tab-icon">🏦</span>债券</div>
+    <div class="tab-item" onclick="switchTab('kelly')" id="tabKelly"><span class="tab-icon">🎯</span>凯利均值回归</div>
   </div>
 
-  <!-- BTC Ticker (shared) -->
+  <!-- ===== BTC TICKER ===== -->
   <div class="btc-ticker">
-    <div>
-      <div class="btc-label">BTC/USDT</div>
-      <div class="btc-price" id="btcPrice">$---</div>
+    <div class="ticker-item">
+      <span class="ticker-label">BTC/USDT</span>
+      <span class="ticker-value price" id="btcPrice">$---</span>
     </div>
-    <div>
-      <div class="btc-label">5分钟变动</div>
-      <div class="btc-change" id="btcChange">0.00%</div>
+    <div class="ticker-item">
+      <span class="ticker-label">5分钟变动</span>
+      <span class="ticker-value" id="btcChange">0.00%</span>
     </div>
-    <div>
-      <div class="btc-label">5分钟成交量</div>
-      <div class="btc-detail" id="btcVolume">$0</div>
+    <div class="ticker-item">
+      <span class="ticker-label">5分钟成交量</span>
+      <span class="ticker-value" id="btcVolume">$0</span>
     </div>
-    <div>
-      <div class="btc-label">深度失衡</div>
-      <div class="btc-detail" id="btcImbalance">0%</div>
+    <div class="ticker-item">
+      <span class="ticker-label">⚡ 剥头皮</span>
+      <span class="ticker-value" id="tickScalper" style="color:var(--cyan)">$50.00</span>
     </div>
-    <div>
-      <div class="btc-label">剥头皮资金</div>
-      <div class="btc-detail" id="scalperBalance">$50.00</div>
+    <div class="ticker-item">
+      <span class="ticker-label">🧠 5源信号</span>
+      <span class="ticker-value" id="tickM101" style="color:var(--purple)">$50.00</span>
     </div>
-    <div>
-      <div class="btc-label">M101资金</div>
-      <div class="btc-detail" id="m101Balance">$50.00</div>
+    <div class="ticker-item">
+      <span class="ticker-label">📋 跟单</span>
+      <span class="ticker-value" id="tickCopy" style="color:var(--orange)">$50.00</span>
+    </div>
+    <div class="ticker-item">
+      <span class="ticker-label">🏦 债券</span>
+      <span class="ticker-value" id="tickBond" style="color:var(--yellow)">$50.00</span>
+    </div>
+    <div class="ticker-item">
+      <span class="ticker-label">🎯 凯利</span>
+      <span class="ticker-value" id="tickKelly" style="color:var(--green)">$50.00</span>
     </div>
     <div class="binance-status">
       <div class="status-dot idle" id="binanceDot"></div>
@@ -349,43 +333,43 @@
     </div>
   </div>
 
-  <!-- ===== MODULE 1: Scalper Panel ===== -->
-  <div class="module-panel active" id="panelScalper">
-    <!-- KPI Cards -->
+  <!-- ============================================================ -->
+  <!-- TAB 1: ⚡ 剥头皮 (Scalper)                                   -->
+  <!-- ============================================================ -->
+  <div class="tab-panel active" id="panelScalper">
     <div class="kpi-grid">
       <div class="kpi-card">
         <div class="kpi-label">总盈亏</div>
-        <div class="kpi-value" id="totalPnl">$0.00</div>
-        <div class="kpi-sub" id="totalPnlSub">0 笔交易</div>
+        <div class="kpi-value" id="scTotalPnl">$0.00</div>
+        <div class="kpi-sub" id="scTotalPnlSub">0 笔交易</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">日盈亏</div>
-        <div class="kpi-value" id="dailyPnl">$0.00</div>
-        <div class="kpi-sub" id="dailyCapSub">上限: 0%</div>
+        <div class="kpi-value" id="scDailyPnl">$0.00</div>
+        <div class="kpi-sub" id="scDailyCapSub">日限: 0/2</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">胜率</div>
-        <div class="kpi-value" id="winRate">0%</div>
-        <div class="kpi-sub" id="winLossSub">0W / 0L</div>
+        <div class="kpi-value" id="scWinRate">0%</div>
+        <div class="kpi-sub" id="scWinLossSub">0W / 0L</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">活跃仓位</div>
-        <div class="kpi-value" id="activePositions">0</div>
+        <div class="kpi-value" id="scActivePos">0</div>
         <div class="kpi-sub">最大: 3</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">扫描次数</div>
-        <div class="kpi-value" id="scanCount">0</div>
-        <div class="kpi-sub" id="skipSub">0 跳过</div>
+        <div class="kpi-value" id="scScanCount">0</div>
+        <div class="kpi-sub" id="scSkipSub">0 跳过</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">运行时间</div>
-        <div class="kpi-value" id="uptime">0:00</div>
-        <div class="kpi-sub" id="hardStopSub">硬止损: 正常</div>
+        <div class="kpi-value" id="scUptime">0:00</div>
+        <div class="kpi-sub" id="scHardStopSub">硬止损: 正常</div>
       </div>
     </div>
 
-    <!-- Main Grid -->
     <div class="main-grid">
       <!-- PnL Chart -->
       <div class="card">
@@ -394,24 +378,22 @@
           <span class="card-badge" style="background:var(--blue-bg);color:var(--blue)">实时</span>
         </div>
         <div class="card-body">
-          <div class="chart-container">
-            <canvas id="pnlChart"></canvas>
-          </div>
+          <div class="chart-container"><canvas id="pnlChart"></canvas></div>
         </div>
       </div>
 
       <!-- Signal Convergence -->
       <div class="card">
         <div class="card-header">
-          <span class="card-title">信号汇聚 (力导向图)</span>
-          <span class="card-badge" id="convergenceBadge" style="background:var(--bg-card);color:var(--text-muted)">---%</span>
+          <span class="card-title">信号汇聚</span>
+          <span class="card-badge" id="scConvBadge" style="background:var(--bg-card);color:var(--text-muted)">---</span>
         </div>
         <div class="card-body">
-          <div class="signal-grid" id="signalGrid"></div>
+          <div class="signal-grid" id="scSignalGrid"></div>
           <div class="convergence-display">
             <div class="convergence-label">汇聚方向</div>
-            <div class="convergence-value neutral" id="convergenceValue">---</div>
-            <div class="convergence-dir" id="convergenceDir">等待信号...</div>
+            <div class="convergence-value neutral" id="scConvValue">---</div>
+            <div class="convergence-dir" id="scConvDir">等待信号...</div>
           </div>
         </div>
       </div>
@@ -420,48 +402,44 @@
       <div class="card">
         <div class="card-header">
           <span class="card-title">活跃仓位</span>
-          <span class="card-badge" id="positionsBadge" style="background:var(--blue-bg);color:var(--blue)">0</span>
+          <span class="card-badge" id="scPosBadge" style="background:var(--blue-bg);color:var(--blue)">0</span>
         </div>
         <div class="card-body">
-          <div class="table-container" id="positionsContainer">
-            <div class="positions-empty" id="noPositions">暂无活跃仓位</div>
-            <table id="positionsTable" style="display:none">
-              <thead><tr><th>市场</th><th>类型</th><th>入场</th><th>当前</th><th>数量</th><th>成本</th><th>盈亏</th><th>盈亏%</th><th>BTC</th><th>滞后</th><th>时长</th></tr></thead>
-              <tbody id="positionsBody"></tbody>
+          <div class="table-container">
+            <table id="scPosTable">
+              <thead><tr><th>市场</th><th>方向</th><th>入场价</th><th>当前价</th><th>数量</th><th>成本</th><th>盈亏</th><th>盈亏%</th><th>时长</th></tr></thead>
+              <tbody id="scPosBody">
+                <tr class="empty-row"><td colspan="9">暂无活跃仓位</td></tr>
+              </tbody>
             </table>
           </div>
         </div>
       </div>
 
-      <!-- MiroFish Simulation Engine -->
+      <!-- Simulation Engine -->
       <div class="card">
         <div class="card-header">
-          <span class="card-title">🧬 MiroFish 蒙特卡洛模拟器</span>
-          <span class="card-badge" id="simBadge" style="background:var(--purple-bg);color:var(--purple)">10K 循环</span>
+          <span class="card-title">🧬 蒙特卡洛模拟器</span>
+          <span class="card-badge" id="scSimBadge" style="background:var(--purple-bg);color:var(--purple)">10K 循环</span>
         </div>
         <div class="card-body">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div style="background:var(--bg-card);border-radius:8px;padding:14px;text-align:center">
-              <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">模拟方向</div>
-              <div id="simDirection" style="font-size:22px;font-weight:800;color:var(--text-muted)">---</div>
-              <div id="simProb" style="font-size:11px;color:var(--text-secondary)">UP: --% | DOWN: --%</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="background:var(--bg-card);border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;margin-bottom:3px">模拟方向</div>
+              <div id="scSimDir" style="font-size:20px;font-weight:800;color:var(--text-muted)">---</div>
+              <div id="scSimProb" style="font-size:10px;color:var(--text-secondary)">UP: --% | DOWN: --%</div>
             </div>
-            <div style="background:var(--bg-card);border-radius:8px;padding:14px;text-align:center">
-              <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">模拟置信度</div>
-              <div id="simConfidence" style="font-size:22px;font-weight:800;color:var(--text-muted)">--%</div>
-              <div id="simShouldTrade" style="font-size:11px">---</div>
+            <div style="background:var(--bg-card);border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;margin-bottom:3px">置信度</div>
+              <div id="scSimConf" style="font-size:20px;font-weight:800;color:var(--text-muted)">--%</div>
+              <div id="scSimTrade" style="font-size:10px">---</div>
             </div>
           </div>
-          <div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">
-            <div style="font-size:11px;color:var(--text-muted)">Kelly: <span id="simKelly" style="color:var(--text-primary)">--%</span></div>
-            <div style="font-size:11px;color:var(--text-muted)">Sharpe: <span id="simSharpe" style="color:var(--text-primary)">--</span></div>
-            <div style="font-size:11px;color:var(--text-muted)">模拟: <span id="simTotalCount" style="color:var(--text-primary)">0</span></div>
-            <div style="font-size:11px;color:var(--text-muted)">校准: <span id="simCalibration" style="color:var(--text-primary)">--%</span></div>
-            <div style="font-size:11px;color:var(--text-muted)">延迟: <span id="simLatency" style="color:var(--text-primary)">--ms</span></div>
-          </div>
-          <div style="margin-top:10px">
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:600">市场上下文</div>
-            <div id="simContext" style="font-size:10px;color:var(--text-secondary);background:var(--bg-card);padding:8px;border-radius:6px;font-family:monospace;word-break:break-all">等待数据...</div>
+          <div style="margin-top:8px;display:flex;gap:14px;flex-wrap:wrap">
+            <span style="font-size:10px;color:var(--text-muted)">Kelly: <span id="scSimKelly" style="color:var(--text-primary)">--%</span></span>
+            <span style="font-size:10px;color:var(--text-muted)">Sharpe: <span id="scSimSharpe" style="color:var(--text-primary)">--</span></span>
+            <span style="font-size:10px;color:var(--text-muted)">模拟: <span id="scSimCount" style="color:var(--text-primary)">0</span></span>
+            <span style="font-size:10px;color:var(--text-muted)">校准: <span id="scSimCalib" style="color:var(--text-primary)">--%</span></span>
           </div>
         </div>
       </div>
@@ -470,14 +448,14 @@
       <div class="card full-width">
         <div class="card-header">
           <span class="card-title">交易记录</span>
-          <span class="card-badge" id="tradesBadge" style="background:var(--bg-card);color:var(--text-secondary)">0 笔交易</span>
+          <span class="card-badge" id="scTradesBadge" style="background:var(--bg-card);color:var(--text-secondary)">0 笔</span>
         </div>
         <div class="card-body">
           <div class="table-container">
-            <table id="tradesTable">
-              <thead><tr><th>时间</th><th>方向</th><th>类型</th><th>市场</th><th>价格</th><th>数量</th><th>成本</th><th>盈亏</th><th>盈亏%</th><th>BTC价格</th><th>滞后</th><th>汇聚</th><th>原因</th><th>状态</th></tr></thead>
-              <tbody id="tradesBody">
-                <tr><td colspan="14" style="text-align:center;color:var(--text-muted);padding:24px">暂无交易。启动引擎开始剥头皮交易。</td></tr>
+            <table id="scTradesTable">
+              <thead><tr><th>时间</th><th>市场</th><th>方向</th><th>价格</th><th>数量</th><th>成本</th><th>盈亏</th><th>盈亏%</th><th>原因</th></tr></thead>
+              <tbody id="scTradesBody">
+                <tr class="empty-row"><td colspan="9">暂无交易记录</td></tr>
               </tbody>
             </table>
           </div>
@@ -486,263 +464,475 @@
     </div>
   </div>
 
-  <!-- ===== MODULE 2: Marketing101 Panel ===== -->
-  <div class="module-panel" id="panelM101">
-    <!-- M101 KPI Cards -->
+  <!-- ============================================================ -->
+  <!-- TAB 2: 🧠 5源信号 (Marketing101)                              -->
+  <!-- ============================================================ -->
+  <div class="tab-panel" id="panelM101">
     <div class="kpi-grid">
       <div class="kpi-card" style="border-left:3px solid var(--purple)">
-        <div class="kpi-label">M101 总盈亏</div>
-        <div class="kpi-value" id="m101TotalPnl">$0.00</div>
-        <div class="kpi-sub" id="m101TradeCount">0 笔交易</div>
+        <div class="kpi-label">总盈亏</div>
+        <div class="kpi-value" id="m1TotalPnl">$0.00</div>
+        <div class="kpi-sub" id="m1TradeCountSub">0 笔交易</div>
       </div>
       <div class="kpi-card" style="border-left:3px solid var(--cyan)">
-        <div class="kpi-label">M101 日盈亏</div>
-        <div class="kpi-value" id="m101DailyPnl">$0.00</div>
-        <div class="kpi-sub">模拟资金: $50 (50U)</div>
+        <div class="kpi-label">日盈亏</div>
+        <div class="kpi-value" id="m1DailyPnl">$0.00</div>
+        <div class="kpi-sub">模拟资金: $50</div>
       </div>
       <div class="kpi-card" style="border-left:3px solid var(--green)">
-        <div class="kpi-label">M101 胜率</div>
-        <div class="kpi-value" id="m101WinRate">0%</div>
-        <div class="kpi-sub" id="m101WinLoss">0W / 0L</div>
+        <div class="kpi-label">胜率</div>
+        <div class="kpi-value" id="m1WinRate">0%</div>
+        <div class="kpi-sub" id="m1WinLossSub">0W / 0L</div>
       </div>
       <div class="kpi-card" style="border-left:3px solid var(--orange)">
-        <div class="kpi-label">模拟运行</div>
-        <div class="kpi-value" id="m101SimRuns">0</div>
-        <div class="kpi-sub" id="m101ScanSkip">0 扫描 / 0 跳过</div>
+        <div class="kpi-label">扫描/跳过</div>
+        <div class="kpi-value" id="m1ScanSkip">0 / 0</div>
+        <div class="kpi-sub">信号源: 5</div>
       </div>
       <div class="kpi-card" style="border-left:3px solid var(--yellow)">
         <div class="kpi-label">平均仓位</div>
-        <div class="kpi-value" id="m101AvgSize">$0</div>
-        <div class="kpi-sub">目标: $2-$10 (50U)</div>
+        <div class="kpi-value" id="m1AvgSize">$0</div>
+        <div class="kpi-sub">目标: $2-$10</div>
       </div>
       <div class="kpi-card" style="border-left:3px solid var(--blue)">
-        <div class="kpi-label">M101 运行时间</div>
-        <div class="kpi-value" id="m101Uptime">0:00</div>
+        <div class="kpi-label">运行时间</div>
+        <div class="kpi-value" id="m1Uptime">0:00</div>
         <div class="kpi-sub">5源信号汇聚</div>
       </div>
     </div>
 
-    <!-- 5-Source Signal Convergence -->
-    <div class="card" style="margin-bottom:16px">
+    <!-- 5-Source Signal Cards -->
+    <div class="card" style="margin-bottom:14px">
       <div class="card-header">
-        <span class="card-title">🧠 Marketing101 - 5源信号汇聚</span>
-        <span class="card-badge" id="m101ConsensusBadge" style="background:var(--purple-bg);color:var(--purple)">4/5 共识</span>
+        <span class="card-title">🧠 5源信号汇聚</span>
+        <span class="card-badge" id="m1ConsensusBadge" style="background:var(--purple-bg);color:var(--purple)">---</span>
       </div>
       <div class="card-body">
-        <!-- 5 Source Cards -->
-        <div class="m101-source-grid" id="m101SourceGrid">
-          <div class="m101-source-card neutral">
-            <div class="source-weight">30%</div>
-            <div class="source-icon">🤖</div>
-            <div class="source-name">Claude 大脑</div>
-            <div class="source-dir" style="color:var(--text-muted)">---</div>
-            <div class="source-strength">--% | Conf: --%</div>
+        <div class="source-grid" id="m1SourceGrid">
+          <div class="source-card neutral"><div class="s-weight">30%</div><div class="s-icon">🤖</div><div class="s-name">Claude 大脑</div><div class="s-dir" style="color:var(--text-muted)">---</div><div class="s-strength">--% | Conf: --%</div></div>
+          <div class="source-card neutral"><div class="s-weight">25%</div><div class="s-icon">🧬</div><div class="s-name">MiroFish</div><div class="s-dir" style="color:var(--text-muted)">---</div><div class="s-strength">--% | Conf: --%</div></div>
+          <div class="source-card neutral"><div class="s-weight">20%</div><div class="s-icon">📊</div><div class="s-name">BTC 模拟</div><div class="s-dir" style="color:var(--text-muted)">---</div><div class="s-strength">--% | Conf: --%</div></div>
+          <div class="source-card neutral"><div class="s-weight">15%</div><div class="s-icon">🏛️</div><div class="s-name">OTC 柜台</div><div class="s-dir" style="color:var(--text-muted)">---</div><div class="s-strength">--% | Conf: --%</div></div>
+          <div class="source-card neutral"><div class="s-weight">10%</div><div class="s-icon">📋</div><div class="s-name">封闭订单簿</div><div class="s-dir" style="color:var(--text-muted)">---</div><div class="s-strength">--% | Conf: --%</div></div>
+        </div>
+
+        <div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-bottom:3px">
+            <span>共识</span><span id="m1ConsensusText">-- / 5 源同意</span>
           </div>
-          <div class="m101-source-card neutral">
-            <div class="source-weight">25%</div>
-            <div class="source-icon">🧬</div>
-            <div class="source-name">MiroFish 10K</div>
-            <div class="source-dir" style="color:var(--text-muted)">---</div>
-            <div class="source-strength">--% | Conf: --%</div>
-          </div>
-          <div class="m101-source-card neutral">
-            <div class="source-weight">20%</div>
-            <div class="source-icon">📊</div>
-            <div class="source-name">BTC 模拟器</div>
-            <div class="source-dir" style="color:var(--text-muted)">---</div>
-            <div class="source-strength">--% | Conf: --%</div>
-          </div>
-          <div class="m101-source-card neutral">
-            <div class="source-weight">15%</div>
-            <div class="source-icon">🏛️</div>
-            <div class="source-name">OTC 柜台</div>
-            <div class="source-dir" style="color:var(--text-muted)">---</div>
-            <div class="source-strength">--% | Conf: --%</div>
-          </div>
-          <div class="m101-source-card neutral">
-            <div class="source-weight">10%</div>
-            <div class="source-icon">📋</div>
-            <div class="source-name">封闭订单簿</div>
-            <div class="source-dir" style="color:var(--text-muted)">---</div>
-            <div class="source-strength">--% | Conf: --%</div>
+          <div class="consensus-bar" id="m1ConsensusBar">
+            <div class="up-seg" style="width:0%"></div>
+            <div class="neutral-seg" style="width:100%"></div>
+            <div class="down-seg" style="width:0%"></div>
           </div>
         </div>
 
-        <!-- Consensus Bar -->
-        <div style="margin-bottom:12px">
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px">
-            <span>共识</span>
-            <span id="m101ConsensusText">-- / 5 源同意</span>
-          </div>
-          <div class="consensus-bar" id="m101ConsensusBar">
-            <div class="up-segment" style="width:0%"></div>
-            <div class="neutral-segment" style="width:100%"></div>
-            <div class="down-segment" style="width:0%"></div>
-          </div>
-        </div>
-
-        <!-- Decision Box -->
-        <div class="m101-decision-box skip" id="m101DecisionBox">
-          <div class="m101-decision-label">Marketing101 决策</div>
-          <div class="m101-decision-value skip" id="m101DecisionValue">等待中</div>
-          <div class="m101-decision-reason" id="m101DecisionReason">等待5源汇聚分析...</div>
+        <div class="decision-box skip" id="m1DecisionBox">
+          <div class="decision-label">Marketing101 决策</div>
+          <div class="decision-value skip" id="m1DecisionValue">等待中</div>
+          <div class="decision-reason" id="m1DecisionReason">等待5源汇聚分析...</div>
         </div>
       </div>
     </div>
 
     <!-- Data Panels -->
-    <div class="m101-data-grid">
-      <!-- BTC Simulator Results -->
+    <div class="data-grid">
+      <!-- MiroFish -->
       <div class="card">
-        <div class="card-header">
-          <span class="card-title">📊 BTC 价格模拟器</span>
-          <span class="card-badge" style="background:var(--cyan-bg);color:var(--cyan)">10K 路径</span>
-        </div>
+        <div class="card-header"><span class="card-title">🧬 MiroFish 统计</span><span class="card-badge" style="background:var(--purple-bg);color:var(--purple)">10K</span></div>
         <div class="card-body">
-          <div class="m101-data-card">
-            <div class="m101-data-title">价格分布 (5分钟)</div>
-            <div class="m101-data-row"><span class="label">当前价格</span><span class="value" id="m101BtcCurrent">$---</span></div>
-            <div class="m101-data-row"><span class="label">上涨路径</span><span class="value" style="color:var(--green)" id="m101BtcUp">---</span></div>
-            <div class="m101-data-row"><span class="label">下跌路径</span><span class="value" style="color:var(--red)" id="m101BtcDown">---</span></div>
-            <div class="m101-data-row"><span class="label">平均终价</span><span class="value" id="m101BtcAvg">$---</span></div>
-            <div class="m101-data-row"><span class="label">P5 (看跌)</span><span class="value" style="color:var(--red)" id="m101BtcP5">$---</span></div>
-            <div class="m101-data-row"><span class="label">P50 (中位数)</span><span class="value" id="m101BtcP50">$---</span></div>
-            <div class="m101-data-row"><span class="label">P95 (看涨)</span><span class="value" style="color:var(--green)" id="m101BtcP95">$---</span></div>
-            <div class="m101-data-row"><span class="label">平均跳跃</span><span class="value" id="m101BtcJumps">---</span></div>
+          <div class="data-card">
+            <div class="data-row"><span class="label">方向</span><span class="value" id="m1mfDir">---</span></div>
+            <div class="data-row"><span class="label">上涨概率</span><span class="value" style="color:var(--green)" id="m1mfUp">--%</span></div>
+            <div class="data-row"><span class="label">下跌概率</span><span class="value" style="color:var(--red)" id="m1mfDown">--%</span></div>
+            <div class="data-row"><span class="label">置信度</span><span class="value" id="m1mfConf">--%</span></div>
+            <div class="data-row"><span class="label">Kelly</span><span class="value" id="m1mfKelly">--%</span></div>
+            <div class="data-row"><span class="label">Sharpe</span><span class="value" id="m1mfSharpe">--</span></div>
+            <div class="data-row"><span class="label">预期盈亏</span><span class="value" id="m1mfExpPnl">$---</span></div>
           </div>
         </div>
       </div>
-
-      <!-- OTC Desk Data -->
+      <!-- OTC -->
       <div class="card">
-        <div class="card-header">
-          <span class="card-title">🏛️ OTC 柜台资金流</span>
-          <span class="card-badge" id="m101OtcBadge" style="background:var(--orange-bg);color:var(--orange)">实时</span>
-        </div>
+        <div class="card-header"><span class="card-title">🏛️ OTC 柜台数据</span><span class="card-badge" style="background:var(--orange-bg);color:var(--orange)">实时</span></div>
         <div class="card-body">
-          <div class="m101-data-card">
-            <div class="m101-data-title">5分钟资金流汇总</div>
-            <div class="m101-data-row"><span class="label">买入流</span><span class="value" style="color:var(--green)" id="m101OtcBuy">--- BTC</span></div>
-            <div class="m101-data-row"><span class="label">卖出流</span><span class="value" style="color:var(--red)" id="m101OtcSell">--- BTC</span></div>
-            <div class="m101-data-row"><span class="label">净流入</span><span class="value" id="m101OtcNet">--- BTC</span></div>
-            <div class="m101-data-row"><span class="label">平均买入量</span><span class="value" id="m101OtcAvgBuy">--- BTC</span></div>
-            <div class="m101-data-row"><span class="label">平均卖出量</span><span class="value" id="m101OtcAvgSell">--- BTC</span></div>
-            <div class="m101-data-row"><span class="label">信号</span><span class="value" id="m101OtcSignal">---</span></div>
-            <div class="m101-data-row"><span class="label">置信度</span><span class="value" id="m101OtcConf">---%</span></div>
-            <div class="m101-data-row"><span class="label">大宗交易</span><span class="value" id="m101OtcBlocks">---</span></div>
+          <div class="data-card">
+            <div class="data-row"><span class="label">买入流</span><span class="value" style="color:var(--green)" id="m1otcBuy">---</span></div>
+            <div class="data-row"><span class="label">卖出流</span><span class="value" style="color:var(--red)" id="m1otcSell">---</span></div>
+            <div class="data-row"><span class="label">净流入</span><span class="value" id="m1otcNet">---</span></div>
+            <div class="data-row"><span class="label">信号</span><span class="value" id="m1otcSignal">---</span></div>
+            <div class="data-row"><span class="label">置信度</span><span class="value" id="m1otcConf">--%</span></div>
+            <div class="data-row"><span class="label">大宗交易</span><span class="value" id="m1otcBlocks">---</span></div>
           </div>
         </div>
       </div>
-
-      <!-- Closed Order Book -->
+      <!-- Closed Book -->
       <div class="card">
-        <div class="card-header">
-          <span class="card-title">📋 封闭订单簿</span>
-          <span class="card-badge" style="background:var(--yellow-bg);color:var(--yellow)">聪明钱</span>
-        </div>
+        <div class="card-header"><span class="card-title">📋 封闭订单簿</span><span class="card-badge" style="background:var(--yellow-bg);color:var(--yellow)">聪明钱</span></div>
         <div class="card-body">
-          <div class="m101-data-card">
-            <div class="m101-data-title">订单簿分析</div>
-            <div class="m101-data-row"><span class="label">做市商偏向</span><span class="value" id="m101CbBias">---</span></div>
-            <div class="m101-data-row"><span class="label">定价偏差</span><span class="value" id="m101CbMispricing">---</span></div>
-            <div class="m101-data-row"><span class="label">鲸鱼买</span><span class="value" style="color:var(--green)" id="m101CbWhaleBids">---</span></div>
-            <div class="m101-data-row"><span class="label">鲸鱼卖</span><span class="value" style="color:var(--red)" id="m101CbWhaleAsks">---</span></div>
-            <div class="m101-data-row"><span class="label">隐性流动性</span><span class="value" id="m101CbHidden">---</span></div>
-            <div class="m101-data-row"><span class="label">价格效率</span><span class="value" id="m101CbEfficiency">---</span></div>
-            <div class="m101-data-row"><span class="label">买方流动性</span><span class="value" id="m101CbBidLiq">---</span></div>
-            <div class="m101-data-row"><span class="label">卖方流动性</span><span class="value" id="m101CbAskLiq">---</span></div>
+          <div class="data-card">
+            <div class="data-row"><span class="label">做市商偏向</span><span class="value" id="m1cbBias">---</span></div>
+            <div class="data-row"><span class="label">定价偏差</span><span class="value" id="m1cbMispricing">---</span></div>
+            <div class="data-row"><span class="label">鲸鱼买</span><span class="value" style="color:var(--green)" id="m1cbWhaleBids">---</span></div>
+            <div class="data-row"><span class="label">鲸鱼卖</span><span class="value" style="color:var(--red)" id="m1cbWhaleAsks">---</span></div>
+            <div class="data-row"><span class="label">隐性流动性</span><span class="value" id="m1cbHidden">---</span></div>
+            <div class="data-row"><span class="label">价格效率</span><span class="value" id="m1cbEfficiency">---</span></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- MiroFish + Decision Detail -->
+    <!-- Positions & Trades -->
     <div class="main-grid">
       <div class="card">
-        <div class="card-header">
-          <span class="card-title">🧬 MiroFish 10K 蒙特卡洛</span>
-          <span class="card-badge" style="background:var(--purple-bg);color:var(--purple)">10K 循环</span>
-        </div>
+        <div class="card-header"><span class="card-title">活跃仓位</span><span class="card-badge" id="m1PosBadge" style="background:var(--blue-bg);color:var(--blue)">0</span></div>
         <div class="card-body">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div style="background:var(--bg-card);border-radius:8px;padding:14px;text-align:center">
-              <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">方向</div>
-              <div id="m101SimDirection" style="font-size:22px;font-weight:800;color:var(--text-muted)">---</div>
-              <div id="m101SimProb" style="font-size:11px;color:var(--text-secondary)">UP: --% | DOWN: --%</div>
-            </div>
-            <div style="background:var(--bg-card);border-radius:8px;padding:14px;text-align:center">
-              <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">置信度</div>
-              <div id="m101SimConfidence" style="font-size:22px;font-weight:800;color:var(--text-muted)">--%</div>
-              <div id="m101SimTrade" style="font-size:11px">---</div>
-            </div>
-          </div>
-          <div style="margin-top:10px">
-            <div class="m101-data-row"><span class="label">Kelly 比例</span><span class="value" id="m101SimKelly">--%</span></div>
-            <div class="m101-data-row"><span class="label">Sharpe 比率</span><span class="value" id="m101SimSharpe">--</span></div>
-            <div class="m101-data-row"><span class="label">预期盈亏</span><span class="value" id="m101SimExpPnl">$---</span></div>
-            <div class="m101-data-row"><span class="label">盈亏标准差</span><span class="value" id="m101SimStd">$---</span></div>
-            <div class="m101-data-row"><span class="label">P50 盈亏</span><span class="value" id="m101SimP50">$---</span></div>
-            <div class="m101-data-row"><span class="label">模拟延迟</span><span class="value" id="m101SimLatency">--ms</span></div>
-          </div>
-          <div style="margin-top:10px">
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;font-weight:600">上下文</div>
-            <div id="m101SimContext" style="font-size:10px;color:var(--text-secondary);background:var(--bg-card);padding:8px;border-radius:6px;font-family:monospace;word-break:break-all">等待...</div>
+          <div class="table-container">
+            <table><thead><tr><th>市场</th><th>方向</th><th>入场价</th><th>数量</th><th>成本</th><th>盈亏</th><th>盈亏%</th></tr></thead>
+            <tbody id="m1PosBody"><tr class="empty-row"><td colspan="7">暂无活跃仓位</td></tr></tbody></table>
           </div>
         </div>
       </div>
-
-      <!-- Claude Brain Analysis -->
       <div class="card">
-        <div class="card-header">
-          <span class="card-title">🤖 Claude 大脑分析</span>
-          <span class="card-badge" style="background:var(--blue-bg);color:var(--blue)">AI 核心</span>
-        </div>
+        <div class="card-header"><span class="card-title">已平仓记录</span><span class="card-badge" id="m1ClosedBadge" style="background:var(--bg-card);color:var(--text-secondary)">0 笔</span></div>
         <div class="card-body">
-          <div style="background:var(--bg-card);border-radius:8px;padding:16px;margin-bottom:12px">
-            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;font-weight:700">推理链</div>
-            <div id="m101ClaudeReasoning" style="font-size:12px;color:var(--text-secondary);line-height:1.8">
-              等待 Claude 大脑分析...
-            </div>
-          </div>
-          <div style="background:var(--bg-card);border-radius:8px;padding:16px;margin-bottom:12px">
-            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;font-weight:700">交易参数</div>
-            <div class="m101-data-row"><span class="label">仓位大小</span><span class="value" id="m101PosSize">$---</span></div>
-            <div class="m101-data-row"><span class="label">入场价格</span><span class="value" id="m101EntryPrice">---</span></div>
-            <div class="m101-data-row"><span class="label">止损</span><span class="value" style="color:var(--red)" id="m101StopLoss">---</span></div>
-            <div class="m101-data-row"><span class="label">止盈</span><span class="value" style="color:var(--green)" id="m101TakeProfit">---</span></div>
-            <div class="m101-data-row"><span class="label">盈亏比</span><span class="value" id="m101RR">---</span></div>
-            <div class="m101-data-row"><span class="label">期望值</span><span class="value" id="m101EV">$---</span></div>
-          </div>
-          <div style="background:var(--bg-card);border-radius:8px;padding:16px">
-            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;font-weight:700">策略简介</div>
-            <div style="font-size:11px;color:var(--text-secondary);line-height:1.8">
-              基于 Marketing101 案例：香港营销者月赚 $374K，使用 Claude 作为算法大脑 + MiroFish 模拟引擎。此模块在每次入场前运行 10,000 次模拟循环，交叉参考封闭订单簿数据、私人OTC柜台数据和高精度BTC价格路径。
-            </div>
+          <div class="table-container">
+            <table><thead><tr><th>市场</th><th>方向</th><th>入场</th><th>出场</th><th>盈亏</th><th>盈亏%</th><th>时长</th></tr></thead>
+            <tbody id="m1ClosedBody"><tr class="empty-row"><td colspan="7">暂无已平仓记录</td></tr></tbody></table>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+
+  <!-- ============================================================ -->
+  <!-- TAB 3: 📋 跟单 (Copy Trading)                                 -->
+  <!-- ============================================================ -->
+  <div class="tab-panel" id="panelCopy">
+    <div class="kpi-grid">
+      <div class="kpi-card" style="border-left:3px solid var(--orange)">
+        <div class="kpi-label">总盈亏</div>
+        <div class="kpi-value" id="cpTotalPnl">$0.00</div>
+        <div class="kpi-sub" id="cpTradeCountSub">0 笔交易</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--cyan)">
+        <div class="kpi-label">日盈亏</div>
+        <div class="kpi-value" id="cpDailyPnl">$0.00</div>
+        <div class="kpi-sub">模拟资金: $50</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--green)">
+        <div class="kpi-label">胜率</div>
+        <div class="kpi-value" id="cpWinRate">0%</div>
+        <div class="kpi-sub" id="cpWinLossSub">0W / 0L</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--purple)">
+        <div class="kpi-label">追踪钱包</div>
+        <div class="kpi-value" id="cpWallets">0</div>
+        <div class="kpi-sub" id="cpProfitWallets">0 盈利</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--yellow)">
+        <div class="kpi-label">扫描/跳过</div>
+        <div class="kpi-value" id="cpScanSkip">0 / 0</div>
+        <div class="kpi-sub">策略: 跟单交易</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--blue)">
+        <div class="kpi-label">运行时间</div>
+        <div class="kpi-value" id="cpUptime">0:00</div>
+        <div class="kpi-sub">智能跟单系统</div>
+      </div>
+    </div>
+
+    <!-- Tracked Wallets -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-header">
+        <span class="card-title">追踪钱包</span>
+        <span class="card-badge" id="cpWalletBadge" style="background:var(--orange-bg);color:var(--orange)">0 钱包</span>
+      </div>
+      <div class="card-body">
+        <div class="table-container">
+          <table><thead><tr><th>钱包地址</th><th>胜率</th><th>总盈亏</th><th>风险等级</th><th>交易次数</th><th>最近活跃</th></tr></thead>
+          <tbody id="cpWalletBody"><tr class="empty-row"><td colspan="6">暂无追踪钱包</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Positions & Trades -->
+    <div class="main-grid">
+      <div class="card">
+        <div class="card-header"><span class="card-title">活跃仓位</span><span class="card-badge" id="cpPosBadge" style="background:var(--blue-bg);color:var(--blue)">0</span></div>
+        <div class="card-body">
+          <div class="table-container">
+            <table><thead><tr><th>市场</th><th>方向</th><th>入场价</th><th>数量</th><th>成本</th><th>盈亏</th><th>来源钱包</th></tr></thead>
+            <tbody id="cpPosBody"><tr class="empty-row"><td colspan="7">暂无活跃仓位</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">已平仓记录</span><span class="card-badge" id="cpClosedBadge" style="background:var(--bg-card);color:var(--text-secondary)">0 笔</span></div>
+        <div class="card-body">
+          <div class="table-container">
+            <table><thead><tr><th>市场</th><th>方向</th><th>入场</th><th>出场</th><th>盈亏</th><th>盈亏%</th><th>来源钱包</th></tr></thead>
+            <tbody id="cpClosedBody"><tr class="empty-row"><td colspan="7">暂无已平仓记录</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- TAB 4: 🏦 债券 (Bond)                                        -->
+  <!-- ============================================================ -->
+  <div class="tab-panel" id="panelBond">
+    <div class="kpi-grid">
+      <div class="kpi-card" style="border-left:3px solid var(--yellow)">
+        <div class="kpi-label">总盈亏</div>
+        <div class="kpi-value" id="bdTotalPnl">$0.00</div>
+        <div class="kpi-sub" id="bdTradeCountSub">0 笔交易</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--cyan)">
+        <div class="kpi-label">日盈亏</div>
+        <div class="kpi-value" id="bdDailyPnl">$0.00</div>
+        <div class="kpi-sub">模拟资金: $50</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--green)">
+        <div class="kpi-label">胜率</div>
+        <div class="kpi-value" id="bdWinRate">0%</div>
+        <div class="kpi-sub" id="bdWinLossSub">0W / 0L</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--purple)">
+        <div class="kpi-label">持仓数</div>
+        <div class="kpi-value" id="bdPositionCount">0</div>
+        <div class="kpi-sub" id="bdAvgReturn">平均年化: 0%</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--orange)">
+        <div class="kpi-label">扫描/跳过</div>
+        <div class="kpi-value" id="bdScanSkip">0 / 0</div>
+        <div class="kpi-sub">债券市场扫描</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--blue)">
+        <div class="kpi-label">运行时间</div>
+        <div class="kpi-value" id="bdUptime">0:00</div>
+        <div class="kpi-sub">固定收益策略</div>
+      </div>
+    </div>
+
+    <!-- Available Bond Markets -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-header">
+        <span class="card-title">可用债券市场</span>
+        <span class="card-badge" id="bdMarketBadge" style="background:var(--yellow-bg);color:var(--yellow)">0 市场</span>
+      </div>
+      <div class="card-body">
+        <div class="table-container">
+          <table><thead><tr><th>市场问题</th><th>YES 价格</th><th>年化收益</th><th>风险等级</th><th>到期天数</th><th>成交量</th></tr></thead>
+          <tbody id="bdMarketBody"><tr class="empty-row"><td colspan="6">暂无可用债券市场</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Positions & Trades -->
+    <div class="main-grid">
+      <div class="card">
+        <div class="card-header"><span class="card-title">活跃仓位</span><span class="card-badge" id="bdPosBadge" style="background:var(--blue-bg);color:var(--blue)">0</span></div>
+        <div class="card-body">
+          <div class="table-container">
+            <table><thead><tr><th>市场</th><th>方向</th><th>入场价</th><th>当前价</th><th>数量</th><th>成本</th><th>盈亏</th><th>年化收益</th></tr></thead>
+            <tbody id="bdPosBody"><tr class="empty-row"><td colspan="8">暂无活跃仓位</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">已平仓记录</span><span class="card-badge" id="bdClosedBadge" style="background:var(--bg-card);color:var(--text-secondary)">0 笔</span></div>
+        <div class="card-body">
+          <div class="table-container">
+            <table><thead><tr><th>市场</th><th>方向</th><th>入场</th><th>出场</th><th>盈亏</th><th>盈亏%</th><th>持有天数</th></tr></thead>
+            <tbody id="bdClosedBody"><tr class="empty-row"><td colspan="7">暂无已平仓记录</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- TAB 5: 🎯 凯利均值回归 (Kelly Mean Reversion)                  -->
+  <!-- ============================================================ -->
+  <div class="tab-panel" id="panelKelly">
+    <div class="kpi-grid">
+      <div class="kpi-card" style="border-left:3px solid var(--green)">
+        <div class="kpi-label">总盈亏</div>
+        <div class="kpi-value" id="klTotalPnl">$0.00</div>
+        <div class="kpi-sub" id="klTradeCountSub">0 笔交易</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--cyan)">
+        <div class="kpi-label">日盈亏</div>
+        <div class="kpi-value" id="klDailyPnl">$0.00</div>
+        <div class="kpi-sub">模拟资金: $50</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--purple)">
+        <div class="kpi-label">胜率</div>
+        <div class="kpi-value" id="klWinRate">0%</div>
+        <div class="kpi-sub" id="klWinLossSub">0W / 0L</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--yellow)">
+        <div class="kpi-label">EMA 偏离</div>
+        <div class="kpi-value" id="klDeviation">0.00%</div>
+        <div class="kpi-sub" id="klEmaPrice">EMA: $0</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--orange)">
+        <div class="kpi-label">Kelly 比例</div>
+        <div class="kpi-value" id="klKellyFrac">0%</div>
+        <div class="kpi-sub" id="klKellyConserv">保守: 0%</div>
+      </div>
+      <div class="kpi-card" style="border-left:3px solid var(--blue)">
+        <div class="kpi-label">运行时间</div>
+        <div class="kpi-value" id="klUptime">0:00</div>
+        <div class="kpi-sub">均值回归策略</div>
+      </div>
+    </div>
+
+    <!-- 5-Source Signal Cards -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-header">
+        <span class="card-title">🎯 凯利5源信号汇聚</span>
+        <span class="card-badge" id="klConsensusBadge" style="background:var(--green-bg);color:var(--green)">---</span>
+      </div>
+      <div class="card-body">
+        <div class="source-grid" id="klSourceGrid">
+          <div class="source-card neutral"><div class="s-weight">40%</div><div class="s-icon">📈</div><div class="s-name">EMA 均值回归</div><div class="s-dir" style="color:var(--text-muted)">---</div><div class="s-strength">--% | Dev: --%</div></div>
+          <div class="source-card neutral"><div class="s-weight">20%</div><div class="s-icon">📊</div><div class="s-name">成交量</div><div class="s-dir" style="color:var(--text-muted)">---</div><div class="s-strength">--% | Vol: --</div></div>
+          <div class="source-card neutral"><div class="s-weight">15%</div><div class="s-icon">💧</div><div class="s-name">流动性</div><div class="s-dir" style="color:var(--text-muted)">---</div><div class="s-strength">--% | Liq: --</div></div>
+          <div class="source-card neutral"><div class="s-weight">15%</div><div class="s-icon">🎲</div><div class="s-name">Kelly EV</div><div class="s-dir" style="color:var(--text-muted)">---</div><div class="s-strength">--% | EV: --</div></div>
+          <div class="source-card neutral"><div class="s-weight">10%</div><div class="s-icon">⚡</div><div class="s-name">过度反应</div><div class="s-dir" style="color:var(--text-muted)">---</div><div class="s-strength">--% | React: --</div></div>
+        </div>
+
+        <div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-bottom:3px">
+            <span>共识</span><span id="klConsensusText">-- / 5 源同意</span>
+          </div>
+          <div class="consensus-bar" id="klConsensusBar">
+            <div class="up-seg" style="width:0%"></div>
+            <div class="neutral-seg" style="width:100%"></div>
+            <div class="down-seg" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="decision-box skip" id="klDecisionBox">
+          <div class="decision-label">凯利均值回归决策</div>
+          <div class="decision-value skip" id="klDecisionValue">等待中</div>
+          <div class="decision-reason" id="klDecisionReason">等待5源汇聚分析...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kelly Stats & Positions -->
+    <div class="data-grid">
+      <div class="card">
+        <div class="card-header"><span class="card-title">🎯 Kelly 统计</span><span class="card-badge" style="background:var(--green-bg);color:var(--green)">核心</span></div>
+        <div class="card-body">
+          <div class="data-card">
+            <div class="data-row"><span class="label">平均 Kelly 比例</span><span class="value" id="klStatAvgKelly">0%</span></div>
+            <div class="data-row"><span class="label">最大 Kelly 比例</span><span class="value" id="klStatMaxKelly">0%</span></div>
+            <div class="data-row"><span class="label">总交易 Kelly</span><span class="value" id="klStatTotalKelly">0</span></div>
+            <div class="data-row"><span class="label">保守比例</span><span class="value" id="klStatConserv">0%</span></div>
+            <div class="data-row"><span class="label">EMA 价格</span><span class="value" id="klStatEma">$0</span></div>
+            <div class="data-row"><span class="label">偏离度</span><span class="value" id="klStatDev">0%</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">活跃仓位</span><span class="card-badge" id="klPosBadge" style="background:var(--blue-bg);color:var(--blue)">0</span></div>
+        <div class="card-body">
+          <div class="table-container">
+            <table><thead><tr><th>市场</th><th>方向</th><th>入场价</th><th>数量</th><th>成本</th><th>盈亏</th><th>盈亏%</th></tr></thead>
+            <tbody id="klPosBody"><tr class="empty-row"><td colspan="7">暂无活跃仓位</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">已平仓记录</span><span class="card-badge" id="klClosedBadge" style="background:var(--bg-card);color:var(--text-secondary)">0 笔</span></div>
+        <div class="card-body">
+          <div class="table-container">
+            <table><thead><tr><th>市场</th><th>方向</th><th>入场</th><th>出场</th><th>盈亏</th><th>盈亏%</th><th>时长</th></tr></thead>
+            <tbody id="klClosedBody"><tr class="empty-row"><td colspan="7">暂无已平仓记录</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.app -->
 
 <script>
-// ===== State =====
-let engineRunning = false;
-let engineMode = 'idle';
-let pnlChart = null;
-let refreshTimer = null;
+// ===== Globals =====
 let currentTab = 'scalper';
+let pnlChart = null;
+let pnlData = [];
+let pnlLabels = [];
+let stateCache = null;
+let startTime = Date.now();
 
 // ===== Tab Switching =====
+const TABS = ['scalper','m101','copy','bond','kelly'];
+const TAB_IDS = {
+  scalper: 'tabScalper', m101: 'tabM101', copy: 'tabCopy', bond: 'tabBond', kelly: 'tabKelly'
+};
+const PANEL_IDS = {
+  scalper: 'panelScalper', m101: 'panelM101', copy: 'panelCopy', bond: 'panelBond', kelly: 'panelKelly'
+};
+
 function switchTab(tab) {
   currentTab = tab;
-  document.getElementById('tabScalper').className = 'module-tab' + (tab === 'scalper' ? ' active' : '');
-  document.getElementById('tabM101').className = 'module-tab' + (tab === 'm101' ? ' active' : '');
-  document.getElementById('panelScalper').className = 'module-panel' + (tab === 'scalper' ? ' active' : '');
-  document.getElementById('panelM101').className = 'module-panel' + (tab === 'm101' ? ' active' : '');
+  TABS.forEach(t => {
+    document.getElementById(TAB_IDS[t]).className = 'tab-item' + (t === tab ? ' active' : '');
+    document.getElementById(PANEL_IDS[t]).className = 'tab-panel' + (t === tab ? ' active' : '');
+  });
 }
 
-// ===== Initialize Chart =====
+// ===== Formatters =====
+function fmt$(v) {
+  if (v == null || isNaN(v)) return '$0.00';
+  const sign = v >= 0 ? '' : '-';
+  return sign + '$' + Math.abs(v).toFixed(2);
+}
+function fmtPct(v) {
+  if (v == null || isNaN(v)) return '0%';
+  return (v * 100).toFixed(1) + '%';
+}
+function fmtPctSigned(v) {
+  if (v == null || isNaN(v)) return '0%';
+  const sign = v > 0 ? '+' : '';
+  return sign + (v * 100).toFixed(1) + '%';
+}
+function fmtNum(v) {
+  if (v == null || isNaN(v)) return '0';
+  return Number(v).toLocaleString();
+}
+function fmtCompact(v) {
+  if (v == null || isNaN(v)) return '$0';
+  if (Math.abs(v) >= 1e6) return '$' + (v/1e6).toFixed(2) + 'M';
+  if (Math.abs(v) >= 1e3) return '$' + (v/1e3).toFixed(1) + 'K';
+  return '$' + v.toFixed(0);
+}
+function fmtTime(ms) {
+  if (!ms) return '0:00';
+  const s = Math.floor((Date.now() - ms) / 1000);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  if (h > 0) return h + ':' + String(m).padStart(2, '0');
+  return m + '分';
+}
+function fmtAddr(addr) {
+  if (!addr) return '---';
+  if (addr.length > 12) return addr.slice(0, 6) + '...' + addr.slice(-4);
+  return addr;
+}
+function pnlClass(v) {
+  if (v > 0) return 'pnl-pos';
+  if (v < 0) return 'pnl-neg';
+  return '';
+}
+
+// ===== Chart Init =====
 function initChart() {
   const ctx = document.getElementById('pnlChart').getContext('2d');
   pnlChart = new Chart(ctx, {
@@ -753,7 +943,7 @@ function initChart() {
         label: '累计盈亏 ($)',
         data: [],
         borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        backgroundColor: 'rgba(59,130,246,0.08)',
         fill: true,
         tension: 0.3,
         pointRadius: 0,
@@ -774,21 +964,43 @@ function initChart() {
         }
       },
       scales: {
-        x: { display: true, grid: { color: 'rgba(45,58,77,0.5)' }, ticks: { color: '#64748b', maxTicksLimit: 10, font: { size: 10 } } },
-        y: { display: true, grid: { color: 'rgba(45,58,77,0.5)' }, ticks: { color: '#64748b', font: { size: 10 }, callback: v => '$' + v.toFixed(2) } }
+        x: { display: true, grid: { color: 'rgba(45,58,77,0.5)' }, ticks: { color: '#64748b', maxTicksLimit: 10, font: { size: 9 } } },
+        y: { display: true, grid: { color: 'rgba(45,58,77,0.5)' }, ticks: { color: '#64748b', font: { size: 9 }, callback: v => '$' + v.toFixed(2) } }
       },
       interaction: { intersect: false, mode: 'index' },
     }
   });
 }
 
-// ===== API Calls =====
+function updateChart(trades) {
+  if (!pnlChart) return;
+  let cumPnl = 0;
+  const labels = [];
+  const data = [];
+  const now = new Date();
+  (trades || []).forEach((t, i) => {
+    cumPnl += (t.pnl || 0);
+    const d = t.exitTime ? new Date(t.exitTime) : new Date(now - (trades.length - i) * 60000);
+    labels.push(d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'));
+    data.push(parseFloat(cumPnl.toFixed(4)));
+  });
+  pnlChart.data.labels = labels.length ? labels : [''];
+  pnlChart.data.datasets[0].data = data.length ? data : [0];
+  pnlChart.data.datasets[0].borderColor = cumPnl >= 0 ? '#22c55e' : '#ef4444';
+  pnlChart.data.datasets[0].backgroundColor = cumPnl >= 0 ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)';
+  pnlChart.update('none');
+}
+
+// ===== API =====
 async function fetchState() {
   try {
     const resp = await fetch('/api/state');
     const data = await resp.json();
+    stateCache = data;
     updateUI(data);
-  } catch (e) { console.error('Fetch error:', e); }
+  } catch (e) {
+    console.error('Fetch error:', e);
+  }
 }
 
 async function startEngine() {
@@ -819,17 +1031,13 @@ async function stopEngine() {
 
 function exportData() { window.open('/api/export', '_blank'); }
 
-// ===== Update UI =====
-function updateUI(state) {
-  engineRunning = state.running;
-  engineMode = state.mode;
-
+// ===== Master UI Update =====
+function updateUI(s) {
   // Header
   const dot = document.getElementById('statusDot');
   const text = document.getElementById('statusText');
   const modeBadge = document.getElementById('modeBadge');
-
-  if (state.running) {
+  if (s.running) {
     dot.className = 'status-dot running pulse';
     text.textContent = '运行中';
     text.style.color = '#22c55e';
@@ -842,368 +1050,640 @@ function updateUI(state) {
     document.getElementById('btnStart').disabled = false;
     document.getElementById('btnStop').disabled = true;
   }
+  modeBadge.className = 'mode-badge ' + (s.scalper?.mode === 'live' ? 'live' : 'paper');
 
-  modeBadge.className = 'mode-badge ' + (state.mode === 'live' ? 'live' : 'paper');
-  modeBadge.textContent = state.mode === 'live' ? '实盘' : state.mode === 'paper' ? '模拟盘' : '空闲';
+  // Version
+  document.getElementById('versionBadge').textContent = 'V' + (s.version || '16').split('.')[0];
+
+  // Binance
+  const bDot = document.getElementById('binanceDot');
+  const bText = document.getElementById('binanceText');
+  if (s.binance?.connected) {
+    bDot.className = 'status-dot running';
+    bText.textContent = 'Binance: 已连接';
+  } else {
+    bDot.className = 'status-dot idle';
+    bText.textContent = 'Binance: 断开';
+  }
 
   // BTC Ticker
-  if (state.btcPrice > 0) {
-    document.getElementById('btcPrice').textContent = '$' + state.btcPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-  }
-  const changeEl = document.getElementById('btcChange');
-  const change5m = state.btcPriceChange5m || 0;
-  changeEl.textContent = (change5m >= 0 ? '+' : '') + change5m.toFixed(3) + '%';
-  changeEl.className = 'btc-change ' + (change5m >= 0 ? 'up' : 'down');
-  document.getElementById('btcVolume').textContent = '$' + ((state.btcVolume5m || 0) / 1e6).toFixed(1) + 'M';
+  const btcP = s.binance?.btcPrice;
+  document.getElementById('btcPrice').textContent = btcP ? '$' + Number(btcP).toLocaleString() : '$---';
+  const chg = s.binance?.btcChange5m || 0;
+  const chgEl = document.getElementById('btcChange');
+  chgEl.textContent = fmtPctSigned(chg);
+  chgEl.className = 'ticker-value ' + (chg >= 0 ? 'up' : 'down');
+  document.getElementById('btcVolume').textContent = fmtCompact(s.binance?.btcVolume5m || 0);
 
-  const binanceDot = document.getElementById('binanceDot');
-  const binanceText = document.getElementById('binanceText');
-  if (state.binanceConnected) {
-    binanceDot.className = 'status-dot running';
-    binanceText.textContent = 'Binance: 已连接';
-    binanceText.style.color = '#22c55e';
-  } else {
-    binanceDot.className = 'status-dot idle';
-    binanceText.textContent = 'Binance: 断开';
-    binanceText.style.color = '#64748b';
-  }
+  // Ticker balances
+  document.getElementById('tickScalper').textContent = fmt$(s.scalper?.paperBalance);
+  document.getElementById('tickM101').textContent = fmt$(s.marketing101?.paperBalance);
+  document.getElementById('tickCopy').textContent = fmt$(s.copyTrading?.paperBalance);
+  document.getElementById('tickBond').textContent = fmt$(s.bond?.paperBalance);
+  document.getElementById('tickKelly').textContent = fmt$(s.kelly?.paperBalance);
 
-  // 双策略独立资金
-  if (state.scalperPaperBalance !== undefined) {
-    document.getElementById('scalperBalance').textContent = '$' + state.scalperPaperBalance.toFixed(2);
-  }
-  const m101Bal = state.m101?.paperBalance;
-  if (m101Bal !== undefined) {
-    document.getElementById('m101Balance').textContent = '$' + m101Bal.toFixed(2);
-  }
-
-  // Scalper KPIs
-  const totalPnlEl = document.getElementById('totalPnl');
-  totalPnlEl.textContent = '$' + (state.totalPnl || 0).toFixed(2);
-  totalPnlEl.className = 'kpi-value ' + ((state.totalPnl || 0) >= 0 ? 'positive' : 'negative');
-  document.getElementById('totalPnlSub').textContent = (state.totalTrades || 0) + ' 笔交易';
-
-  const dailyPnlEl = document.getElementById('dailyPnl');
-  dailyPnlEl.textContent = '$' + (state.dailyPnl || 0).toFixed(2);
-  dailyPnlEl.className = 'kpi-value ' + ((state.dailyPnl || 0) >= 0 ? 'positive' : 'negative');
-  document.getElementById('dailyCapSub').textContent = '上限: ' + (state.dailyCapLimit || 2) + '%';
-
-  document.getElementById('winRate').textContent = (state.winRate || 0).toFixed(0) + '%';
-  document.getElementById('winLossSub').textContent = (state.winningTrades || 0) + 'W / ' + (state.losingTrades || 0) + 'L';
-  document.getElementById('activePositions').textContent = (state.positions || []).length;
-  document.getElementById('scanCount').textContent = (state.scanCount || 0).toLocaleString();
-  document.getElementById('skipSub').textContent = (state.skipCount || 0) + ' 跳过';
-
-  if (state.startTime > 0) {
-    const uptime = Date.now() - state.startTime;
-    const hours = Math.floor(uptime / 3600000);
-    const mins = Math.floor((uptime % 3600000) / 60000);
-    document.getElementById('uptime').textContent = hours + ':' + String(mins).padStart(2, '0');
-  }
-
-  const hardStopEl = document.getElementById('hardStopSub');
-  hardStopEl.textContent = state.hardStopTriggered ? '硬止损: 已触发' : '硬止损: 正常';
-  hardStopEl.style.color = state.hardStopTriggered ? '#ef4444' : '';
-
-  // Scalper Signals
-  updateSignals(state.signals || [], state.activeConvergence);
-  updateMiroFish(state.lastSimulation, state.simulationCount || 0, state.calibrationAccuracy || 0);
-  updatePositions(state.positions || []);
-  updateTrades(state.trades || []);
-  updatePnlChart(state.trades || []);
-
-  // Marketing101
-  updateM101(state.m101);
+  // Update each tab
+  updateScalper(s.scalper);
+  updateM101(s.marketing101);
+  updateCopy(s.copyTrading);
+  updateBond(s.bond);
+  updateKelly(s.kelly);
 }
 
-function updateSignals(signals, convergence) {
-  const grid = document.getElementById('signalGrid');
-  grid.innerHTML = '';
-  for (const sig of signals) {
-    const dirClass = sig.direction === 'BULL' ? 'bull' : sig.direction === 'BEAR' ? 'bear' : 'neutral';
-    const barWidth = Math.max(5, sig.strength * 100);
-    grid.innerHTML += `
-      <div class="signal-row">
-        <span class="signal-name">${sig.name}</span>
-        <div class="signal-bar-bg"><div class="signal-bar ${dirClass}" style="width:${barWidth}%"></div></div>
-        <span class="signal-dir ${dirClass}">${sig.direction}</span>
-        <span class="signal-details">${sig.details || ''}</span>
-      </div>`;
-  }
-  if (signals.length === 0) {
-    grid.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-muted)">等待 Binance 数据...</div>';
-  }
-  const convValue = document.getElementById('convergenceValue');
-  const convDir = document.getElementById('convergenceDir');
-  const convBadge = document.getElementById('convergenceBadge');
-  if (convergence) {
-    const dirClass = convergence.direction === 'BULL' ? 'bull' : convergence.direction === 'BEAR' ? 'bear' : 'neutral';
-    convValue.className = 'convergence-value ' + dirClass;
-    convValue.textContent = convergence.confidence.toFixed(0) + '%';
-    convDir.textContent = convergence.details || convergence.direction;
-    const badgeBg = convergence.shouldTrade ? (convergence.direction === 'BULL' ? 'background:var(--green-bg);color:var(--green)' : 'background:var(--red-bg);color:var(--red)') : 'background:var(--bg-card);color:var(--text-muted)';
-    convBadge.style = badgeBg;
-    convBadge.textContent = convergence.shouldTrade ? (convergence.tradeSide || convergence.direction) : convergence.confidence.toFixed(0) + '%';
-  }
-}
-
-function updatePositions(positions) {
-  const table = document.getElementById('positionsTable');
-  const noPos = document.getElementById('noPositions');
-  const badge = document.getElementById('positionsBadge');
-  badge.textContent = positions.length;
-  if (positions.length === 0) { table.style.display = 'none'; noPos.style.display = 'block'; return; }
-  table.style.display = 'table'; noPos.style.display = 'none';
-  const tbody = document.getElementById('positionsBody');
-  tbody.innerHTML = '';
-  for (const pos of positions) {
-    const age = Date.now() - pos.entryTime;
-    const pnlClass = pos.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
-    const typeClass = pos.tradeType === 'UP' ? 'type-up' : 'type-down';
-    tbody.innerHTML += `<tr>
-      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pos.marketQuestion || pos.conditionId}</td>
-      <td class="${typeClass}" style="font-weight:700">${pos.tradeType}</td>
-      <td>${pos.entryPrice.toFixed(4)}</td><td>${pos.currentPrice.toFixed(4)}</td>
-      <td>${pos.size}</td><td>$${pos.cost.toFixed(2)}</td>
-      <td class="${pnlClass}">$${pos.pnl.toFixed(4)}</td><td class="${pnlClass}">${pos.pnlPercent.toFixed(2)}%</td>
-      <td>$${(pos.btcEntryPrice || 0).toFixed(0)}</td><td>${pos.polymarketLag.toFixed(2)}%</td>
-      <td>${Math.floor(age/60000)}m ${Math.floor((age%60000)/1000)}s</td></tr>`;
-  }
-}
-
-function updateTrades(trades) {
-  const tbody = document.getElementById('tradesBody');
-  const badge = document.getElementById('tradesBadge');
-  badge.textContent = trades.length + ' 笔交易';
-  if (trades.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:var(--text-muted);padding:24px">暂无交易。</td></tr>';
-    return;
-  }
-  tbody.innerHTML = '';
-  for (const t of trades) {
-    const time = new Date(t.timestamp).toLocaleTimeString('en-US', {hour12: false});
-    const sideClass = t.side === 'BUY' ? 'side-buy' : 'side-sell';
-    const pnlClass = t.pnl > 0 ? 'pnl-positive' : t.pnl < 0 ? 'pnl-negative' : '';
-    const typeClass = t.tradeType === 'UP' ? 'type-up' : 'type-down';
-    const statusClass = t.status === 'open' ? 'status-open' : 'status-closed';
-    const paperBadge = t.isPaper ? '<span class="paper-badge">模拟盘</span> ' : '';
-    tbody.innerHTML += `<tr>
-      <td>${time}</td><td class="${sideClass}">${paperBadge}${t.side}</td>
-      <td class="${typeClass}" style="font-weight:600">${t.tradeType}</td>
-      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.marketQuestion || t.conditionId}</td>
-      <td>${t.price.toFixed(4)}</td><td>${t.size}</td><td>$${t.cost.toFixed(2)}</td>
-      <td class="${pnlClass}">$${t.pnl.toFixed(4)}</td><td class="${pnlClass}">${t.pnlPercent.toFixed(2)}%</td>
-      <td>$${(t.btcPrice || 0).toFixed(0)}</td><td>${t.polymarketLag.toFixed(2)}%</td>
-      <td>${t.convergence.toFixed(0)}%</td><td class="trade-reason">${t.reason || ''}</td>
-      <td class="${statusClass}">${t.status}</td></tr>`;
-  }
-}
-
-function updatePnlChart(trades) {
-  const closedTrades = trades.filter(t => t.side === 'SELL' && t.status === 'closed');
-  if (closedTrades.length === 0) {
-    if (pnlChart.data.labels.length === 0) { pnlChart.data.labels = ['开始']; pnlChart.data.datasets[0].data = [0]; pnlChart.update('none'); }
-    return;
-  }
-  closedTrades.sort((a, b) => a.timestamp - b.timestamp);
-  let cumPnl = 0;
-  const labels = ['开始']; const data = [0];
-  for (const t of closedTrades) { cumPnl += t.pnl; labels.push(new Date(t.timestamp).toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute: '2-digit'})); data.push(cumPnl); }
-  pnlChart.data.labels = labels; pnlChart.data.datasets[0].data = data;
-  pnlChart.data.datasets[0].borderColor = cumPnl >= 0 ? '#22c55e' : '#ef4444';
-  pnlChart.data.datasets[0].backgroundColor = cumPnl >= 0 ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)';
-  pnlChart.update('none');
-}
-
-function updateMiroFish(sim, simCount, calibration) {
-  if (!sim) {
-    document.getElementById('simDirection').textContent = '---'; document.getElementById('simDirection').style.color = 'var(--text-muted)';
-    document.getElementById('simProb').textContent = 'UP: --% | DOWN: --%';
-    document.getElementById('simConfidence').textContent = '--%';
-    document.getElementById('simShouldTrade').textContent = '---';
-    document.getElementById('simKelly').textContent = '--%'; document.getElementById('simSharpe').textContent = '--';
-    document.getElementById('simTotalCount').textContent = simCount;
-    document.getElementById('simCalibration').textContent = '--%'; document.getElementById('simLatency').textContent = '--ms';
-    document.getElementById('simContext').textContent = '等待数据...';
-    return;
-  }
-  const dirEl = document.getElementById('simDirection');
-  dirEl.textContent = sim.direction;
-  dirEl.style.color = sim.direction === 'UP' ? 'var(--green)' : 'var(--red)';
-  document.getElementById('simProb').innerHTML = `UP: <span style="color:${sim.upProbability > sim.downProbability ? 'var(--green)' : 'var(--text-secondary)'}">${(sim.upProbability*100).toFixed(1)}%</span> | DOWN: <span style="color:${sim.downProbability > sim.upProbability ? 'var(--red)' : 'var(--text-secondary)'}">${(sim.downProbability*100).toFixed(1)}%</span>`;
-  const confEl = document.getElementById('simConfidence');
-  confEl.textContent = sim.confidence.toFixed(1) + '%';
-  confEl.style.color = sim.confidence >= 15 ? 'var(--green)' : 'var(--text-muted)';
-  const shouldTradeEl = document.getElementById('simShouldTrade');
-  shouldTradeEl.textContent = sim.shouldTrade ? '✓ 交易' : '✗ 跳过';
-  shouldTradeEl.style.color = sim.shouldTrade ? 'var(--green)' : 'var(--text-muted)';
-  document.getElementById('simKelly').textContent = (sim.kellyFraction * 100).toFixed(2) + '%';
-  document.getElementById('simSharpe').textContent = sim.sharpe.toFixed(3);
-  document.getElementById('simTotalCount').textContent = simCount;
-  document.getElementById('simCalibration').textContent = calibration.toFixed(1) + '%';
-  document.getElementById('simLatency').textContent = sim.elapsedMs + 'ms';
-  document.getElementById('simContext').textContent = sim.marketContext || 'N/A';
-}
-
-// ===== Marketing101 UI =====
-function updateM101(m101) {
-  if (!m101) return;
+// ===== Tab 1: Scalper =====
+function updateScalper(sc) {
+  if (!sc) return;
+  const el = (id) => document.getElementById(id);
 
   // KPIs
-  const totalPnlEl = document.getElementById('m101TotalPnl');
-  totalPnlEl.textContent = '$' + (m101.totalPnl || 0).toFixed(2);
-  totalPnlEl.className = 'kpi-value ' + ((m101.totalPnl || 0) >= 0 ? 'positive' : 'negative');
-  document.getElementById('m101TradeCount').textContent = (m101.tradeCount || 0) + ' 笔交易';
+  const tp = sc.totalPnl || 0;
+  const dp = sc.dailyPnl || 0;
+  el('scTotalPnl').textContent = fmt$(tp);
+  el('scTotalPnl').className = 'kpi-value ' + (tp >= 0 ? 'positive' : 'negative');
+  el('scTotalPnlSub').textContent = (sc.totalTrades || 0) + ' 笔交易';
+  el('scDailyPnl').textContent = fmt$(dp);
+  el('scDailyPnl').className = 'kpi-value ' + (dp >= 0 ? 'positive' : 'negative');
+  el('scDailyCapSub').textContent = '日限: ' + (sc.dailyCapUsed || 0) + '/' + (sc.dailyCapLimit || 2);
+  el('scWinRate').textContent = fmtPct(sc.winRate);
+  el('scWinLossSub').textContent = '胜/负: ' + (sc.totalTrades || 0);
+  el('scActivePos').textContent = (sc.positions || []).length;
+  el('scScanCount').textContent = fmtNum(sc.scanCount);
+  el('scSkipSub').textContent = (sc.skipCount || 0) + ' 跳过';
+  el('scUptime').textContent = fmtTime(sc.startTime);
+  el('scHardStopSub').textContent = sc.hardStopTriggered ? '硬止损: 已触发' : '硬止损: 正常';
+  if (sc.hardStopTriggered) el('scHardStopSub').style.color = '#ef4444';
 
-  const dailyPnlEl = document.getElementById('m101DailyPnl');
-  dailyPnlEl.textContent = '$' + (m101.dailyPnl || 0).toFixed(2);
-  dailyPnlEl.className = 'kpi-value ' + ((m101.dailyPnl || 0) >= 0 ? 'positive' : 'negative');
-
-  document.getElementById('m101WinRate').textContent = (m101.winRate || 0).toFixed(0) + '%';
-  document.getElementById('m101SimRuns').textContent = (m101.simulationRuns || 0).toLocaleString();
-  document.getElementById('m101ScanSkip').textContent = (m101.scanCount || 0) + ' 扫描 / ' + (m101.skipCount || 0) + ' 跳过';
-  document.getElementById('m101AvgSize').textContent = '$' + (m101.avgTradeSize || 0).toFixed(0);
-
-  if (m101.startTime > 0) {
-    const up = Date.now() - m101.startTime;
-    document.getElementById('m101Uptime').textContent = Math.floor(up/3600000) + ':' + String(Math.floor((up%3600000)/60000)).padStart(2,'0');
+  // Signals
+  const signals = sc.signals || [];
+  const grid = el('scSignalGrid');
+  if (signals.length > 0) {
+    grid.innerHTML = signals.map(sig => {
+      const dir = (sig.direction || '').toLowerCase();
+      const dirClass = dir.includes('up') || dir.includes('bull') || dir === 'yes' ? 'bull' : dir.includes('down') || dir.includes('bear') || dir === 'no' ? 'bear' : 'neutral';
+      const dirLabel = dirClass === 'bull' ? '看涨' : dirClass === 'bear' ? '看跌' : '中性';
+      const strength = Math.abs(sig.strength || 0) * 100;
+      return '<div class="signal-row">' +
+        '<span class="signal-name">' + (sig.name || sig.source || '---') + '</span>' +
+        '<div class="signal-bar-bg"><div class="signal-bar ' + dirClass + '" style="width:' + Math.min(strength, 100) + '%"></div></div>' +
+        '<span class="signal-dir ' + dirClass + '">' + dirLabel + '</span>' +
+        '</div>';
+    }).join('');
+  } else {
+    grid.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:12px;padding:16px">等待信号...</div>';
   }
 
-  // 5-Source Signal Cards
-  const signals = m101.lastSignals || [];
-  const sourceWeights = {'claude_brain': '30%', 'mirofish': '25%', 'btc_sim': '20%', 'otc': '15%', 'closed_book': '10%'};
-  const sourceIcons = {'claude_brain': '🤖', 'mirofish': '🧬', 'btc_sim': '📊', 'otc': '🏛️', 'closed_book': '📋'};
-  const sourceNames = {'claude_brain': 'Claude 大脑', 'mirofish': 'MiroFish 10K', 'btc_sim': 'BTC 模拟器', 'otc': 'OTC 柜台', 'closed_book': '封闭订单簿'};
-  const sourceOrder = ['claude_brain', 'mirofish', 'btc_sim', 'otc', 'closed_book'];
-
-  const grid = document.getElementById('m101SourceGrid');
-  grid.innerHTML = '';
-  let upCount = 0, downCount = 0;
-  const dominantDir = m101.lastDecision?.direction || 'NEUTRAL';
-
-  for (const src of sourceOrder) {
-    const sig = signals.find(s => s.source === src);
-    const dir = sig?.direction || 'NEUTRAL';
-    const strength = sig?.strength || 0;
-    const confidence = sig?.confidence || 0;
-    const cardClass = dir === 'UP' ? 'up' : dir === 'DOWN' ? 'down' : 'neutral';
-    if (dir === 'UP') upCount++;
-    if (dir === 'DOWN') downCount++;
-
-    grid.innerHTML += `
-      <div class="m101-source-card ${cardClass}">
-        <div class="source-weight">${sourceWeights[src]}</div>
-        <div class="source-icon">${sourceIcons[src]}</div>
-        <div class="source-name">${sourceNames[src]}</div>
-        <div class="source-dir" style="color:${dir === 'UP' ? 'var(--green)' : dir === 'DOWN' ? 'var(--red)' : 'var(--text-muted)'}">${dir}</div>
-        <div class="source-strength">${(strength * 100).toFixed(0)}% | Conf: ${(confidence * 100).toFixed(0)}%</div>
-      </div>`;
+  // Convergence
+  const conv = sc.activeConvergence;
+  if (conv) {
+    const convDir = (conv.direction || '').toLowerCase();
+    const convClass = convDir.includes('up') || convDir.includes('bull') ? 'bull' : convDir.includes('down') || convDir.includes('bear') ? 'bear' : 'neutral';
+    const convLabel = convClass === 'bull' ? '看涨 ▲' : convClass === 'bear' ? '看跌 ▼' : '中性 —';
+    el('scConvValue').textContent = ((conv.strength || 0) * 100).toFixed(0) + '%';
+    el('scConvValue').className = 'convergence-value ' + convClass;
+    el('scConvDir').textContent = convLabel;
+    el('scConvDir').style.color = convClass === 'bull' ? '#22c55e' : convClass === 'bear' ? '#ef4444' : '#64748b';
+    el('scConvBadge').textContent = ((conv.strength || 0) * 100).toFixed(0) + '%';
   }
 
-  // Consensus bar
-  const total = signals.length || 1;
-  const neutralCount = total - upCount - downCount;
-  const bar = document.getElementById('m101ConsensusBar');
-  bar.innerHTML = `<div class="up-segment" style="width:${(upCount/total)*100}%"></div>
-    <div class="neutral-segment" style="width:${(neutralCount/total)*100}%"></div>
-    <div class="down-segment" style="width:${(downCount/total)*100}%"></div>`;
+  // Positions
+  const positions = sc.positions || [];
+  el('scPosBadge').textContent = positions.length;
+  const posBody = el('scPosBody');
+  if (positions.length > 0) {
+    posBody.innerHTML = positions.map(p => {
+      const pnl = p.pnl || 0;
+      const pnlPct = p.pnlPct || (p.entryPrice ? ((p.currentPrice - p.entryPrice) / p.entryPrice * 100) : 0);
+      const side = (p.side || p.type || '').toLowerCase();
+      return '<tr>' +
+        '<td>' + (p.market || p.conditionId || '---') + '</td>' +
+        '<td class="' + (side === 'yes' || side === 'buy' ? 'side-yes' : 'side-no') + '">' + (side === 'yes' || side === 'buy' ? 'YES' : 'NO') + '</td>' +
+        '<td>' + (p.entryPrice ? fmtPct(p.entryPrice) : '---') + '</td>' +
+        '<td>' + (p.currentPrice ? fmtPct(p.currentPrice) : '---') + '</td>' +
+        '<td>' + (p.size || p.amount || '---') + '</td>' +
+        '<td>' + fmt$(p.cost) + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + fmt$(pnl) + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + pnlPct.toFixed(1) + '%</td>' +
+        '<td>' + (p.duration || '---') + '</td>' +
+        '</tr>';
+    }).join('');
+  } else {
+    posBody.innerHTML = '<tr class="empty-row"><td colspan="9">暂无活跃仓位</td></tr>';
+  }
 
-  const agreeing = signals.filter(s => s.direction === dominantDir).length;
-  document.getElementById('m101ConsensusText').textContent = `${agreeing} / ${signals.length} 源同意 (${dominantDir})`;
+  // Simulation
+  const sim = sc.lastSimulation;
+  if (sim) {
+    const simDir = (sim.direction || '').toLowerCase();
+    const simDirClass = simDir.includes('up') || simDir.includes('bull') ? 'bull' : simDir.includes('down') || simDir.includes('bear') ? 'bear' : 'neutral';
+    el('scSimDir').textContent = simDirClass === 'bull' ? '看涨 ▲' : simDirClass === 'bear' ? '看跌 ▼' : '中性 —';
+    el('scSimDir').style.color = simDirClass === 'bull' ? '#22c55e' : simDirClass === 'bear' ? '#ef4444' : '#64748b';
+    el('scSimProb').textContent = 'UP: ' + fmtPct(sim.upProb || sim.probUp) + ' | DOWN: ' + fmtPct(sim.downProb || sim.probDown);
+    el('scSimConf').textContent = fmtPct(sim.confidence);
+    el('scSimConf').style.color = (sim.confidence || 0) > 0.6 ? '#22c55e' : '#64748b';
+    el('scSimTrade').textContent = sim.shouldTrade ? '✅ 建议交易' : '⛔ 不建议';
+    el('scSimTrade').style.color = sim.shouldTrade ? '#22c55e' : '#ef4444';
+    el('scSimKelly').textContent = fmtPct(sim.kelly || sim.kellyFraction);
+    el('scSimSharpe').textContent = (sim.sharpe || '--');
+    el('scSimCount').textContent = fmtNum(sc.simulationCount);
+    el('scSimCalib').textContent = fmtPct(sc.calibrationAccuracy);
+  }
 
-  // Decision box
-  const decision = m101.lastDecision;
-  const decBox = document.getElementById('m101DecisionBox');
-  const decValue = document.getElementById('m101DecisionValue');
-  const decReason = document.getElementById('m101DecisionReason');
+  // Trades
+  const trades = sc.trades || [];
+  el('scTradesBadge').textContent = trades.length + ' 笔';
+  const tradesBody = el('scTradesBody');
+  if (trades.length > 0) {
+    tradesBody.innerHTML = trades.slice(-50).reverse().map(t => {
+      const pnl = t.pnl || 0;
+      const side = (t.side || t.type || '').toLowerCase();
+      return '<tr>' +
+        '<td>' + (t.time ? new Date(t.time).toLocaleTimeString('zh-CN') : '---') + '</td>' +
+        '<td>' + (t.market || t.conditionId || '---') + '</td>' +
+        '<td class="' + (side === 'yes' || side === 'buy' ? 'side-yes' : 'side-no') + '">' + (side === 'yes' || side === 'buy' ? 'YES' : 'NO') + '</td>' +
+        '<td>' + (t.price ? fmtPct(t.price) : '---') + '</td>' +
+        '<td>' + (t.size || t.amount || '---') + '</td>' +
+        '<td>' + fmt$(t.cost) + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + fmt$(pnl) + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + (t.pnlPct || 0).toFixed(1) + '%</td>' +
+        '<td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;color:var(--text-secondary)">' + (t.reason || '---') + '</td>' +
+        '</tr>';
+    }).join('');
+    updateChart(trades);
+  } else {
+    tradesBody.innerHTML = '<tr class="empty-row"><td colspan="9">暂无交易记录</td></tr>';
+  }
+}
 
-  if (decision) {
-    decBox.className = 'm101-decision-box ' + (decision.shouldTrade ? 'trade' : 'skip');
-    if (decision.shouldTrade) {
-      decValue.textContent = decision.direction + ' 信号';
-      decValue.className = 'm101-decision-value ' + (decision.direction === 'UP' ? 'up' : 'down');
-    } else {
-      decValue.textContent = '跳过';
-      decValue.className = 'm101-decision-value skip';
+// ===== Tab 2: Marketing101 =====
+function updateM101(m) {
+  if (!m) return;
+  const el = (id) => document.getElementById(id);
+
+  // KPIs
+  const tp = m.totalPnl || 0;
+  const dp = m.dailyPnl || 0;
+  el('m1TotalPnl').textContent = fmt$(tp);
+  el('m1TotalPnl').className = 'kpi-value ' + (tp >= 0 ? 'positive' : 'negative');
+  el('m1TradeCountSub').textContent = (m.tradeCount || 0) + ' 笔交易';
+  el('m1DailyPnl').textContent = fmt$(dp);
+  el('m1DailyPnl').className = 'kpi-value ' + (dp >= 0 ? 'positive' : 'negative');
+  el('m1WinRate').textContent = fmtPct(m.winRate);
+  el('m1WinLossSub').textContent = '胜/负: ' + (m.tradeCount || 0);
+  el('m1ScanSkip').textContent = (m.scanCount || 0) + ' / ' + (m.skipCount || 0);
+  el('m1AvgSize').textContent = fmt$(m.tradeCount ? Math.abs(tp) / m.tradeCount : 0);
+  el('m1Uptime').textContent = fmtTime(m.startTime || Date.now());
+
+  // 5 Source Cards
+  const signals = m.lastSignals || [];
+  const sourceGrid = el('m1SourceGrid');
+  const sources = [
+    { name: 'Claude 大脑', icon: '🤖', weight: '30%' },
+    { name: 'MiroFish', icon: '🧬', weight: '25%' },
+    { name: 'BTC 模拟', icon: '📊', weight: '20%' },
+    { name: 'OTC 柜台', icon: '🏛️', weight: '15%' },
+    { name: '封闭订单簿', icon: '📋', weight: '10%' },
+  ];
+  sourceGrid.innerHTML = sources.map((src, i) => {
+    const sig = signals[i];
+    if (sig) {
+      const dir = (sig.direction || '').toLowerCase();
+      const cls = dir.includes('up') || dir.includes('bull') || dir === 'yes' ? 'up' : dir.includes('down') || dir.includes('bear') || dir === 'no' ? 'down' : 'neutral';
+      const dirText = cls === 'up' ? '看涨 ▲' : cls === 'down' ? '看跌 ▼' : '中性 —';
+      const dirColor = cls === 'up' ? '#22c55e' : cls === 'down' ? '#ef4444' : '#64748b';
+      return '<div class="source-card ' + cls + '">' +
+        '<div class="s-weight">' + src.weight + '</div>' +
+        '<div class="s-icon">' + src.icon + '</div>' +
+        '<div class="s-name">' + src.name + '</div>' +
+        '<div class="s-dir" style="color:' + dirColor + '">' + dirText + '</div>' +
+        '<div class="s-strength">' + fmtPct(sig.strength) + ' | Conf: ' + fmtPct(sig.confidence) + '</div>' +
+        '</div>';
     }
-    decReason.textContent = decision.reasoning || '';
+    return '<div class="source-card neutral">' +
+      '<div class="s-weight">' + src.weight + '</div>' +
+      '<div class="s-icon">' + src.icon + '</div>' +
+      '<div class="s-name">' + src.name + '</div>' +
+      '<div class="s-dir" style="color:var(--text-muted)">---</div>' +
+      '<div class="s-strength">--% | Conf: --%</div>' +
+      '</div>';
+  }).join('');
+
+  // Consensus
+  const upCount = signals.filter(s => {
+    const d = (s.direction || '').toLowerCase();
+    return d.includes('up') || d.includes('bull') || d === 'yes';
+  }).length;
+  const downCount = signals.filter(s => {
+    const d = (s.direction || '').toLowerCase();
+    return d.includes('down') || d.includes('bear') || d === 'no';
+  }).length;
+  const total = signals.length || 5;
+  el('m1ConsensusText').textContent = Math.max(upCount, downCount) + ' / ' + total + ' 源同意';
+  el('m1ConsensusBadge').textContent = Math.max(upCount, downCount) + '/' + total + ' 共识';
+
+  const bar = el('m1ConsensusBar');
+  bar.querySelector('.up-seg').style.width = (upCount / total * 100) + '%';
+  bar.querySelector('.down-seg').style.width = (downCount / total * 100) + '%';
+  bar.querySelector('.neutral-seg').style.width = ((total - upCount - downCount) / total * 100) + '%';
+
+  // Decision
+  const dec = m.lastDecision;
+  if (dec) {
+    const action = (dec.action || dec.decision || '').toLowerCase();
+    const isTrade = action.includes('buy') || action.includes('yes') || action.includes('trade') || action.includes('up');
+    const isDown = action.includes('sell') || action.includes('no') || action.includes('down');
+    el('m1DecisionBox').className = 'decision-box ' + (isTrade || isDown ? 'trade' : 'skip');
+    const decEl = el('m1DecisionValue');
+    if (isTrade) { decEl.textContent = '买入 YES ▲'; decEl.className = 'decision-value up'; }
+    else if (isDown) { decEl.textContent = '买入 NO ▼'; decEl.className = 'decision-value down'; }
+    else { decEl.textContent = '跳过 ⏸'; decEl.className = 'decision-value skip'; }
+    el('m1DecisionReason').textContent = dec.reasoning || dec.reason || '---';
   }
 
-  // BTC Simulator
-  const btcSim = m101.lastBtcSim;
-  if (btcSim) {
-    document.getElementById('m101BtcCurrent').textContent = '$' + (btcSim.currentPrice || 0).toLocaleString('en-US', {maximumFractionDigits: 0});
-    document.getElementById('m101BtcUp').textContent = (btcSim.upCount || 0).toLocaleString();
-    document.getElementById('m101BtcDown').textContent = (btcSim.downCount || 0).toLocaleString();
-    document.getElementById('m101BtcAvg').textContent = '$' + (btcSim.avgFinalPrice || 0).toLocaleString('en-US', {maximumFractionDigits: 0});
-    document.getElementById('m101BtcP5').textContent = '$' + (btcSim.p5 || 0).toLocaleString('en-US', {maximumFractionDigits: 0});
-    document.getElementById('m101BtcP50').textContent = '$' + (btcSim.p50 || 0).toLocaleString('en-US', {maximumFractionDigits: 0});
-    document.getElementById('m101BtcP95').textContent = '$' + (btcSim.p95 || 0).toLocaleString('en-US', {maximumFractionDigits: 0});
-    document.getElementById('m101BtcJumps').textContent = (btcSim.avgJumpCount || 0).toFixed(2);
+  // MiroFish stats
+  const mf = m.lastBtcSim;
+  if (mf) {
+    el('m1mfDir').textContent = mf.direction || '---';
+    el('m1mfUp').textContent = fmtPct(mf.upProb || mf.probUp);
+    el('m1mfDown').textContent = fmtPct(mf.downProb || mf.probDown);
+    el('m1mfConf').textContent = fmtPct(mf.confidence);
+    el('m1mfKelly').textContent = fmtPct(mf.kelly || mf.kellyFraction);
+    el('m1mfSharpe').textContent = mf.sharpe || '--';
+    el('m1mfExpPnl').textContent = fmt$(mf.expectedPnl || mf.expPnl);
   }
 
-  // OTC Data
-  const otc = m101.lastOtcSnapshot;
+  // OTC
+  const otc = m.lastOtcSnapshot;
   if (otc) {
-    document.getElementById('m101OtcBuy').textContent = (otc.buyFlow || 0).toFixed(1) + ' BTC';
-    document.getElementById('m101OtcSell').textContent = (otc.sellFlow || 0).toFixed(1) + ' BTC';
-    document.getElementById('m101OtcNet').textContent = (otc.netFlow || 0).toFixed(1) + ' BTC';
-    document.getElementById('m101OtcNet').style.color = otc.netFlow > 0 ? 'var(--green)' : 'var(--red)';
-    document.getElementById('m101OtcAvgBuy').textContent = (otc.avgBuySize || 0).toFixed(1) + ' BTC';
-    document.getElementById('m101OtcAvgSell').textContent = (otc.avgSellSize || 0).toFixed(1) + ' BTC';
-    const otcSigEl = document.getElementById('m101OtcSignal');
-    otcSigEl.textContent = otc.signal || 'NEUTRAL';
-    otcSigEl.style.color = otc.signal === 'BULL' ? 'var(--green)' : otc.signal === 'BEAR' ? 'var(--red)' : 'var(--text-muted)';
-    document.getElementById('m101OtcConf').textContent = ((otc.confidence || 0) * 100).toFixed(0) + '%';
-    document.getElementById('m101OtcBlocks').textContent = (otc.largeBlocks || []).length;
+    el('m1otcBuy').textContent = (otc.buyFlow || otc.buyVolume || '---') + ' BTC';
+    el('m1otcSell').textContent = (otc.sellFlow || otc.sellVolume || '---') + ' BTC';
+    el('m1otcNet').textContent = (otc.netFlow || '---') + ' BTC';
+    el('m1otcSignal').textContent = otc.signal || '---';
+    el('m1otcConf').textContent = fmtPct(otc.confidence);
+    el('m1otcBlocks').textContent = otc.largeBlocks || otc.blockCount || '---';
   }
 
   // Closed Book
-  const cb = m101.lastClosedBook;
+  const cb = m.lastClosedBook;
   if (cb) {
-    const biasEl = document.getElementById('m101CbBias');
-    biasEl.textContent = cb.makerBias || 'NEUTRAL';
-    biasEl.style.color = cb.makerBias === 'YES' ? 'var(--green)' : cb.makerBias === 'NO' ? 'var(--red)' : 'var(--text-muted)';
-    document.getElementById('m101CbMispricing').textContent = (cb.mispricing || 0).toFixed(3) + '%';
-    document.getElementById('m101CbWhaleBids').textContent = cb.whaleBidCount || 0;
-    document.getElementById('m101CbWhaleAsks').textContent = cb.whaleAskCount || 0;
-    document.getElementById('m101CbHidden').textContent = (cb.hiddenLiquidity || 0).toFixed(1);
-    document.getElementById('m101CbEfficiency').textContent = ((cb.priceEfficiency || 0) * 100).toFixed(1) + '%';
-    document.getElementById('m101CbBidLiq').textContent = (cb.totalBidLiquidity || 0).toFixed(1);
-    document.getElementById('m101CbAskLiq').textContent = (cb.totalAskLiquidity || 0).toFixed(1);
+    el('m1cbBias').textContent = cb.makerBias || cb.bias || '---';
+    el('m1cbMispricing').textContent = cb.mispricing || '---';
+    el('m1cbWhaleBids').textContent = cb.whaleBids || '---';
+    el('m1cbWhaleAsks').textContent = cb.whaleAsks || '---';
+    el('m1cbHidden').textContent = cb.hiddenLiquidity || '---';
+    el('m1cbEfficiency').textContent = cb.priceEfficiency || '---';
   }
 
-  // MiroFish Sim
-  const sim = m101.lastSimResult;
-  if (sim) {
-    const dirEl = document.getElementById('m101SimDirection');
-    dirEl.textContent = sim.direction;
-    dirEl.style.color = sim.direction === 'UP' ? 'var(--green)' : 'var(--red)';
-    document.getElementById('m101SimProb').innerHTML = `UP: ${(sim.upProbability*100).toFixed(1)}% | DOWN: ${(sim.downProbability*100).toFixed(1)}%`;
-    const confEl = document.getElementById('m101SimConfidence');
-    confEl.textContent = sim.confidence.toFixed(1) + '%';
-    confEl.style.color = sim.confidence >= 15 ? 'var(--green)' : 'var(--text-muted)';
-    document.getElementById('m101SimTrade').textContent = sim.shouldTrade ? '✓ 交易' : '✗ 跳过';
-    document.getElementById('m101SimTrade').style.color = sim.shouldTrade ? 'var(--green)' : 'var(--text-muted)';
-    document.getElementById('m101SimKelly').textContent = (sim.kellyFraction * 100).toFixed(2) + '%';
-    document.getElementById('m101SimSharpe').textContent = sim.sharpe.toFixed(3);
-    document.getElementById('m101SimExpPnl').textContent = '$' + sim.expectedPnl.toFixed(4);
-    document.getElementById('m101SimStd').textContent = '$' + sim.pnlStdDev.toFixed(4);
-    document.getElementById('m101SimP50').textContent = '$' + (sim.pnlDistribution?.p50 || 0).toFixed(4);
-    document.getElementById('m101SimLatency').textContent = sim.elapsedMs + 'ms';
-    document.getElementById('m101SimContext').textContent = sim.marketContext || 'N/A';
+  // Positions
+  const openPos = m.openPositions || [];
+  el('m1PosBadge').textContent = openPos.length;
+  const posBody = el('m1PosBody');
+  if (openPos.length > 0) {
+    posBody.innerHTML = openPos.map(p => {
+      const pnl = p.pnl || 0;
+      const side = (p.side || p.type || '').toLowerCase();
+      return '<tr>' +
+        '<td>' + (p.market || p.question || '---') + '</td>' +
+        '<td class="' + (side === 'yes' ? 'side-yes' : 'side-no') + '">' + (side === 'yes' ? 'YES' : 'NO') + '</td>' +
+        '<td>' + (p.entryPrice ? fmtPct(p.entryPrice) : '---') + '</td>' +
+        '<td>' + (p.size || p.amount || '---') + '</td>' +
+        '<td>' + fmt$(p.cost) + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + fmt$(pnl) + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + (p.pnlPct || 0).toFixed(1) + '%</td>' +
+        '</tr>';
+    }).join('');
+  } else {
+    posBody.innerHTML = '<tr class="empty-row"><td colspan="7">暂无活跃仓位</td></tr>';
   }
 
-  // Claude Brain / Trade params
-  if (decision) {
-    document.getElementById('m101ClaudeReasoning').innerHTML =
-      (decision.signals || []).map(s => `<div style="margin-bottom:4px"><b style="color:${s.direction==='UP'?'var(--green)':s.direction==='DOWN'?'var(--red)':'var(--text-muted)'}">${s.source}</b>: ${s.details}</div>`).join('');
-    document.getElementById('m101PosSize').textContent = '$' + (decision.positionSize || 0).toFixed(2);
-    document.getElementById('m101EntryPrice').textContent = (decision.entryPrice || 0).toFixed(6);
-    document.getElementById('m101StopLoss').textContent = (decision.stopLoss || 0).toFixed(6);
-    document.getElementById('m101TakeProfit').textContent = (decision.takeProfit || 0).toFixed(6);
-    document.getElementById('m101RR').textContent = (decision.riskReward || 0).toFixed(2);
-    document.getElementById('m101EV').textContent = '$' + (decision.expectedValue || 0).toFixed(4);
+  // Closed Trades
+  const closed = m.closedTrades || [];
+  el('m1ClosedBadge').textContent = closed.length + ' 笔';
+  const closedBody = el('m1ClosedBody');
+  if (closed.length > 0) {
+    closedBody.innerHTML = closed.slice(-30).reverse().map(t => {
+      const pnl = t.pnl || 0;
+      return '<tr>' +
+        '<td>' + (t.market || t.question || '---') + '</td>' +
+        '<td class="' + ((t.side || '').toLowerCase() === 'yes' ? 'side-yes' : 'side-no') + '">' + (t.side || '---') + '</td>' +
+        '<td>' + (t.entryPrice ? fmtPct(t.entryPrice) : '---') + '</td>' +
+        '<td>' + (t.exitPrice ? fmtPct(t.exitPrice) : '---') + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + fmt$(pnl) + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + (t.pnlPct || 0).toFixed(1) + '%</td>' +
+        '<td>' + (t.duration || t.holdTime || '---') + '</td>' +
+        '</tr>';
+    }).join('');
+  } else {
+    closedBody.innerHTML = '<tr class="empty-row"><td colspan="7">暂无已平仓记录</td></tr>';
+  }
+}
+
+// ===== Tab 3: Copy Trading =====
+function updateCopy(cp) {
+  if (!cp) return;
+  const el = (id) => document.getElementById(id);
+
+  // KPIs
+  const tp = cp.totalPnl || 0;
+  const dp = cp.dailyPnl || 0;
+  el('cpTotalPnl').textContent = fmt$(tp);
+  el('cpTotalPnl').className = 'kpi-value ' + (tp >= 0 ? 'positive' : 'negative');
+  el('cpTradeCountSub').textContent = (cp.tradeCount || 0) + ' 笔交易';
+  el('cpDailyPnl').textContent = fmt$(dp);
+  el('cpDailyPnl').className = 'kpi-value ' + (dp >= 0 ? 'positive' : 'negative');
+  el('cpWinRate').textContent = fmtPct(cp.winRate);
+  el('cpWinLossSub').textContent = '胜/负: ' + (cp.tradeCount || 0);
+  el('cpWallets').textContent = cp.trackedWallets || 0;
+  el('cpProfitWallets').textContent = (cp.profitableWallets || 0) + ' 盈利';
+  el('cpScanSkip').textContent = (cp.scanCount || 0) + ' / ' + (cp.skipCount || 0);
+  el('cpUptime').textContent = fmtTime(cp.startTime || Date.now());
+
+  // Wallets Table
+  const wallets = cp.topWallets || [];
+  el('cpWalletBadge').textContent = wallets.length + ' 钱包';
+  const wBody = el('cpWalletBody');
+  if (wallets.length > 0) {
+    wBody.innerHTML = wallets.map(w => {
+      const pnl = w.totalPnl || 0;
+      const risk = w.riskLevel || w.risk || '---';
+      const riskColor = risk === 'low' || risk === '低' ? '#22c55e' : risk === 'high' || risk === '高' ? '#ef4444' : '#eab308';
+      return '<tr>' +
+        '<td style="font-family:monospace;font-size:10px">' + fmtAddr(w.address || w.wallet || '---') + '</td>' +
+        '<td>' + fmtPct(w.winRate) + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + fmt$(pnl) + '</td>' +
+        '<td style="color:' + riskColor + ';font-weight:600">' + risk + '</td>' +
+        '<td>' + (w.tradeCount || w.trades || 0) + '</td>' +
+        '<td>' + (w.lastActive || '---') + '</td>' +
+        '</tr>';
+    }).join('');
+  } else {
+    wBody.innerHTML = '<tr class="empty-row"><td colspan="6">暂无追踪钱包</td></tr>';
+  }
+
+  // Positions
+  const openPos = cp.openPositions || [];
+  el('cpPosBadge').textContent = openPos.length;
+  const posBody = el('cpPosBody');
+  if (openPos.length > 0) {
+    posBody.innerHTML = openPos.map(p => {
+      const pnl = p.pnl || 0;
+      return '<tr>' +
+        '<td>' + (p.market || p.question || '---') + '</td>' +
+        '<td class="' + ((p.side || '').toLowerCase() === 'yes' ? 'side-yes' : 'side-no') + '">' + (p.side || '---') + '</td>' +
+        '<td>' + (p.entryPrice ? fmtPct(p.entryPrice) : '---') + '</td>' +
+        '<td>' + (p.size || p.amount || '---') + '</td>' +
+        '<td>' + fmt$(p.cost) + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + fmt$(pnl) + '</td>' +
+        '<td style="font-family:monospace;font-size:10px">' + fmtAddr(p.sourceWallet || p.wallet || '---') + '</td>' +
+        '</tr>';
+    }).join('');
+  } else {
+    posBody.innerHTML = '<tr class="empty-row"><td colspan="7">暂无活跃仓位</td></tr>';
+  }
+
+  // Closed Trades
+  const closed = cp.closedTrades || [];
+  el('cpClosedBadge').textContent = closed.length + ' 笔';
+  const clBody = el('cpClosedBody');
+  if (closed.length > 0) {
+    clBody.innerHTML = closed.slice(-30).reverse().map(t => {
+      const pnl = t.pnl || 0;
+      return '<tr>' +
+        '<td>' + (t.market || t.question || '---') + '</td>' +
+        '<td class="' + ((t.side || '').toLowerCase() === 'yes' ? 'side-yes' : 'side-no') + '">' + (t.side || '---') + '</td>' +
+        '<td>' + (t.entryPrice ? fmtPct(t.entryPrice) : '---') + '</td>' +
+        '<td>' + (t.exitPrice ? fmtPct(t.exitPrice) : '---') + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + fmt$(pnl) + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + (t.pnlPct || 0).toFixed(1) + '%</td>' +
+        '<td style="font-family:monospace;font-size:10px">' + fmtAddr(t.sourceWallet || t.wallet || '---') + '</td>' +
+        '</tr>';
+    }).join('');
+  } else {
+    clBody.innerHTML = '<tr class="empty-row"><td colspan="7">暂无已平仓记录</td></tr>';
+  }
+}
+
+// ===== Tab 4: Bond =====
+function updateBond(bd) {
+  if (!bd) return;
+  const el = (id) => document.getElementById(id);
+
+  // KPIs
+  const tp = bd.totalPnl || 0;
+  const dp = bd.dailyPnl || 0;
+  el('bdTotalPnl').textContent = fmt$(tp);
+  el('bdTotalPnl').className = 'kpi-value ' + (tp >= 0 ? 'positive' : 'negative');
+  el('bdTradeCountSub').textContent = (bd.tradeCount || 0) + ' 笔交易';
+  el('bdDailyPnl').textContent = fmt$(dp);
+  el('bdDailyPnl').className = 'kpi-value ' + (dp >= 0 ? 'positive' : 'negative');
+  el('bdWinRate').textContent = fmtPct(bd.winRate);
+  el('bdWinLossSub').textContent = '胜/负: ' + (bd.tradeCount || 0);
+  el('bdPositionCount').textContent = bd.positionCount || 0;
+  el('bdAvgReturn').textContent = '平均年化: ' + fmtPct(bd.avgAnnualizedReturn);
+  el('bdScanSkip').textContent = (bd.scanCount || 0) + ' / ' + (bd.skipCount || 0);
+  el('bdUptime').textContent = fmtTime(bd.startTime || Date.now());
+
+  // Available Markets
+  const markets = bd.availableMarkets || [];
+  el('bdMarketBadge').textContent = markets.length + ' 市场';
+  const mBody = el('bdMarketBody');
+  if (markets.length > 0) {
+    mBody.innerHTML = markets.map(m => {
+      const risk = m.riskLevel || m.risk || '---';
+      const riskColor = risk === 'low' || risk === '低' ? '#22c55e' : risk === 'high' || risk === '高' ? '#ef4444' : '#eab308';
+      return '<tr>' +
+        '<td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (m.question || m.market || '---') + '</td>' +
+        '<td>' + fmtPct(m.yesPrice) + '</td>' +
+        '<td style="color:#22c55e;font-weight:600">' + fmtPct(m.annualizedReturn || m.annualYield) + '</td>' +
+        '<td style="color:' + riskColor + ';font-weight:600">' + risk + '</td>' +
+        '<td>' + (m.daysToExpiry || m.daysLeft || '---') + ' 天</td>' +
+        '<td>' + fmtCompact(m.volume || 0) + '</td>' +
+        '</tr>';
+    }).join('');
+  } else {
+    mBody.innerHTML = '<tr class="empty-row"><td colspan="6">暂无可用债券市场</td></tr>';
+  }
+
+  // Positions
+  const openPos = bd.openPositions || [];
+  el('bdPosBadge').textContent = openPos.length;
+  const posBody = el('bdPosBody');
+  if (openPos.length > 0) {
+    posBody.innerHTML = openPos.map(p => {
+      const pnl = p.pnl || 0;
+      return '<tr>' +
+        '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (p.market || p.question || '---') + '</td>' +
+        '<td class="' + ((p.side || '').toLowerCase() === 'yes' ? 'side-yes' : 'side-no') + '">' + (p.side || '---') + '</td>' +
+        '<td>' + (p.entryPrice ? fmtPct(p.entryPrice) : '---') + '</td>' +
+        '<td>' + (p.currentPrice ? fmtPct(p.currentPrice) : '---') + '</td>' +
+        '<td>' + (p.size || p.amount || '---') + '</td>' +
+        '<td>' + fmt$(p.cost) + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + fmt$(pnl) + '</td>' +
+        '<td style="color:#22c55e">' + fmtPct(p.annualizedReturn || p.annualYield) + '</td>' +
+        '</tr>';
+    }).join('');
+  } else {
+    posBody.innerHTML = '<tr class="empty-row"><td colspan="8">暂无活跃仓位</td></tr>';
+  }
+
+  // Closed Trades
+  const closed = bd.closedTrades || [];
+  el('bdClosedBadge').textContent = closed.length + ' 笔';
+  const clBody = el('bdClosedBody');
+  if (closed.length > 0) {
+    clBody.innerHTML = closed.slice(-30).reverse().map(t => {
+      const pnl = t.pnl || 0;
+      return '<tr>' +
+        '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (t.market || t.question || '---') + '</td>' +
+        '<td class="' + ((t.side || '').toLowerCase() === 'yes' ? 'side-yes' : 'side-no') + '">' + (t.side || '---') + '</td>' +
+        '<td>' + (t.entryPrice ? fmtPct(t.entryPrice) : '---') + '</td>' +
+        '<td>' + (t.exitPrice ? fmtPct(t.exitPrice) : '---') + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + fmt$(pnl) + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + (t.pnlPct || 0).toFixed(1) + '%</td>' +
+        '<td>' + (t.holdDays || t.duration || '---') + '</td>' +
+        '</tr>';
+    }).join('');
+  } else {
+    clBody.innerHTML = '<tr class="empty-row"><td colspan="7">暂无已平仓记录</td></tr>';
+  }
+}
+
+// ===== Tab 5: Kelly Mean Reversion =====
+function updateKelly(kl) {
+  if (!kl) return;
+  const el = (id) => document.getElementById(id);
+
+  // KPIs
+  const tp = kl.totalPnl || 0;
+  const dp = kl.dailyPnl || 0;
+  el('klTotalPnl').textContent = fmt$(tp);
+  el('klTotalPnl').className = 'kpi-value ' + (tp >= 0 ? 'positive' : 'negative');
+  el('klTradeCountSub').textContent = (kl.tradeCount || 0) + ' 笔交易';
+  el('klDailyPnl').textContent = fmt$(dp);
+  el('klDailyPnl').className = 'kpi-value ' + (dp >= 0 ? 'positive' : 'negative');
+  el('klWinRate').textContent = fmtPct(kl.winRate);
+  el('klWinLossSub').textContent = '胜/负: ' + (kl.tradeCount || 0);
+  const dev = kl.deviation || 0;
+  el('klDeviation').textContent = fmtPctSigned(dev);
+  el('klDeviation').className = 'kpi-value ' + (dev < 0 ? 'negative' : dev > 0 ? 'positive' : '');
+  el('klEmaPrice').textContent = 'EMA: ' + fmt$(kl.emaPrice);
+  const ks = kl.kellyStats || {};
+  el('klKellyFrac').textContent = fmtPct(ks.avgKellyFraction);
+  el('klKellyConserv').textContent = '保守: ' + fmtPct(ks.conservativeFraction);
+  el('klUptime').textContent = fmtTime(kl.startTime || Date.now());
+
+  // 5 Source Cards
+  const signals = kl.lastSignals || [];
+  const sourceGrid = el('klSourceGrid');
+  const sources = [
+    { name: 'EMA 均值回归', icon: '📈', weight: '40%' },
+    { name: '成交量', icon: '📊', weight: '20%' },
+    { name: '流动性', icon: '💧', weight: '15%' },
+    { name: 'Kelly EV', icon: '🎲', weight: '15%' },
+    { name: '过度反应', icon: '⚡', weight: '10%' },
+  ];
+  sourceGrid.innerHTML = sources.map((src, i) => {
+    const sig = signals[i];
+    if (sig) {
+      const dir = (sig.direction || '').toLowerCase();
+      const cls = dir.includes('up') || dir.includes('bull') || dir === 'yes' ? 'up' : dir.includes('down') || dir.includes('bear') || dir === 'no' ? 'down' : 'neutral';
+      const dirText = cls === 'up' ? '看涨 ▲' : cls === 'down' ? '看跌 ▼' : '中性 —';
+      const dirColor = cls === 'up' ? '#22c55e' : cls === 'down' ? '#ef4444' : '#64748b';
+      return '<div class="source-card ' + cls + '">' +
+        '<div class="s-weight">' + src.weight + '</div>' +
+        '<div class="s-icon">' + src.icon + '</div>' +
+        '<div class="s-name">' + src.name + '</div>' +
+        '<div class="s-dir" style="color:' + dirColor + '">' + dirText + '</div>' +
+        '<div class="s-strength">' + fmtPct(sig.strength) + ' | ' + (sig.detail || sig.value || '--') + '</div>' +
+        '</div>';
+    }
+    return '<div class="source-card neutral">' +
+      '<div class="s-weight">' + src.weight + '</div>' +
+      '<div class="s-icon">' + src.icon + '</div>' +
+      '<div class="s-name">' + src.name + '</div>' +
+      '<div class="s-dir" style="color:var(--text-muted)">---</div>' +
+      '<div class="s-strength">--%</div>' +
+      '</div>';
+  }).join('');
+
+  // Consensus
+  const upCount = signals.filter(s => {
+    const d = (s.direction || '').toLowerCase();
+    return d.includes('up') || d.includes('bull') || d === 'yes';
+  }).length;
+  const downCount = signals.filter(s => {
+    const d = (s.direction || '').toLowerCase();
+    return d.includes('down') || d.includes('bear') || d === 'no';
+  }).length;
+  const total = signals.length || 5;
+  el('klConsensusText').textContent = Math.max(upCount, downCount) + ' / ' + total + ' 源同意';
+  el('klConsensusBadge').textContent = Math.max(upCount, downCount) + '/' + total + ' 共识';
+  const bar = el('klConsensusBar');
+  bar.querySelector('.up-seg').style.width = (upCount / total * 100) + '%';
+  bar.querySelector('.down-seg').style.width = (downCount / total * 100) + '%';
+  bar.querySelector('.neutral-seg').style.width = ((total - upCount - downCount) / total * 100) + '%';
+
+  // Decision
+  const dec = kl.lastDecision;
+  if (dec) {
+    const action = (dec.action || dec.decision || '').toLowerCase();
+    const isTrade = action.includes('buy') || action.includes('yes') || action.includes('trade') || action.includes('up');
+    const isDown = action.includes('sell') || action.includes('no') || action.includes('down');
+    el('klDecisionBox').className = 'decision-box ' + (isTrade || isDown ? 'trade' : 'skip');
+    const decEl = el('klDecisionValue');
+    if (isTrade) { decEl.textContent = '买入 YES ▲'; decEl.className = 'decision-value up'; }
+    else if (isDown) { decEl.textContent = '买入 NO ▼'; decEl.className = 'decision-value down'; }
+    else { decEl.textContent = '跳过 ⏸'; decEl.className = 'decision-value skip'; }
+    el('klDecisionReason').textContent = dec.reasoning || dec.reason || '---';
+  }
+
+  // Kelly Stats
+  el('klStatAvgKelly').textContent = fmtPct(ks.avgKellyFraction);
+  el('klStatMaxKelly').textContent = fmtPct(ks.maxKellyFraction);
+  el('klStatTotalKelly').textContent = ks.totalTradesKelly || 0;
+  el('klStatConserv').textContent = fmtPct(ks.conservativeFraction);
+  el('klStatEma').textContent = fmt$(kl.emaPrice);
+  el('klStatDev').textContent = fmtPctSigned(kl.deviation);
+
+  // Positions
+  const openPos = kl.openPositions || [];
+  el('klPosBadge').textContent = openPos.length;
+  const posBody = el('klPosBody');
+  if (openPos.length > 0) {
+    posBody.innerHTML = openPos.map(p => {
+      const pnl = p.pnl || 0;
+      return '<tr>' +
+        '<td>' + (p.market || p.question || '---') + '</td>' +
+        '<td class="' + ((p.side || '').toLowerCase() === 'yes' ? 'side-yes' : 'side-no') + '">' + (p.side || '---') + '</td>' +
+        '<td>' + (p.entryPrice ? fmtPct(p.entryPrice) : '---') + '</td>' +
+        '<td>' + (p.size || p.amount || '---') + '</td>' +
+        '<td>' + fmt$(p.cost) + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + fmt$(pnl) + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + (p.pnlPct || 0).toFixed(1) + '%</td>' +
+        '</tr>';
+    }).join('');
+  } else {
+    posBody.innerHTML = '<tr class="empty-row"><td colspan="7">暂无活跃仓位</td></tr>';
+  }
+
+  // Closed Trades
+  const closed = kl.closedTrades || [];
+  el('klClosedBadge').textContent = closed.length + ' 笔';
+  const clBody = el('klClosedBody');
+  if (closed.length > 0) {
+    clBody.innerHTML = closed.slice(-30).reverse().map(t => {
+      const pnl = t.pnl || 0;
+      return '<tr>' +
+        '<td>' + (t.market || t.question || '---') + '</td>' +
+        '<td class="' + ((t.side || '').toLowerCase() === 'yes' ? 'side-yes' : 'side-no') + '">' + (t.side || '---') + '</td>' +
+        '<td>' + (t.entryPrice ? fmtPct(t.entryPrice) : '---') + '</td>' +
+        '<td>' + (t.exitPrice ? fmtPct(t.exitPrice) : '---') + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + fmt$(pnl) + '</td>' +
+        '<td class="' + pnlClass(pnl) + '">' + (t.pnlPct || 0).toFixed(1) + '%</td>' +
+        '<td>' + (t.duration || t.holdTime || '---') + '</td>' +
+        '</tr>';
+    }).join('');
+  } else {
+    clBody.innerHTML = '<tr class="empty-row"><td colspan="7">暂无已平仓记录</td></tr>';
   }
 }
 
@@ -1211,7 +1691,7 @@ function updateM101(m101) {
 document.addEventListener('DOMContentLoaded', () => {
   initChart();
   fetchState();
-  refreshTimer = setInterval(fetchState, 2000);
+  setInterval(fetchState, 3000);
 });
 </script>
 </body>

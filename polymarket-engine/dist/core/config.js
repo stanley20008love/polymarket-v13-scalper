@@ -41,7 +41,7 @@ function loadConfig() {
         lagThreshold: parseFloat(process.env.LAG_THRESHOLD || '0.1'),
         perTradeRiskPercent: parseFloat(process.env.PER_TRADE_RISK_PERCENT || '2'),
         dailyCapPercent: parseFloat(process.env.DAILY_CAP_PERCENT || '2'),
-        hardStopPercent: parseFloat(process.env.HARD_STOP_PERCENT || '-0.4'),
+        hardStopPercent: parseFloat(process.env.HARD_STOP_PERCENT || '0.4'), // Positive value: 0.4% = hard stop
         minConvergence: parseFloat(process.env.MIN_CONVERGENCE || '35'),
         maxActivePositions: parseInt(process.env.MAX_ACTIVE_POSITIONS || '3', 10),
         positionTimeoutMs: parseInt(process.env.POSITION_TIMEOUT_MS || '300000', 10),

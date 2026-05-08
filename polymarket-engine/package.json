@@ -1,7 +1,7 @@
 {
   "name": "polymarket-v13-scalper",
-  "version": "13.0.0",
-  "description": "Polymarket V13 BTC 5MIN Scalper - CLOB Price Lag Exploitation",
+  "version": "16.0.0",
+  "description": "Polymarket V16 - 五引擎50U模拟盘交易系统",
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc",

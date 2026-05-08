@@ -27,6 +27,8 @@ class BinanceFeed {
     // Callbacks
     onPriceUpdate = null;
     onKlineUpdate = null;
+    reconnectAttempts = 0;
+    maxReconnectAttempts = 20; // Max 20 reconnection attempts
     constructor(config) {
         this.config = config;
     }
@@ -168,15 +170,27 @@ class BinanceFeed {
     scheduleReconnect() {
         if (this.reconnectTimer)
             clearTimeout(this.reconnectTimer);
+        this.reconnectAttempts++;
+        if (this.reconnectAttempts > this.maxReconnectAttempts) {
+            logger_1.logger.error('Binance最大重连次数已达到，停止重连', {
+                attempts: this.reconnectAttempts,
+                max: this.maxReconnectAttempts,
+            });
+            return;
+        }
+        // Exponential backoff: 5s, 10s, 20s, 40s... max 60s
+        const delay = Math.min(5000 * Math.pow(1.5, this.reconnectAttempts - 1), 60000);
+        logger_1.logger.info(`Binance重连 ${this.reconnectAttempts}/${this.maxReconnectAttempts}，${(delay / 1000).toFixed(0)}秒后重试`);
         this.reconnectTimer = setTimeout(async () => {
             try {
                 await this.connect();
+                this.reconnectAttempts = 0; // Reset on success
             }
             catch (e) {
                 logger_1.logger.error('Binance reconnect failed', { error: e.message });
                 this.scheduleReconnect();
             }
-        }, 5000);
+        }, delay);
     }
     // ---- Public Getters ----
     getPrice() { return this.currentPrice; }

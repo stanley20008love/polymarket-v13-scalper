@@ -56,23 +56,30 @@ class MiroFishEngine {
         });
         // Phase 1: Build market context
         const context = this.buildMarketContext(btcPrice, btcChange5m, btcVolume5m, depthImbalance, klinesClose, orderBook, market);
-        // Phase 2: Run simulation loops
+        // Phase 2: Run simulation loops in async batches to avoid blocking event loop
         let upWins = 0;
         let downWins = 0;
         const pnlDistribution = [];
         const pricePaths = [];
-        // Batch simulate for performance (can't actually spawn 10k LLM agents, use statistical model)
-        for (let i = 0; i < loopCount; i++) {
-            const result = this.runSingleLoop(context, i);
-            if (result.direction === 'UP') {
-                upWins++;
+        const BATCH_SIZE = 500; // Process 500 loops per batch, then yield to event loop
+        for (let batch = 0; batch < loopCount; batch += BATCH_SIZE) {
+            const batchEnd = Math.min(batch + BATCH_SIZE, loopCount);
+            for (let i = batch; i < batchEnd; i++) {
+                const result = this.runSingleLoop(context, i);
+                if (result.direction === 'UP') {
+                    upWins++;
+                }
+                else {
+                    downWins++;
+                }
+                pnlDistribution.push(result.expectedPnl);
+                if (i < 100) {
+                    pricePaths.push(result.pricePath);
+                }
             }
-            else {
-                downWins++;
-            }
-            pnlDistribution.push(result.expectedPnl);
-            if (i < 100) {
-                pricePaths.push(result.pricePath);
+            // Yield to event loop between batches
+            if (batch + BATCH_SIZE < loopCount) {
+                await new Promise(resolve => setImmediate(resolve));
             }
         }
         // Phase 3: Calculate statistics
@@ -124,7 +131,7 @@ class MiroFishEngine {
             simulationCount: loopCount,
             elapsedMs: elapsed,
             pricePaths: pricePaths.slice(0, 20), // Top 20 paths for visualization
-            shouldTrade: confidence >= 1, // Paper mode: lowered to 1% to ensure trades happen in simulation
+            shouldTrade: confidence >= 5, // 5% minimum confidence edge to recommend trading
             marketContext: context.summary,
         };
     }
@@ -178,8 +185,8 @@ class MiroFishEngine {
      * Returns predicted direction and expected PnL
      */
     runSingleLoop(context, seed) {
-        // Seeded random number generator for reproducibility within each loop
-        let rng = this.seededRandom(seed + Date.now());
+        // Seeded random: use only seed-based RNG (no Date.now() pollution)
+        let rng = this.seededRandom(seed);
         // Simulate price path over 5 minutes (300 seconds in 30 steps)
         const steps = 30;
         const stepDuration = 10; // seconds per step
@@ -206,7 +213,8 @@ class MiroFishEngine {
         const netPressure = (bullPressure - bearPressure) / (bullPressure + bearPressure + 0.001);
         // Simulate price path using Geometric Brownian Motion with agent pressure
         for (let step = 0; step < steps; step++) {
-            rng = this.seededRandom(seed * 31 + step * 17 + Date.now());
+            // Deterministic seeded RNG per step (no Date.now() - was causing correlation)
+            rng = this.seededRandom(seed * 31 + step * 17 + 7919);
             const noise = (this.boxMullerRandom(rng) * stepVol);
             const drift = baseDrift * 0.3 + netPressure * stepVol * 0.5;
             const stepReturn = drift + noise;

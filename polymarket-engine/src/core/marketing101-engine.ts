@@ -171,8 +171,9 @@ export class Marketing101Engine {
   private lastTradeTime: number = 0;
 
   // 风控
-  private dailyCapPercent: number = 2;    // 每日最大亏损2%
+  private dailyCapPercent: number = 5;    // 每日最大亏损5%
   private hardStopPercent: number = 0.4;  // 硬止损0.4%
+  private dailyPnlResetTime: number = 0;  // 日PnL重置时间
 
   constructor(config: StrategyConfig) {
     this.config = config;
@@ -180,6 +181,22 @@ export class Marketing101Engine {
     this.btcSim = new BtcSimulator();
     this.otcEngine = new OTCDataEngine();
     this.closedBookAnalyzer = new ClosedOrderBookAnalyzer();
+    this.dailyPnlResetTime = this.getNextDayStart();
+  }
+
+  private getNextDayStart(): number {
+    const tomorrow = new Date();
+    tomorrow.setUTCHours(tomorrow.getUTCHours() + 24);
+    tomorrow.setUTCHours(0, 0, 0, 0);
+    return tomorrow.getTime();
+  }
+
+  private resetDailyPnlIfNeeded(): void {
+    if (Date.now() >= this.dailyPnlResetTime) {
+      this.dailyPnl = 0;
+      this.dailyPnlResetTime = this.getNextDayStart();
+      logger.info('M101日PnL已重置');
+    }
   }
 
   async start(btcPrice: number): Promise<void> {
@@ -498,11 +515,10 @@ export class Marketing101Engine {
     const agreeingSources = signals.filter(s => s.direction === direction).length;
     const consensusRatio = agreeingSources / signals.length;
 
-    // 模拟盘模式: 宽松门控确保有交易可测试
-    // 2/5源同意(40%)即可交易, MiroFish仅为建议而非门控
+    // 需要3/5源同意(60%) AND MiroFish确认
     const shouldTrade =
-      consensusRatio >= 0.4 ||  // 2/5 = 40% (任意方向)
-      (consensus >= 0.35 && simResult.shouldTrade);  // 或35%共识+MiroFish确认
+      (consensusRatio >= 0.6 && simResult.shouldTrade) ||  // 3/5 + MiroFish
+      (consensusRatio >= 0.8);  // 4/5即可，无需MiroFish
 
     const kellySize = Math.max(simResult.kellyFraction, 0.05) * this.paperBalance;
     const positionSize = Math.min(
@@ -549,6 +565,9 @@ export class Marketing101Engine {
    * 执行模拟交易
    */
   private executeSimTrade(decision: M101Decision, btcPrice: number): void {
+    // 日PnL重置
+    this.resetDailyPnlIfNeeded();
+
     // 风控检查
     if (this.openPositions.length >= 3) {
       this.skipCount++;
@@ -630,19 +649,19 @@ export class Marketing101Engine {
         pnlPercent = -btcChange * 100; // BTC跌了=赚
       }
 
-      // 杠杆放大 (模拟Polymarket的杠杆效应)
-      pnlPercent *= 3;
+      // 不使用杠杆 (模拟盘1:1)
+      // pnlPercent 保持原值，反映真实盈亏
 
       let shouldClose = false;
       let closeReason = '';
 
-      // 止盈: +1.5%
-      if (pnlPercent >= 1.5) {
+      // 止盈: +5%
+      if (pnlPercent >= 5) {
         shouldClose = true;
         closeReason = '止盈';
       }
-      // 止损: -0.5%
-      else if (pnlPercent <= -0.5) {
+      // 止损: -2%
+      else if (pnlPercent <= -2) {
         shouldClose = true;
         closeReason = '止损';
       }
@@ -676,7 +695,8 @@ export class Marketing101Engine {
       this.tradeCount++;
       this.totalPnl += pos.pnl;
       this.dailyPnl += pos.pnl;
-      this.paperBalance += pos.cost + pos.pnl;
+      // Balance protection: cannot go negative
+      this.paperBalance = Math.max(0, this.paperBalance + pos.cost + pos.pnl);
       if (pos.pnl > 0) this.winningTrades++;
 
       logger.info('📊 M101平仓', {

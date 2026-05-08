@@ -483,8 +483,8 @@ export class ScalperEngine {
 
     // Check hard stop
     const hardStopAmount = this.mode === 'paper'
-      ? this.paperBalance * (Math.abs(this.config.hardStopPercent) / 100)
-      : 100 * (Math.abs(this.config.hardStopPercent) / 100);
+      ? this.paperBalance * (this.config.hardStopPercent / 100)
+      : 100 * (this.config.hardStopPercent / 100);
 
     if (this.dailyPnl <= -hardStopAmount) {
       this.hardStopTriggered = true;
